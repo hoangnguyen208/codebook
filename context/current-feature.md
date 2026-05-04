@@ -6,7 +6,7 @@ Dashboard UI Phase 1
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Completed
 
 ## Goals
 
@@ -34,3 +34,4 @@ In Progress
 - Initial Next.js app setup with App Router, TypeScript, Tailwind CSS, and ESLint
 - Boilerplate cleanup by removing the default starter assets and unused starter styles
 - Added the initial project context files and Copilot guidance for future sessions
+- Implemented dashboard UI phase 1 in `webapp` with ShadCN setup, a dark-first app shell, and a `/dashboard` route with search/new item controls plus Sidebar/Main placeholders
