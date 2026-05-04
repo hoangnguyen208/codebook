@@ -233,6 +233,7 @@ model ItemTag {
 - Minimal, developer‑friendly UI
 - Syntax highlighting for code
 - Inspired by **Notion, Linear, Raycast**
+- Refer to the screenshots below as a base for the dashboard UI. It does not have to be exact. Use all the files in this folder @context/screenshots as reference.
 
 ### Layout
 
