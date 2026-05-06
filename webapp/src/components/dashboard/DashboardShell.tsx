@@ -5,14 +5,20 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  ArrowUpRight,
+  Bookmark,
+  Clock3,
   Code2,
   File,
   FileImage,
   FileText,
+  FolderKanban,
   FolderOpen,
+  Layers3,
   Link2,
   Menu,
   PanelsTopLeft,
+  Pin,
   Plus,
   Search,
   Sparkles,
@@ -45,6 +51,13 @@ type CollectionSummary = MockCollection & {
   lastUpdatedAt: string | null;
 };
 
+type DashboardStat = {
+  label: string;
+  value: number;
+  description: string;
+  icon: LucideIcon;
+};
+
 const itemTypeIcons: Record<MockItemType["icon"], LucideIcon> = {
   code: Code2,
   sparkles: Sparkles,
@@ -71,6 +84,32 @@ function getColorClasses(color: string) {
 
 function formatPlanLabel(plan: MockUser["plan"]) {
   return plan === "pro" ? "Pro plan" : "Free plan";
+}
+
+function formatRelativeDateLabel(value: string | null) {
+  if (!value) {
+    return "No recent activity";
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const currentDate = new Date(2026, 0, 16);
+  const targetDate = new Date(year, month - 1, day);
+  const diffInDays = Math.max(
+    0,
+    Math.round(
+      (currentDate.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24),
+    ),
+  );
+
+  if (diffInDays === 0) {
+    return "Updated today";
+  }
+
+  if (diffInDays === 1) {
+    return "Updated 1 day ago";
+  }
+
+  return `Updated ${diffInDays} days ago`;
 }
 
 function SidebarSectionLabel({
@@ -321,6 +360,63 @@ export function DashboardShell({ data }: DashboardShellProps) {
     [collectionSummaries],
   );
 
+  const recentItems = useMemo(
+    () =>
+      [...data.items]
+        .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+        .slice(0, 10),
+    [data.items],
+  );
+
+  const pinnedItems = useMemo(
+    () =>
+      data.items
+        .filter((item) => item.isPinned)
+        .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)),
+    [data.items],
+  );
+
+  const favoriteItemCount = useMemo(
+    () => data.items.filter((item) => item.isFavorite).length,
+    [data.items],
+  );
+
+  const itemTypeById = useMemo(
+    () =>
+      Object.fromEntries(data.itemTypes.map((itemType) => [itemType.id, itemType])),
+    [data.itemTypes],
+  );
+
+  const stats = useMemo<DashboardStat[]>(
+    () => [
+      {
+        label: "Items",
+        value: data.items.length,
+        description: "Total resources in your workspace",
+        icon: Layers3,
+      },
+      {
+        label: "Collections",
+        value: data.collections.length,
+        description: "Mixed groups for organizing work",
+        icon: FolderKanban,
+      },
+      {
+        label: "Favorite items",
+        value: favoriteItemCount,
+        description: "Starred resources you revisit often",
+        icon: Bookmark,
+      },
+      {
+        label: "Favorite collections",
+        value: favoriteCollections.length,
+        description: "Pinned collection shortcuts in the sidebar",
+        icon: Star,
+      },
+    ],
+    [data.collections.length, data.items.length, favoriteCollections.length, favoriteItemCount],
+  );
+
   return (
     <main className="min-h-screen bg-background">
       <div className="lg:grid lg:min-h-screen lg:grid-cols-[auto_minmax(0,1fr)]">
@@ -400,36 +496,222 @@ export function DashboardShell({ data }: DashboardShellProps) {
               </p>
             </div>
 
-            <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-2xl font-semibold tracking-tight">Main</h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                    Phase 2 completes the dashboard navigation shell with a
-                    collapsible sidebar, mobile drawer, item type routes, and
-                    collection shortcuts. The larger content area stays intentionally
-                    focused until phase 3 adds the collections grid, stats, and
-                    recent items.
-                  </p>
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {stats.map((stat) => {
+                const Icon = stat.icon;
+
+                return (
+                  <article
+                    key={stat.label}
+                    className="rounded-3xl border border-border/70 bg-card p-5 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {stat.label}
+                        </p>
+                        <p className="mt-3 text-3xl font-semibold tracking-tight">
+                          {stat.value}
+                        </p>
+                      </div>
+                      <div className="flex size-11 items-center justify-center rounded-2xl border border-border/70 bg-background/70 text-muted-foreground">
+                        <Icon className="size-5" />
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                      {stat.description}
+                    </p>
+                  </article>
+                );
+              })}
+            </section>
+
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+              <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-semibold tracking-tight">
+                      Recent collections
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+                      Jump back into the collections that changed most recently.
+                    </p>
+                  </div>
+                  <div className="hidden rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-muted-foreground sm:inline-flex">
+                    {recentCollections.length} visible
+                  </div>
                 </div>
 
-                <div className="grid gap-3 sm:min-w-72">
-                  <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Favorite collections
-                    </p>
-                    <p className="mt-1 text-2xl font-semibold">
-                      {favoriteCollections.length}
+                <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                  {recentCollections.map((collection) => (
+                    <article
+                      key={collection.id}
+                      className="rounded-3xl border border-border/70 bg-background/70 p-5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div
+                          className={cn(
+                            "flex size-11 items-center justify-center rounded-2xl border",
+                            getColorClasses(collection.color),
+                          )}
+                        >
+                          <FolderOpen className="size-5" />
+                        </div>
+                        <div className="inline-flex items-center gap-1 rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                          <Clock3 className="size-3.5" />
+                          {formatRelativeDateLabel(collection.lastUpdatedAt)}
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <h3 className="text-lg font-semibold">{collection.name}</h3>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          {collection.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-5 flex items-center justify-between gap-3 text-sm">
+                        <span className="text-muted-foreground">
+                          {collection.itemCount} items
+                        </span>
+                        <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                          Open collection
+                          <ArrowUpRight className="size-4" />
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-semibold tracking-tight">
+                      Pinned items
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+                      Quick access to the items you pinned for daily work.
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Recent collections shown
-                    </p>
-                    <p className="mt-1 text-2xl font-semibold">
-                      {recentCollections.length}
-                    </p>
+                  <div className="hidden rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-muted-foreground sm:inline-flex">
+                    {pinnedItems.length} pinned
                   </div>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  {pinnedItems.map((item) => {
+                    const itemType = itemTypeById[item.typeId];
+                    const ItemTypeIcon = itemType ? itemTypeIcons[itemType.icon] : FileText;
+
+                    return (
+                      <article
+                        key={item.id}
+                        className="rounded-3xl border border-border/70 bg-background/70 p-5"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div
+                            className={cn(
+                              "flex size-11 items-center justify-center rounded-2xl border",
+                              getColorClasses(itemType?.color ?? "slate"),
+                            )}
+                          >
+                            <ItemTypeIcon className="size-5" />
+                          </div>
+                          <Pin className="size-4 text-muted-foreground" />
+                        </div>
+
+                        <div className="mt-4">
+                          <p className="text-sm font-medium text-muted-foreground">
+                            {itemType?.label ?? "Item"}
+                          </p>
+                          <h3 className="mt-1 text-lg font-semibold">{item.title}</h3>
+                          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                            {item.description}
+                          </p>
+                        </div>
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {item.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            </div>
+
+            <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold tracking-tight">
+                    Recent items
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+                    The 10 most recently updated resources across your workspace.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-muted-foreground">
+                  {recentItems.length} items shown
+                </div>
+              </div>
+
+              <div className="mt-6 overflow-hidden rounded-3xl border border-border/70">
+                <div className="divide-y divide-border/70 bg-background/70">
+                  {recentItems.map((item, index) => {
+                    const itemType = itemTypeById[item.typeId];
+                    const ItemTypeIcon = itemType ? itemTypeIcons[itemType.icon] : FileText;
+
+                    return (
+                      <article
+                        key={item.id}
+                        className="grid gap-4 px-4 py-4 sm:grid-cols-[auto_minmax(0,1.2fr)_minmax(0,0.9fr)_auto] sm:items-center sm:px-6"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 text-sm font-medium text-muted-foreground">
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+                          <div
+                            className={cn(
+                              "flex size-10 items-center justify-center rounded-2xl border",
+                              getColorClasses(itemType?.color ?? "slate"),
+                            )}
+                          >
+                            <ItemTypeIcon className="size-4" />
+                          </div>
+                        </div>
+
+                        <div className="min-w-0">
+                          <h3 className="truncate text-base font-semibold">{item.title}</h3>
+                          <p className="mt-1 truncate text-sm text-muted-foreground">
+                            {item.description}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {item.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="text-sm text-muted-foreground sm:text-right">
+                          {formatRelativeDateLabel(item.updatedAt)}
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               </div>
             </section>

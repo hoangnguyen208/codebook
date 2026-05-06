@@ -152,6 +152,17 @@ export const mockDashboardData: {
   ],
   items: [
     {
+      id: "item-dashboard-release-checklist",
+      title: "Dashboard Release Checklist",
+      description: "Final pre-ship checklist for the dashboard rollout and QA pass",
+      typeId: "type-note",
+      collectionId: "collection-context-files",
+      tags: ["release", "dashboard", "checklist"],
+      isFavorite: true,
+      isPinned: false,
+      updatedAt: "2026-01-16",
+    },
+    {
       id: "item-use-auth-hook",
       title: "useAuth Hook",
       description: "Custom authentication hook for React applications",
