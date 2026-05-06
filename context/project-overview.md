@@ -65,6 +65,8 @@ Examples:
 - React Patterns
 - Context Files
 - Python Snippets
+- C# Snippets
+- .NET Patterns
 
 ### C) Search
 
@@ -97,15 +99,15 @@ Full‑text search across:
 - Explain Code
 - Prompt optimization
 
-> AI powered by **OpenAI gpt-5-nano**
+> AI powered by **OpenAI GPT 5 nano**
 
 ---
 
-## 🗄️ Data Model (Rough Prisma Draft)
+## 🗄️ Data Model (Rough Entity Framework + SQL Server Draft)
 
 > This schema is a starting point and **will evolve**
 
-```prisma
+```Mapping schema typescript object to Entity Framework + SQL Server
 model User {
   id                   String   @id @default(cuid())
   email                String   @unique
@@ -201,18 +203,18 @@ model ItemTag {
 
 ## 🧱 Tech Stack
 
-| Category     | Choice                       |
-| ------------ | ---------------------------- |
-| Framework    | **Next.js (React 19)**       |
-| Language     | TypeScript                   |
-| Database     | Neon PostgreSQL + Prisma ORM |
-| Caching      | Redis (optional)             |
-| File Storage | Cloudflare R2                |
-| CSS/UI       | Tailwind CSS v4 + ShadCN     |
-| Auth         | NextAuth v5 (email + GitHub) |
-| AI           | OpenAI gpt-5-nano            |
-| Deployment   | Vercel (likely)              |
-| Monitoring   | Sentry (later)               |
+| Category     | Choice                               
+| ------------ | -----------------------------------------------------------------------------
+| Framework    | **Next.js (React 19)**, **.NET 10 ** 
+| Language     | TypeScript, C#                       
+| Database     | SQL Server + Entity Framework        
+| Caching      | Redis (optional)                     
+| File Storage | Cloudflare R2                        
+| CSS/UI       | Tailwind CSS v4 + ShadCN             
+| Auth         | Duende IdentityServer, integrate with Github, Google                          
+| AI           | OpenAI GPT 5 nano                    
+| Deployment   | Vercel (likely)                      
+| Monitoring   | Sentry (later)                       
 
 ---
 
@@ -252,11 +254,12 @@ model ItemTag {
 
 ```mermaid
 graph TD;
-  Client <--> Next.API
-  Next.API --> Postgres[(Neon DB)]
-  Next.API --> R2[(File Storage)]
-  Next.API --> OpenAI
-  Next.API --> Redis[(Cache)]
+  Client (NextJS) (Containerized) <--> .NET API (Containerized)
+  .NET API --> Duende IdentityServer (Containerized)
+  .NET API --> SQL Server (Entity Framework ORM) (Containerized)
+  .NET API --> R2[(File Storage)]
+  .NET API --> OpenAI
+  .NET API --> Redis[(Cache)] (Containerized)
 ```
 
 ---
@@ -266,9 +269,9 @@ graph TD;
 ```mermaid
 flowchart LR
   User --> Login
-  Login --> NextAuth
-  NextAuth --> Providers{Email / GitHub}
-  Providers --> Session
+  Login --> .NET API
+  .NET API --> Duende IdentityServer {Email, Github, Google}
+  Providers --> Session (JWT token + refresh token)
   Session --> AppAccess
 ```
 

@@ -1,5 +1,48 @@
 # Coding Standards
 
+## C# and .NET Usage
+- Use C# 10+ features when appropriate (e.g., record types, pattern matching, null-coalescing assignment).
+- Leverage built-in ASP.NET Core features and middleware.
+- Use Entity Framework Core effectively for database operations.
+- Write concise, idiomatic C# code with accurate examples.
+- Follow .NET and ASP.NET Core conventions and best practices.
+- Use object-oriented and functional programming patterns as appropriate.
+- Prefer LINQ and lambda expressions for collection operations.
+- Use descriptive variable and method names (e.g., 'IsUserSignedIn', 'CalculateTotal').
+- Structure files according to .NET conventions (Controllers, Models, Services, etc.).
+- Use PascalCase for class names, method names, and public members.
+- Use camelCase for local variables and private fields.
+- Use UPPERCASE for constants.
+- Prefix interface names with "I" (e.g., 'IUserService').
+- Follow the C# Coding Conventions (https://docs.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)
+- Use C#'s expressive syntax (e.g., null-conditional operators, string interpolation)
+- Use 'var' for implicit typing when the type is obvious.
+- Use exceptions for exceptional cases, not for control flow.
+- Implement proper error logging using built-in .NET logging or a third-party logger.
+- Use Data Annotations or Fluent Validation for model validation.
+- Implement global exception handling middleware.
+- Return appropriate HTTP status codes and consistent error responses.
+- Follow RESTful API design principles.
+- Use attribute routing in controllers.
+- Use action filters for cross-cutting concerns.
+- Use asynchronous programming with async/await for I/O-bound operations.
+- Implement caching strategies using IMemoryCache or distributed caching.
+- Use efficient LINQ queries and avoid N+1 query problems.
+- Implement pagination for large data sets.
+- Use Dependency Injection for loose coupling and testability.
+- Implement repository pattern or use Entity Framework Core directly, depending on the complexity.
+- Don't use AutoMapper for object-to-object mapping, manually mapping necessary fields by creating extension methods such as entity.ToDto() or dto.ToEntity().
+- Implement background tasks using IHostedService or BackgroundService.
+- Write unit tests using xUnit, NUnit, or MSTest.
+- Use Moq or NSubstitute for mocking dependencies.
+- Implement integration tests for API endpoints.
+- Use Authentication and Authorization middleware.
+- Implement JWT authentication for stateless API authentication.
+- Don't use HTTPS/SSL in development phase, only enable it until the final stage of deployment.
+- Implement proper CORS policies.
+- Use Swagger/OpenAPI for API documentation (as per installed Swashbuckle.AspNetCore package).
+- Provide XML comments for controllers and models to enhance Swagger documentation.
+
 ## TypeScript
 
 - Strict mode enabled
@@ -72,14 +115,14 @@ Example v4 configuration:
 
 ## Database
 
-- Use Prisma ORM for all database operations
-- Always use `prisma migrate dev` for schema changes (not `db push`)
-- Run `prisma migrate status` before committing to verify migrations are in sync
-- Production deployments must run `prisma migrate deploy` before the app starts
+- Use Entity Framework for database operations
+- Handle missing migrations as well as updating migrations for schema changes gracefully
+- Check status of migrations before committing to verify migrations are in sync
+- Production deployments must always check migrations status before the app starts
 
 ## Data Fetching
 
-- Server components fetch directly with Prisma
+- NextJS Server components fetch data from .NET API
 - Client components use Server Actions
 - Validate all inputs with Zod
 

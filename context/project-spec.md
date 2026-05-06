@@ -1,4 +1,4 @@
-## DevStash Project Specifications
+## CodeBook Project Specifications
 
 ## Problem (Core Idea)
 
@@ -10,10 +10,10 @@ Developers keep their essentials scattered:
 - Useful links in bookmarks
 - Docs in random folders
 - Commands in .txt files
-- Project templates in GitHu gists
+- Project templates in GitHub gists
 - Terminal commands in bash history
 
-This creates context switching, lost knowledge, and inconsistent workflows. DevStash provides ONE fast, searchable, AI-enhanced hub for all dev knowledge & resources.
+This creates context switching, lost knowledge, and inconsistent workflows. CodeBook provides ONE fast, searchable, AI-enhanced hub for all dev knowledge & resources.
 
 ## Users
 
@@ -30,7 +30,7 @@ This creates context switching, lost knowledge, and inconsistent workflows. DevS
   Collects patterns, boilerplates, API examples.
 
 ## Features
-Here is a list of features for DevStash.
+Here is a list of features for CodeBook.
 
 A. **Items/Item Types**
 Items can have types. Users will be able to create custom types, but we will start with the following system types that can not be changed:
@@ -56,6 +56,7 @@ Some examples may be:
 - React Patterns (snippets, notes)
 - Context Files (files)
 - Python Snippets (snippets)
+- .NET/C# Snippets (snippets)
 
 C. **Search**
 
@@ -94,7 +95,7 @@ F. **AI Features (Pro only)**
 
 This is a rough mockup of what the data will look like. This is not set in stone:
 
-**USER** (extends NextAuth)
+**USER** (extends Duende IdentityServer)
 
 - isPro (for paid users)
 - stripeCustomerId (for payments)
@@ -130,7 +131,7 @@ This is a rough mockup of what the data will look like. This is not set in stone
 **COLLECTION**
 
 - id
-- name ("React Hooks", "Prototype Prompts", "Context Files")
+- name ("React Hooks", "Prototype Prompts", "Context Files", "Entity Framework")
 - description (optional)
 - isFavorite
 - defaultTypeId (for new - collections with no items)
@@ -151,18 +152,19 @@ This is a rough mockup of what the data will look like. This is not set in stone
 
 ## Tech Stack
 
-- Framework Next.js 16 / React 19
+- UI Next.js 16 / React 19
 - SSR pages with dynamic components.
 - API routes for backend needs (storing items, file uploads, AI calls)
 - One codebase/repo for less overhead
 - TypeScript for type safety
+- .NET 10
 
-**Database & ORM Neon**
-PostgreSQL & Prisma
+**Database & ORM Entity Framework**
+SQL Server + Entity Framework
 
-- Database in the cloud
-- Prisma ORM for database connection and interaction
-- Prisma 7 latest (Fetch latest docs)
+- Database is containerized in Docker
+- Entity Framework ORM for database connection and interaction
+- Entity Framework latest (Fetch latest docs)
 - Redis for caching (Maybe)
 - File Storage Cloudflare R2 for file uploads
 - Authentication Next-Auth v5
@@ -171,7 +173,7 @@ PostgreSQL & Prisma
 - IMPORTANT: NEVER use db push or directly update db structure. We will create migrations that will be run in dev and then in prod.
 
 **AI Integration**
-OpenAI gpt-5-nano model
+OpenAI GPT 5.4 model
 
 **CSS Frameworks**
 Tailwind CSS v4 with ShadCN UI
