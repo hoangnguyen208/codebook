@@ -56,7 +56,7 @@ public class UsersController : ControllerBase
         {
             Id = Guid.NewGuid().ToString(),
             Email = request.Email,
-            Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            Password = PasswordHashing.HashPassword(request.Password),
             IsPro = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

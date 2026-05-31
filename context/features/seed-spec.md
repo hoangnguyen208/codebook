@@ -10,7 +10,7 @@ Create a class for seeding data to populate the database with sample data for de
 
 - **Email:** demo@codebook.io
 - **Name:** Demo User
-- **Password:** 12345678 (hash with bcryptjs, 12 rounds)
+- **Password:** 12345678 (remember to hash in a secured way, not storing plain text of password)
 - **isPro:** false
 - **emailVerified:** current date
 

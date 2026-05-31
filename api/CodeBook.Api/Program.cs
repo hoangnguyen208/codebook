@@ -3,11 +3,15 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
+}
+
 // Add services
 builder.Services.AddDbContext<CodeBookDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-        ?? "Server=sqlserver;Database=CodeBookDb;User Id=sa;Password=YourPassword123!;TrustServerCertificate=true;";
     options.UseSqlServer(connectionString);
 });
 
@@ -39,6 +43,7 @@ while (retryCount < maxRetries)
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<CodeBookDbContext>();
             dbContext.Database.Migrate();
+            DatabaseSeeder.SeedAsync(dbContext).GetAwaiter().GetResult();
             break;
         }
     }

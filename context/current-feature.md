@@ -6,18 +6,18 @@ Database Seeding
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+Completed
 
 ## Goals
 
 <!-- Goals & requirements -->
 
-- ⬜ Create a `DatabaseSeeder` class in `api/CodeBook.Api/Data/` that seeds demo data on startup
-- ⬜ Guard against re-seeding: skip if data already exists (idempotent)
-- ⬜ Run seeding only after all EF migrations have been applied
-- ⬜ Seed a demo user (`demo@codebook.io`, password `12345678` hashed with BCrypt 12 rounds)
-- ⬜ Seed all 7 system item types (snippet, prompt, command, note, file, image, link)
-- ⬜ Seed 5 collections with items as per `@context/features/seed-spec.md`
+- ✅ Create a `DatabaseSeeder` class in `api/CodeBook.Api/Data/` that seeds demo data on startup
+- ✅ Guard against re-seeding: skip if data already exists (idempotent)
+- ✅ Run seeding only after all EF migrations have been applied
+- ✅ Seed a demo user (`demo@codebook.io`, password `12345678` hashed with BCrypt 12 rounds)
+- ✅ Seed all 7 system item types (snippet, prompt, command, note, file, image, link)
+- ✅ Seed 5 collections with items as per `@context/features/seed-spec.md`
 
 ## Notes
 
@@ -69,3 +69,4 @@ Not Started
 - **Backend Setup Phase 1**: Created .NET 10 API with Entity Framework Core, SQL Server integration, Entity Framework models, initial migration, Docker containers, and docker-compose.yml for service orchestration
 - **Backend Cleanup**: Removed Duende IdentityServer; project now focuses on data migrations and core API with SQL Server + EF Core
 - **Database Seeding**: Added seed spec and updated current feature to implement `DatabaseSeeder` for demo data
+- **Database Seeding Implementation**: Added runtime seeding after migrations with idempotent checks; seeded 1 demo user, 7 system item types, 5 collections, and 18 sample items
