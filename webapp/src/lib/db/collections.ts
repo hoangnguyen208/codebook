@@ -7,6 +7,7 @@ export type DashboardRecentCollection = {
   itemCount: number;
   lastUpdatedAt: string | null;
   dominantColor: string;
+  isFavorite: boolean;
   typeIcons: string[];
 };
 
@@ -17,6 +18,7 @@ type DashboardRecentCollectionApiDto = {
   itemCount: number;
   lastUpdatedAt: string;
   dominantColor: string;
+  isFavorite: boolean;
   typeIcons: string[];
 };
 
@@ -85,6 +87,7 @@ export async function getRecentDashboardCollections(
     itemCount: collection.itemCount,
     lastUpdatedAt: toDateLabel(collection.lastUpdatedAt),
     dominantColor: collection.dominantColor,
+    isFavorite: collection.isFavorite,
     typeIcons: [...new Set(collection.typeIcons.map(normalizeIconName))],
   }));
 }

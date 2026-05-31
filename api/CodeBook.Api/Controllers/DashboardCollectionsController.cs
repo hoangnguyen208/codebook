@@ -19,7 +19,7 @@ public class DashboardCollectionsController : ControllerBase
     public async Task<ActionResult<IEnumerable<RecentDashboardCollectionDto>>> GetRecentCollections(
         [FromQuery] int limit = 6)
     {
-        var safeLimit = Math.Clamp(limit, 1, 20);
+        var safeLimit = Math.Clamp(limit, 1, 100);
 
         var baseCollections = await _dbContext.Collections
             .Select(collection => new
@@ -30,7 +30,8 @@ public class DashboardCollectionsController : ControllerBase
                 ItemCount = collection.Items.Count,
                 LastUpdatedAt = collection.Items
                     .Select(item => (DateTime?)item.UpdatedAt)
-                    .Max() ?? collection.UpdatedAt
+                    .Max() ?? collection.UpdatedAt,
+                collection.IsFavorite
             })
             .OrderByDescending(collection => collection.LastUpdatedAt)
             .Take(safeLimit)
@@ -82,6 +83,7 @@ public class DashboardCollectionsController : ControllerBase
                 ItemCount = collection.ItemCount,
                 LastUpdatedAt = collection.LastUpdatedAt,
                 DominantColor = dominantColor,
+                IsFavorite = collection.IsFavorite,
                 TypeIcons = orderedTypeStats
                     .Select(stat => stat.Icon)
                     .Where(icon => !string.IsNullOrWhiteSpace(icon))
@@ -139,5 +141,6 @@ public class RecentDashboardCollectionDto
     public int ItemCount { get; set; }
     public DateTime LastUpdatedAt { get; set; }
     public string DominantColor { get; set; } = "slate";
+    public bool IsFavorite { get; set; }
     public List<string> TypeIcons { get; set; } = [];
 }

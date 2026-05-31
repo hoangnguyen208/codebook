@@ -1,6 +1,6 @@
 # Current Feature
 
-Dashboard Collections Data Integration
+Dashboard Items Data Integration
 
 ## Status
 
@@ -12,28 +12,28 @@ Completed
 
 <!-- Goals & requirements -->
 
-- ✅ Create `src/lib/db/collections.ts` with collection data-fetching functions
-- ✅ Fetch recent collections directly in the dashboard server component (replace mock data)
-- ✅ Derive each collection card border color from its most-used content type
-- ✅ Show small icons for all content types present in each collection
-- ✅ Keep current dashboard card layout/design consistent with existing UI
-- ✅ Update collection stats display with real database-backed values
+- Create `src/lib/db/items.ts` with item data-fetching functions
+- Fetch pinned and recent items directly in the dashboard server component
+- Derive each item card icon and border from its item type
+- Display item type tags and the existing item metadata
+- Keep the current dashboard main-area layout/design consistent with the existing UI
+- Update the stats display with real database-backed values
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Replace dashboard main-area collection cards (currently mock-based) with SQL-backed data while preserving the current visual design and layout.
+Replace dashboard main-area item cards (currently mock-based) with database-backed data while preserving the current visual design and layout.
 
 **Implementation notes:**
-- Scope is the right-side main dashboard area collections section only
-- Do not add collection items under cards yet
-- Keep the current 6-card recent collections presentation
-- Use collection content composition to compute border color (most-used type)
-- Render type indicator icons per collection based on existing type metadata/icon names
+- Scope is the right-side main dashboard area items section only
+- Do not add item lists under cards yet
+- Keep the current pinned and recent item presentation
+- Use item type metadata to compute border styling and icons
+- If there are no pinned items, nothing should display there
 
 **References:**
-- Feature spec: `@context/features/dashboard-collections-spec.md`
+- Feature spec: `@context/features/dashboard-items-spec.md`
 - Screenshot reference: `@context/screenshots/dashboard-ui-main.png`
 - Existing mock source to replace: `@src/lib/mock-data.ts`
 - Follow `@context/coding-standards.md` for TypeScript/Next.js conventions
@@ -52,5 +52,7 @@ Replace dashboard main-area collection cards (currently mock-based) with SQL-bac
 - **Backend Cleanup**: Removed Duende IdentityServer; project now focuses on data migrations and core API with SQL Server + EF Core
 - **Database Seeding**: Added seed spec and updated current feature to implement `DatabaseSeeder` for demo data
 - **Database Seeding Implementation**: Added runtime seeding after migrations with idempotent checks; seeded 1 demo user, 7 system item types, 5 collections, and 18 sample items
-- **Dashboard Collections Data Integration**: Started replacing dashboard collection cards from mock data to SQL-backed data
-- **Dashboard Collections Data Integration Implementation**: Added API-backed recent collections endpoint and wired dashboard cards to live SQL-derived data with dominant-type border colors and type icons
+- **Dashboard Collections Data Integration**: Started replacing dashboard collection cards from mock data to .NET/EF-backed data
+- **Dashboard Collections Data Integration Implementation**: Added API-backed recent collections endpoint and wired dashboard cards to live .NET/EF-derived data with dominant-type border colors and type icons
+- **Dashboard Items Data Integration**: Updated current feature to replace the dashboard's pinned/recent item cards with .NET/EF-backed data
+- **Dashboard Items Data Integration Implementation**: Added live dashboard items endpoint/fetcher, wired dashboard cards and stats to database-backed data, and hid the pinned section when empty

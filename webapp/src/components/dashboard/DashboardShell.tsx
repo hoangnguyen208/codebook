@@ -68,6 +68,7 @@ type DashboardRecentCollection = {
   itemCount: number;
   lastUpdatedAt: string | null;
   dominantColor: string;
+  isFavorite: boolean;
   typeIcons: string[];
 };
 
@@ -408,7 +409,7 @@ export function DashboardShell({
       name: collection.name,
       description: collection.description,
       color: collection.dominantColor,
-      isFavorite: false,
+      isFavorite: collection.isFavorite,
       itemCount: collection.itemCount,
       lastUpdatedAt: collection.lastUpdatedAt,
       dominantColor: collection.dominantColor,
@@ -660,68 +661,70 @@ export function DashboardShell({
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-2xl font-semibold tracking-tight">
-                      Pinned items
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
-                      Quick access to the items you pinned for daily work.
-                    </p>
+              {pinnedItems.length > 0 ? (
+                <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-2xl font-semibold tracking-tight">
+                        Pinned items
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+                        Quick access to the items you pinned for daily work.
+                      </p>
+                    </div>
+                    <div className="hidden rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-muted-foreground sm:inline-flex">
+                      {pinnedItems.length} pinned
+                    </div>
                   </div>
-                  <div className="hidden rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-muted-foreground sm:inline-flex">
-                    {pinnedItems.length} pinned
-                  </div>
-                </div>
 
-                <div className="mt-6 space-y-4">
-                  {pinnedItems.map((item) => {
-                    const itemType = itemTypeById[item.typeId];
-                    const ItemTypeIcon = itemType ? itemTypeIcons[itemType.icon] : FileText;
+                  <div className="mt-6 space-y-4">
+                    {pinnedItems.map((item) => {
+                      const itemType = itemTypeById[item.typeId];
+                      const ItemTypeIcon = itemType ? itemTypeIcons[itemType.icon] : FileText;
 
-                    return (
-                      <article
-                        key={item.id}
-                        className="rounded-3xl border border-border/70 bg-background/70 p-5"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div
-                            className={cn(
-                              "flex size-11 items-center justify-center rounded-2xl border",
-                              getColorClasses(itemType?.color ?? "slate"),
-                            )}
-                          >
-                            <ItemTypeIcon className="size-5" />
-                          </div>
-                          <Pin className="size-4 text-muted-foreground" />
-                        </div>
-
-                        <div className="mt-4">
-                          <p className="text-sm font-medium text-muted-foreground">
-                            {itemType?.label ?? "Item"}
-                          </p>
-                          <h3 className="mt-1 text-lg font-semibold">{item.title}</h3>
-                          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                            {item.description}
-                          </p>
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {item.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                      return (
+                        <article
+                          key={item.id}
+                          className="rounded-3xl border border-border/70 bg-background/70 p-5"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div
+                              className={cn(
+                                "flex size-11 items-center justify-center rounded-2xl border",
+                                getColorClasses(itemType?.color ?? "slate"),
+                              )}
                             >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
+                              <ItemTypeIcon className="size-5" />
+                            </div>
+                            <Pin className="size-4 text-muted-foreground" />
+                          </div>
+
+                          <div className="mt-4">
+                            <p className="text-sm font-medium text-muted-foreground">
+                              {itemType?.label ?? "Item"}
+                            </p>
+                            <h3 className="mt-1 text-lg font-semibold">{item.title}</h3>
+                            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                              {item.description}
+                            </p>
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {item.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
             </div>
 
             <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
