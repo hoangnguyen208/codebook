@@ -44,9 +44,9 @@ public static class DatabaseSeeder
 
         var collections = new[]
         {
-            CreateCollection(demoUser.Id, "React Patterns", "Reusable React patterns and hooks", now),
+            CreateCollection(demoUser.Id, "React Patterns", "Reusable React patterns and hooks", now, isFavorite: true),
             CreateCollection(demoUser.Id, "AI Workflows", "AI prompts and workflow automations", now),
-            CreateCollection(demoUser.Id, "DevOps", "Infrastructure and deployment resources", now),
+            CreateCollection(demoUser.Id, "DevOps", "Infrastructure and deployment resources", now, isFavorite: true),
             CreateCollection(demoUser.Id, "Terminal Commands", "Useful shell commands for everyday development", now),
             CreateCollection(demoUser.Id, "Design Resources", "UI/UX resources and references", now)
         };
@@ -63,7 +63,9 @@ public static class DatabaseSeeder
                 "useDebounce Hook",
                 "export function useDebounce<T>(value: T, delay = 300) {\n  const [debounced, setDebounced] = useState(value);\n  useEffect(() => {\n    const id = setTimeout(() => setDebounced(value), delay);\n    return () => clearTimeout(id);\n  }, [value, delay]);\n  return debounced;\n}",
                 "typescript",
-                now),
+                now,
+                isFavorite: true,
+                isPinned: true),
             CreateTextItem(
                 demoUser.Id,
                 typesByName["snippet"].Id,
@@ -123,7 +125,9 @@ public static class DatabaseSeeder
                 "Docker Compose Deploy",
                 "docker compose pull && docker compose up -d --remove-orphans",
                 "bash",
-                now),
+                now,
+                isFavorite: true,
+                isPinned: true),
             CreateLinkItem(
                 demoUser.Id,
                 typesByName["link"].Id,
@@ -180,7 +184,8 @@ public static class DatabaseSeeder
                 collectionsByName["Design Resources"].Id,
                 "Tailwind CSS",
                 "https://tailwindcss.com/docs",
-                now),
+                now,
+                isFavorite: true),
             CreateLinkItem(
                 demoUser.Id,
                 typesByName["link"].Id,
@@ -221,13 +226,18 @@ public static class DatabaseSeeder
         IsSystem = true
     };
 
-    private static Collection CreateCollection(string userId, string name, string description, DateTime now) => new()
+    private static Collection CreateCollection(
+        string userId,
+        string name,
+        string description,
+        DateTime now,
+        bool isFavorite = false) => new()
     {
         Id = Guid.NewGuid().ToString(),
         UserId = userId,
         Name = name,
         Description = description,
-        IsFavorite = false,
+        IsFavorite = isFavorite,
         CreatedAt = now,
         UpdatedAt = now
     };
@@ -239,15 +249,17 @@ public static class DatabaseSeeder
         string title,
         string content,
         string? language,
-        DateTime now) => new()
+        DateTime now,
+        bool isFavorite = false,
+        bool isPinned = false) => new()
     {
         Id = Guid.NewGuid().ToString(),
         Title = title,
         ContentType = "text",
         Content = content,
         Language = language,
-        IsFavorite = false,
-        IsPinned = false,
+        IsFavorite = isFavorite,
+        IsPinned = isPinned,
         UserId = userId,
         TypeId = typeId,
         CollectionId = collectionId,
@@ -261,15 +273,17 @@ public static class DatabaseSeeder
         string collectionId,
         string title,
         string url,
-        DateTime now) => new()
+        DateTime now,
+        bool isFavorite = false,
+        bool isPinned = false) => new()
     {
         Id = Guid.NewGuid().ToString(),
         Title = title,
         ContentType = "text",
         Url = url,
         Description = url,
-        IsFavorite = false,
-        IsPinned = false,
+        IsFavorite = isFavorite,
+        IsPinned = isPinned,
         UserId = userId,
         TypeId = typeId,
         CollectionId = collectionId,

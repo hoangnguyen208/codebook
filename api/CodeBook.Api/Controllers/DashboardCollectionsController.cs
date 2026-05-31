@@ -15,13 +15,28 @@ public class DashboardCollectionsController : ControllerBase
         _dbContext = dbContext;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<RecentDashboardCollectionDto>>> GetCollections(
+        [FromQuery] int limit = 100)
+    {
+        var safeLimit = Math.Clamp(limit, 1, 500);
+        var response = await BuildCollectionDtosAsync(safeLimit);
+        return Ok(response);
+    }
+
     [HttpGet("recent")]
     public async Task<ActionResult<IEnumerable<RecentDashboardCollectionDto>>> GetRecentCollections(
         [FromQuery] int limit = 6)
     {
         var safeLimit = Math.Clamp(limit, 1, 100);
+        var response = await BuildCollectionDtosAsync(safeLimit);
+        return Ok(response);
+    }
 
+    private async Task<List<RecentDashboardCollectionDto>> BuildCollectionDtosAsync(int safeLimit)
+    {
         var baseCollections = await _dbContext.Collections
+            .AsNoTracking()
             .Select(collection => new
             {
                 collection.Id,
@@ -90,9 +105,9 @@ public class DashboardCollectionsController : ControllerBase
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList()!
             };
-        });
+        }).ToList();
 
-        return Ok(response);
+        return response;
     }
 
     private static string MapTypeColorToken(string? typeName, string? typeColor)

@@ -67,14 +67,34 @@ function toDateLabel(value: string) {
 export async function getRecentDashboardCollections(
   limit = 6,
 ): Promise<DashboardRecentCollection[]> {
+  const response = await fetchDashboardCollections(
+    `/api/dashboard/collections/recent?limit=${limit}`,
+  );
+
+  return response;
+}
+
+export async function getDashboardCollections(
+  limit = 100,
+): Promise<DashboardRecentCollection[]> {
+  const response = await fetchDashboardCollections(
+    `/api/dashboard/collections?limit=${limit}`,
+  );
+
+  return response;
+}
+
+async function fetchDashboardCollections(
+  path: string,
+): Promise<DashboardRecentCollection[]> {
   const response = await fetch(
-    `${getApiBaseUrl()}/api/dashboard/collections/recent?limit=${limit}`,
+    `${getApiBaseUrl()}${path}`,
     { cache: "no-store" },
   );
 
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch recent dashboard collections: ${response.status}`,
+      `Failed to fetch dashboard collections: ${response.status}`,
     );
   }
 
