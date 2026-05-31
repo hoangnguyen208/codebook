@@ -1,6 +1,6 @@
 # Current Feature
 
-Database Seeding
+Dashboard Collections Data Integration
 
 ## Status
 
@@ -12,49 +12,31 @@ Completed
 
 <!-- Goals & requirements -->
 
-- ✅ Create a `DatabaseSeeder` class in `api/CodeBook.Api/Data/` that seeds demo data on startup
-- ✅ Guard against re-seeding: skip if data already exists (idempotent)
-- ✅ Run seeding only after all EF migrations have been applied
-- ✅ Seed a demo user (`demo@codebook.io`, password `12345678` hashed with BCrypt 12 rounds)
-- ✅ Seed all 7 system item types (snippet, prompt, command, note, file, image, link)
-- ✅ Seed 5 collections with items as per `@context/features/seed-spec.md`
+- ✅ Create `src/lib/db/collections.ts` with collection data-fetching functions
+- ✅ Fetch recent collections directly in the dashboard server component (replace mock data)
+- ✅ Derive each collection card border color from its most-used content type
+- ✅ Show small icons for all content types present in each collection
+- ✅ Keep current dashboard card layout/design consistent with existing UI
+- ✅ Update collection stats display with real database-backed values
 
 ## Notes
 
 <!-- Any extra notes -->
 
-**Seed data summary** (see `@context/features/seed-spec.md` for full details):
-
-- **User:** `demo@codebook.io` / `12345678` (BCrypt, 12 rounds), `isPro: false`
-- **System Item Types** (`isSystem: true`):
-  | Name    | Icon       | Color   |
-  | ------- | ---------- | ------- |
-  | snippet | Code       | #3b82f6 |
-  | prompt  | Sparkles   | #8b5cf6 |
-  | command | Terminal   | #f97316 |
-  | note    | StickyNote | #fde047 |
-  | file    | File       | #6b7280 |
-  | image   | Image      | #ec4899 |
-  | link    | Link       | #10b981 |
-
-- **Collections & Items:**
-  - **React Patterns** — 3 TypeScript snippets (useDebounce, Context providers, utility functions)
-  - **AI Workflows** — 3 prompts (code review, docs generation, refactoring)
-  - **DevOps** — 1 snippet (Docker/CI config), 1 command (deployment), 2 links (real URLs)
-  - **Terminal Commands** — 4 commands (git, docker, process mgmt, package manager)
-  - **Design Resources** — 4 links (Tailwind, component libs, design systems, icon libraries — real URLs)
+Replace dashboard main-area collection cards (currently mock-based) with SQL-backed data while preserving the current visual design and layout.
 
 **Implementation notes:**
-- Add `DatabaseSeeder.cs` to `api/CodeBook.Api/Data/`
-- Call seeder from `Program.cs` after the migration retry block
-- Use BCrypt work factor 12 for password hashing
-- Icon values are Lucide React component names (for frontend rendering)
+- Scope is the right-side main dashboard area collections section only
+- Do not add collection items under cards yet
+- Keep the current 6-card recent collections presentation
+- Use collection content composition to compute border color (most-used type)
+- Render type indicator icons per collection based on existing type metadata/icon names
 
 **References:**
-- Seed spec: `@context/features/seed-spec.md`
-- EF models: `api/CodeBook.Api/Models/`
-- DbContext: `api/CodeBook.Api/Data/CodeBookDbContext.cs`
-- Follow `@context/coding-standards.md` for C# conventions
+- Feature spec: `@context/features/dashboard-collections-spec.md`
+- Screenshot reference: `@context/screenshots/dashboard-ui-main.png`
+- Existing mock source to replace: `@src/lib/mock-data.ts`
+- Follow `@context/coding-standards.md` for TypeScript/Next.js conventions
 
 ## History
 
@@ -70,3 +52,5 @@ Completed
 - **Backend Cleanup**: Removed Duende IdentityServer; project now focuses on data migrations and core API with SQL Server + EF Core
 - **Database Seeding**: Added seed spec and updated current feature to implement `DatabaseSeeder` for demo data
 - **Database Seeding Implementation**: Added runtime seeding after migrations with idempotent checks; seeded 1 demo user, 7 system item types, 5 collections, and 18 sample items
+- **Dashboard Collections Data Integration**: Started replacing dashboard collection cards from mock data to SQL-backed data
+- **Dashboard Collections Data Integration Implementation**: Added API-backed recent collections endpoint and wired dashboard cards to live SQL-derived data with dominant-type border colors and type icons

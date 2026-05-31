@@ -44,11 +44,14 @@ type DashboardShellProps = {
     collections: MockCollection[];
     items: MockItem[];
   };
+  recentCollectionsOverride?: DashboardRecentCollection[];
 };
 
 type CollectionSummary = MockCollection & {
   itemCount: number;
   lastUpdatedAt: string | null;
+  dominantColor?: string;
+  typeIcons?: string[];
 };
 
 type DashboardStat = {
@@ -56,6 +59,16 @@ type DashboardStat = {
   value: number;
   description: string;
   icon: LucideIcon;
+};
+
+type DashboardRecentCollection = {
+  id: string;
+  name: string;
+  description: string;
+  itemCount: number;
+  lastUpdatedAt: string | null;
+  dominantColor: string;
+  typeIcons: string[];
 };
 
 const itemTypeIcons: Record<MockItemType["icon"], LucideIcon> = {
@@ -80,6 +93,24 @@ const colorClasses: Record<string, string> = {
 
 function getColorClasses(color: string) {
   return colorClasses[color] ?? "border-border bg-muted text-muted-foreground";
+}
+
+function getBorderColorClasses(color: string) {
+  const borderClasses: Record<string, string> = {
+    blue: "border-blue-500/40",
+    purple: "border-purple-500/40",
+    orange: "border-orange-500/40",
+    yellow: "border-yellow-500/40",
+    slate: "border-slate-500/40",
+    pink: "border-pink-500/40",
+    emerald: "border-emerald-500/40",
+  };
+
+  return borderClasses[color] ?? "border-border/70";
+}
+
+function getItemTypeIcon(iconName: string) {
+  return itemTypeIcons[iconName as keyof typeof itemTypeIcons] ?? FileText;
 }
 
 function formatPlanLabel(plan: MockUser["plan"]) {
@@ -313,7 +344,10 @@ function DashboardSidebar({
   );
 }
 
-export function DashboardShell({ data }: DashboardShellProps) {
+export function DashboardShell({
+  data,
+  recentCollectionsOverride,
+}: DashboardShellProps) {
   const pathname = usePathname();
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -359,6 +393,28 @@ export function DashboardShell({ data }: DashboardShellProps) {
         .slice(0, 4),
     [collectionSummaries],
   );
+
+  const mainRecentCollections = useMemo<CollectionSummary[]>(() => {
+    if (!recentCollectionsOverride) {
+      return [...collectionSummaries]
+        .sort((left, right) =>
+          (right.lastUpdatedAt ?? "").localeCompare(left.lastUpdatedAt ?? ""),
+        )
+        .slice(0, 6);
+    }
+
+    return recentCollectionsOverride.map((collection) => ({
+      id: collection.id,
+      name: collection.name,
+      description: collection.description,
+      color: collection.dominantColor,
+      isFavorite: false,
+      itemCount: collection.itemCount,
+      lastUpdatedAt: collection.lastUpdatedAt,
+      dominantColor: collection.dominantColor,
+      typeIcons: collection.typeIcons,
+    }));
+  }, [collectionSummaries, recentCollectionsOverride]);
 
   const recentItems = useMemo(
     () =>
@@ -538,21 +594,24 @@ export function DashboardShell({ data }: DashboardShellProps) {
                     </p>
                   </div>
                   <div className="hidden rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-muted-foreground sm:inline-flex">
-                    {recentCollections.length} visible
+                    {mainRecentCollections.length} visible
                   </div>
                 </div>
 
                 <div className="mt-6 grid gap-4 lg:grid-cols-2">
-                  {recentCollections.map((collection) => (
+                  {mainRecentCollections.map((collection) => (
                     <article
                       key={collection.id}
-                      className="rounded-3xl border border-border/70 bg-background/70 p-5"
+                      className={cn(
+                        "rounded-3xl border bg-background/70 p-5",
+                        getBorderColorClasses(collection.dominantColor ?? collection.color),
+                      )}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div
                           className={cn(
                             "flex size-11 items-center justify-center rounded-2xl border",
-                            getColorClasses(collection.color),
+                            getColorClasses(collection.dominantColor ?? collection.color),
                           )}
                         >
                           <FolderOpen className="size-5" />
@@ -571,9 +630,26 @@ export function DashboardShell({ data }: DashboardShellProps) {
                       </div>
 
                       <div className="mt-5 flex items-center justify-between gap-3 text-sm">
-                        <span className="text-muted-foreground">
-                          {collection.itemCount} items
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-muted-foreground">
+                            {collection.itemCount} items
+                          </span>
+                          {collection.typeIcons && collection.typeIcons.length > 0 ? (
+                            <div className="inline-flex items-center gap-1">
+                              {collection.typeIcons.map((iconName) => {
+                                const Icon = getItemTypeIcon(iconName);
+                                return (
+                                  <span
+                                    key={`${collection.id}-${iconName}`}
+                                    className="inline-flex size-6 items-center justify-center rounded-full border border-border/70 text-muted-foreground"
+                                  >
+                                    <Icon className="size-3.5" />
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          ) : null}
+                        </div>
                         <span className="inline-flex items-center gap-1 font-medium text-foreground">
                           Open collection
                           <ArrowUpRight className="size-4" />
