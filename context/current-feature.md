@@ -1,6 +1,6 @@
 # Current Feature
 
-Dashboard Items Data Integration
+Stats & Sidebar
 
 ## Status
 
@@ -12,30 +12,30 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Create `src/lib/db/items.ts` with item data-fetching functions
-- Fetch pinned and recent items directly in the dashboard server component
-- Derive each item card icon and border from its item type
-- Display item type tags and the existing item metadata
-- Keep the current dashboard main-area layout/design consistent with the existing UI
-- Update the stats display with real database-backed values
+- Display stats from database-backed data while keeping the current design/layout
+- Display system item types in the sidebar with icons, linking to `/items/[typename]`
+- Display actual collection data from the database in the sidebar
+- Add a "View all collections" link under the collections list that links to `/collections`
+- Keep star icons for favorite collections
+- For recent collections, show a colored circle based on the most-used item type in each collection
+- Create `src/lib/db/items.ts` and add database functions (using `src/lib/db/collections.ts` as reference)
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Replace dashboard main-area item cards (currently mock-based) with database-backed data while preserving the current visual design and layout.
+Replace remaining mock-driven stats/sidebar data with database-backed data while preserving current visual design and layout.
 
 **Implementation notes:**
-- Scope is the right-side main dashboard area items section only
-- Do not add item lists under cards yet
-- Keep the current pinned and recent item presentation
-- Use item type metadata to compute border styling and icons
-- If there are no pinned items, nothing should display there
+- Scope includes dashboard main-area stats and sidebar item types/collections sections
+- Sidebar should use live item types and collection data
+- Keep existing visual structure/components unless required by the feature
+- Maintain current favorite vs recent collection behavior with required icon updates
 
 **References:**
-- Feature spec: `@context/features/dashboard-items-spec.md`
-- Screenshot reference: `@context/screenshots/dashboard-ui-main.png`
+- Feature spec: `@context/features/stats-sidebar-spec.md`
 - Existing mock source to replace: `@src/lib/mock-data.ts`
+- Reference implementation: `@src/lib/db/collections.ts`
 - Follow `@context/coding-standards.md` for TypeScript/Next.js conventions
 
 ## History
@@ -56,3 +56,5 @@ Replace dashboard main-area item cards (currently mock-based) with database-back
 - **Dashboard Collections Data Integration Implementation**: Added API-backed recent collections endpoint and wired dashboard cards to live .NET/EF-derived data with dominant-type border colors and type icons
 - **Dashboard Items Data Integration**: Updated current feature to replace the dashboard's pinned/recent item cards with .NET/EF-backed data
 - **Dashboard Items Data Integration Implementation**: Added live dashboard items endpoint/fetcher, wired dashboard cards and stats to database-backed data, and hid the pinned section when empty
+- **Stats & Sidebar**: Updated current feature to implement stats/sidebar database integration from `stats-sidebar-spec.md`
+- **Stats & Sidebar Implementation**: Added API-backed system item types + full collections endpoints, switched dashboard stats/sidebar from mock data to DB-backed data, and added sidebar "View all collections" link

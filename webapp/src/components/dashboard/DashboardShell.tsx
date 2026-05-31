@@ -30,24 +30,55 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type {
-  MockCollection,
-  MockItem,
-  MockItemType,
-  MockUser,
-} from "@/lib/mock-data";
+
+type DashboardUser = {
+  id: string;
+  name: string;
+  email: string;
+  avatarLabel: string;
+  plan: "free" | "pro";
+};
+
+type DashboardItemType = {
+  id: string;
+  name: string;
+  label: string;
+  icon: "code" | "sparkles" | "terminal" | "file-text" | "file" | "image" | "link";
+  color: string;
+  isSystem: boolean;
+};
+
+type DashboardCollection = {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  isFavorite: boolean;
+};
+
+type DashboardItem = {
+  id: string;
+  title: string;
+  description: string;
+  typeId: string;
+  collectionId: string;
+  tags: string[];
+  isFavorite: boolean;
+  isPinned: boolean;
+  updatedAt: string;
+};
 
 type DashboardShellProps = {
   data: {
-    user: MockUser;
-    itemTypes: MockItemType[];
-    collections: MockCollection[];
-    items: MockItem[];
+    user: DashboardUser;
+    itemTypes: DashboardItemType[];
+    collections: DashboardCollection[];
+    items: DashboardItem[];
   };
   recentCollectionsOverride?: DashboardRecentCollection[];
 };
 
-type CollectionSummary = MockCollection & {
+type CollectionSummary = DashboardCollection & {
   itemCount: number;
   lastUpdatedAt: string | null;
   dominantColor?: string;
@@ -72,7 +103,7 @@ type DashboardRecentCollection = {
   typeIcons: string[];
 };
 
-const itemTypeIcons: Record<MockItemType["icon"], LucideIcon> = {
+const itemTypeIcons: Record<DashboardItemType["icon"], LucideIcon> = {
   code: Code2,
   sparkles: Sparkles,
   terminal: Terminal,
@@ -114,7 +145,21 @@ function getItemTypeIcon(iconName: string) {
   return itemTypeIcons[iconName as keyof typeof itemTypeIcons] ?? FileText;
 }
 
-function formatPlanLabel(plan: MockUser["plan"]) {
+function getDotColorClass(color: string) {
+  const dotClasses: Record<string, string> = {
+    blue: "bg-blue-400",
+    purple: "bg-purple-400",
+    orange: "bg-orange-400",
+    yellow: "bg-yellow-400",
+    slate: "bg-slate-400",
+    pink: "bg-pink-400",
+    emerald: "bg-emerald-400",
+  };
+
+  return dotClasses[color] ?? "bg-muted-foreground";
+}
+
+function formatPlanLabel(plan: DashboardUser["plan"]) {
   return plan === "pro" ? "Pro plan" : "Free plan";
 }
 
@@ -172,11 +217,11 @@ function DashboardSidebar({
   isExpanded,
   onNavigate,
 }: {
-  itemTypes: MockItemType[];
+  itemTypes: DashboardItemType[];
   itemCountByType: Record<string, number>;
   favoriteCollections: CollectionSummary[];
   recentCollections: CollectionSummary[];
-  user: MockUser;
+  user: DashboardUser;
   pathname: string;
   isExpanded: boolean;
   onNavigate?: () => void;
@@ -263,7 +308,7 @@ function DashboardSidebar({
                     <span
                       className={cn(
                         "flex size-9 shrink-0 items-center justify-center rounded-xl border",
-                        getColorClasses(collection.color),
+                        getColorClasses(collection.dominantColor ?? collection.color),
                       )}
                     >
                       <FolderOpen className="size-4" />
@@ -294,12 +339,10 @@ function DashboardSidebar({
                   >
                     <span
                       className={cn(
-                        "flex size-9 shrink-0 items-center justify-center rounded-xl border",
-                        getColorClasses(collection.color),
+                        "size-2.5 shrink-0 rounded-full",
+                        getDotColorClass(collection.dominantColor ?? collection.color),
                       )}
-                    >
-                      <FolderOpen className="size-4" />
-                    </span>
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium text-sidebar-foreground">
                         {collection.name}
@@ -314,6 +357,14 @@ function DashboardSidebar({
                   </div>
                 ))}
               </div>
+              <Link
+                href="/collections"
+                onClick={onNavigate}
+                className="inline-flex items-center gap-1 px-3 pt-1 text-sm font-medium text-sidebar-primary hover:text-sidebar-primary/80"
+              >
+                View all collections
+                <ArrowUpRight className="size-3.5" />
+              </Link>
             </div>
           </>
         ) : null}
