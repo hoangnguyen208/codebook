@@ -1,0 +1,69 @@
+using CodeBook.Api.Data;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services
+builder.Services.AddDbContext<CodeBookDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+        ?? "Server=sqlserver;Database=CodeBookDb;User Id=sa;Password=YourPassword123!;TrustServerCertificate=true;";
+    options.UseSqlServer(connectionString);
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000", "http://webapp:3000")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+// Apply migrations on startup with retry logic
+var maxRetries = 5;
+var retryCount = 0;
+while (retryCount < maxRetries)
+{
+    try
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<CodeBookDbContext>();
+            dbContext.Database.Migrate();
+            break;
+        }
+    }
+    catch (Exception ex)
+    {
+        retryCount++;
+        if (retryCount >= maxRetries)
+        {
+            throw new InvalidOperationException($"Failed to apply migrations after {maxRetries} attempts", ex);
+        }
+        System.Threading.Thread.Sleep(5000 * retryCount); // Exponential backoff: 5s, 10s, 15s, 20s, 25s
+    }
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseCors("AllowFrontend");
+
+app.MapControllers();
+
+app.MapGet("/", () => "CodeBook API - Running Successfully!");
+app.MapGet("/health", () => new { status = "healthy", timestamp = DateTime.UtcNow });
+
+app.Run();
