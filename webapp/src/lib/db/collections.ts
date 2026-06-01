@@ -64,16 +64,6 @@ function toDateLabel(value: string) {
   return value.slice(0, 10);
 }
 
-export async function getRecentDashboardCollections(
-  limit = 6,
-): Promise<DashboardRecentCollection[]> {
-  const response = await fetchDashboardCollections(
-    `/api/dashboard/collections/recent?limit=${limit}`,
-  );
-
-  return response;
-}
-
 export async function getDashboardCollections(
   limit = 100,
 ): Promise<DashboardRecentCollection[]> {

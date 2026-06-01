@@ -211,7 +211,7 @@ model ItemTag {
 | Caching      | Redis (optional)                     
 | File Storage | Cloudflare R2                        
 | CSS/UI       | Tailwind CSS v4 + ShadCN             
-| Auth         | Duende IdentityServer, integrate with Github, Google                          
+| Auth         | .NET API authentication (email/password now), OAuth providers planned (GitHub/Google)                          
 | AI           | OpenAI GPT 5 nano                    
 | Deployment   | Vercel (likely)                      
 | Monitoring   | Sentry (later)                       
@@ -255,11 +255,9 @@ model ItemTag {
 ```mermaid
 graph TD;
   Client (NextJS) (Containerized) <--> .NET API (Containerized)
-  .NET API --> Duende IdentityServer (Containerized)
   .NET API --> SQL Server (Entity Framework ORM) (Containerized)
   .NET API --> R2[(File Storage)]
   .NET API --> OpenAI
-  .NET API --> Redis[(Cache)] (Containerized)
 ```
 
 ---
@@ -270,9 +268,9 @@ graph TD;
 flowchart LR
   User --> Login
   Login --> .NET API
-  .NET API --> Duende IdentityServer {Email, Github, Google}
-  Providers --> Session (JWT token + refresh token)
-  Session --> AppAccess
+  .NET API --> Auth{Email/Password now}
+  Auth --> AppAccess
+  .NET API -. planned .-> OAuth[GitHub/Google OAuth]
 ```
 
 ---
@@ -334,8 +332,9 @@ git switch -c lesson-01-setup
 
 ## 📌 Status
 
-- In planning
-- Ready for environment setup & UI scaffolding
+- In active development
+- Dashboard UI and database-backed dashboard data integration are already implemented
+- .NET API + SQL Server integration and database seeding are in place
 
 ---
 
