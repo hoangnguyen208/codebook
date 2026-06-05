@@ -120,7 +120,7 @@ AUTH_SECRET=
 AUTH_GITHUB_ID=
 AUTH_GITHUB_SECRET=
 ```
-For reference: @webapp/.env
+For reference: @webapp/.env, @webapp/.env.production
 
 ## Testing
 
