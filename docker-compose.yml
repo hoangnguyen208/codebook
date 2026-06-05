@@ -4,7 +4,7 @@ services:
   # SQL Server Database
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: codebook-sqlserver
+    container_name: sqlserver
     environment:
       SA_PASSWORD: YourPassword123!
       ACCEPT_EULA: 'Y'
@@ -28,18 +28,47 @@ services:
     build:
       context: .
       dockerfile: api/CodeBook.Api/Dockerfile
-    container_name: codebook-api
+    container_name: api
     ports:
       - "5000:5000"
     environment:
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CodeBook;User Id=sa;Password=YourPassword123!;TrustServerCertificate=true;"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CodeBookApi;User Id=sa;Password=YourPassword123!;TrustServerCertificate=true;"
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:5000"
+      Cors__AllowedOrigins__0: "http://app.codebook.local:3000"
+      Cors__AllowedOrigins__1: "http://localhost:3000"
+      Cors__AllowedOrigins__2: "http://webapp:3000"
     depends_on:
       sqlserver:
         condition: service_healthy
     networks:
-      - codebook-network
+      codebook-network:
+        aliases:
+          - api.codebook.local
+    restart: on-failure
+
+  # Duende Identity Server
+  codebook-identity:
+    build:
+      context: .
+      dockerfile: api/CodeBook.Identity/Dockerfile
+    container_name: identity
+    ports:
+      - "5001:5001"
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CodeBookIdentity;User Id=sa;Password=YourPassword123!;TrustServerCertificate=true;"
+      AuthClient__BaseUrl: "http://app.codebook.local:3000"
+      AuthClient__ClientId: "codebook-webapp"
+      AuthClient__ClientSecret: "codebook-webapp-secret"
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:5001"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      codebook-network:
+        aliases:
+          - id.codebook.local
     restart: on-failure
 
   # Next.js Webapp
@@ -47,23 +76,34 @@ services:
     build:
       context: .
       dockerfile: webapp/Dockerfile
-    container_name: codebook-webapp
+      args:
+        NEXT_PUBLIC_API_URL: "http://api.codebook.local:5000"
+    container_name: webapp
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: "http://codebook-api:5000"
+      NEXT_PUBLIC_API_URL: "http://api.codebook.local:5000"
+      AUTH_URL: "http://app.codebook.local:3000"
+      AUTH_TRUST_HOST: "true"
+      AUTH_DUENDE_ISSUER: "http://id.codebook.local:5001"
+      AUTH_DUENDE_CLIENT_ID: "codebook-webapp"
+      AUTH_DUENDE_CLIENT_SECRET: "codebook-webapp-secret"
       NODE_ENV: development
     depends_on:
       codebook-api:
         condition: service_started
+      codebook-identity:
+        condition: service_started
     networks:
-      - codebook-network
+      codebook-network:
+        aliases:
+          - app.codebook.local
     restart: unless-stopped
-
-volumes:
-  sqlserver_data:
-    name: codebook_sqlserver_data
 
 networks:
   codebook-network:
     driver: bridge
+
+volumes:
+  sqlserver_data:
+    name: codebook_sqlserver_data

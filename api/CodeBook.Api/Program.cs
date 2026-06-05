@@ -17,10 +17,15 @@ builder.Services.AddDbContext<CodeBookDbContext>(options =>
 
 builder.Services.AddCors(options =>
 {
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>()
+        ?? ["http://localhost:3000", "http://webapp:3000", "http://app.codebook.local:3000"];
+
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000", "http://webapp:3000")
+            .WithOrigins(allowedOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader();
     });

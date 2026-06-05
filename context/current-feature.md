@@ -1,6 +1,6 @@
 # Current Feature
 
-Stats & Sidebar
+Auth Setup - Phase 1
 
 ## Status
 
@@ -12,30 +12,38 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Display stats from database-backed data while keeping the current design/layout
-- Display system item types in the sidebar with icons, linking to `/items/[typename]`
-- Display actual collection data from the database in the sidebar
-- Add a "View all collections" link under the collections list that links to `/collections`
-- Keep star icons for favorite collections
-- For recent collections, show a colored circle based on the most-used item type in each collection
-- Create `src/lib/db/items.ts` and add database functions (using `src/lib/db/collections.ts` as reference)
+- Set up `api/CodeBook.Identity` with Duende IdentityServer + ASP.NET Core Identity
+- Keep Identity DB separate from `CodeBook.Api` DB (SQL Server `CodeBookIdentity` vs `CodeBook`)
+- Seed demo account for testing (`bob` / `Pass123$`)
+- Configure NextAuth v5 (`next-auth@beta`) in `webapp` with:
+  - Duende provider
+  - GitHub provider
+  - JWT session strategy
+- Add Auth.js route handler at `src/app/api/auth/[...nextauth]/route.ts`
+- Protect `/dashboard/*` using Next.js 16 `src/proxy.ts` named export (`proxy`)
+- Redirect unauthenticated users to default NextAuth sign-in page
+- Extend `Session` type with `user.id` in `src/types/next-auth.d.ts`
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Replace remaining mock-driven stats/sidebar data with database-backed data while preserving current visual design and layout.
+Implement authentication phase 1 by introducing a dedicated Duende IdentityServer and wiring App Router authentication/protection in Next.js with NextAuth v5.
 
 **Implementation notes:**
-- Scope includes dashboard main-area stats and sidebar item types/collections sections
-- Sidebar should use live item types and collection data
-- Keep existing visual structure/components unless required by the feature
-- Maintain current favorite vs recent collection behavior with required icon updates
+- Duende identity client is configured for NextAuth callback URL (`/api/auth/callback/duende-identity-server6`)
+- `/dashboard/:path*` is protected via `src/proxy.ts` and keeps `callbackUrl` during redirects
+- Keep NextAuth default sign-in page (no custom sign-in page configured)
+- Duende sign-in button is configured as text-only (`Sign in with Duende`) without a provider logo
+- Local development auth topology:
+  - Webapp: `http://app.codebook.local:3000`
+  - IdentityServer: `http://id.codebook.local:5001`
+  - API: `http://api.codebook.local:5000`
 
 **References:**
-- Feature spec: `@context/features/stats-sidebar-spec.md`
-- Existing mock source to replace: `@src/lib/mock-data.ts`
-- Reference implementation: `@src/lib/db/collections.ts`
+- Feature spec: `@context/features/auth-phase-1-spec.md`
+- Identity template reference: https://docs.duendesoftware.com/identityserver/quickstarts/0-overview/#preparation
+- NextAuth Duende reference: https://next-auth.js.org/providers/duende-identityserver6
 - Follow `@context/coding-standards.md` for TypeScript/Next.js conventions
 
 ## History
@@ -58,3 +66,6 @@ Replace remaining mock-driven stats/sidebar data with database-backed data while
 - **Dashboard Items Data Integration Implementation**: Added live dashboard items endpoint/fetcher, wired dashboard cards and stats to database-backed data, and hid the pinned section when empty
 - **Stats & Sidebar**: Updated current feature to implement stats/sidebar database integration from `stats-sidebar-spec.md`
 - **Stats & Sidebar Implementation**: Added API-backed system item types + full collections endpoints, switched dashboard stats/sidebar from mock data to DB-backed data, and added sidebar "View all collections" link
+- **Auth Setup - Phase 1**: Updated current feature to implement Duende IdentityServer + NextAuth v5 + dashboard route protection from `auth-phase-1-spec.md`
+- **Auth Setup - Phase 1 Implementation**: Added `CodeBook.Identity` service, NextAuth route/config/proxy wiring, dashboard protection, and auth environment/client configuration
+- **Auth Setup - Phase 1 Stabilization**: Fixed Duende callback/provider ID mismatches, aligned Docker hostnames to `*.codebook.local` on HTTP, and made Duende sign-in button text-only
