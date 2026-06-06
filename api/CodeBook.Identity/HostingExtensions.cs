@@ -2,6 +2,9 @@ using System.Globalization;
 using Duende.IdentityServer;
 using CodeBook.Identity.Data;
 using CodeBook.Identity.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -56,6 +59,36 @@ internal static class HostingExtensions
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
+        builder.Services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        });
+
+        builder.Services.ConfigureExternalCookie(options =>
+        {
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        });
+
+        builder.Services.Configure<CookiePolicyOptions>(options =>
+        {
+            options.OnAppendCookie = context =>
+            {
+                if (context.CookieOptions.SameSite == SameSiteMode.None && context.CookieOptions.Secure == false)
+                {
+                    context.CookieOptions.SameSite = SameSiteMode.Lax;
+                }
+            };
+            options.OnDeleteCookie = context =>
+            {
+                if (context.CookieOptions.SameSite == SameSiteMode.None && context.CookieOptions.Secure == false)
+                {
+                    context.CookieOptions.SameSite = SameSiteMode.Lax;
+                }
+            };
+        });
+
         builder.Services
             .AddIdentityServer(options =>
             {
@@ -90,6 +123,7 @@ internal static class HostingExtensions
 
         app.UseStaticFiles();
         app.UseRouting();
+        app.UseCookiePolicy();
         app.UseIdentityServer();
         app.UseAuthorization();
 
