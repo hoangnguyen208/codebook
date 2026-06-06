@@ -19,7 +19,7 @@ Replace NextAuth default pages with custom UI. Update user icon, username or ema
 - Display user name or email
 - Dropdown/up on avatar click with "Sign out" link
 - Clicking on the icon should go to "/profile"
-- Clicking "Sign out" should log user out, clear sessions and coookies both in client and server.
+- Clicking "Sign out" should log user out, clear sessions and coookies both in client and server, and then route back to the landing page.
 
 ## Notes
 
