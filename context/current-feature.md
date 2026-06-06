@@ -1,6 +1,6 @@
 # Current Feature
 
-Auth Setup - Phase 1
+Auth Setup - Phase 2
 
 ## Status
 
@@ -12,36 +12,27 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Set up `api/CodeBook.Identity` with Duende IdentityServer + ASP.NET Core Identity
-- Keep Identity DB separate from `CodeBook.Api` DB (SQL Server `CodeBookIdentity` vs `CodeBook`)
-- Seed demo account for testing (`bob` / `Pass123$`)
-- Configure NextAuth v5 (`next-auth@beta`) in `webapp` with:
-  - Duende provider
-  - GitHub provider
-  - JWT session strategy
-- Add Auth.js route handler at `src/app/api/auth/[...nextauth]/route.ts`
-- Protect `/dashboard/*` using Next.js 16 `src/proxy.ts` named export (`proxy`)
-- Redirect unauthenticated users to default NextAuth sign-in page
-- Extend `Session` type with `user.id` in `src/types/next-auth.d.ts`
+- Create registration API route at `/api/auth/register`
+- Route registration requests to Duende Identity Server
+- Redirect successfully registered users to `/dashboard`
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement authentication phase 1 by introducing a dedicated Duende IdentityServer and wiring App Router authentication/protection in Next.js with NextAuth v5.
+Implement authentication phase 2 by adding username/password registration flow via Duende Identity Server and exposing a dedicated registration entry route from the Next.js app.
 
 **Implementation notes:**
-- Duende identity client is configured for NextAuth callback URL (`/api/auth/callback/duende-identity-server6`)
-- `/dashboard/:path*` is protected via `src/proxy.ts` and keeps `callbackUrl` during redirects
-- Keep NextAuth default sign-in page (no custom sign-in page configured)
-- Duende sign-in button is configured as text-only (`Sign in with Duende`) without a provider logo
+- `/api/auth/register` starts the Duende login flow with signup intent (`screen_hint=signup`)
+- Duende login page routes signup requests to a new local registration page while preserving OIDC `returnUrl`
+- Successful registration signs in the new user and continues the auth flow back to NextAuth
 - Local development auth topology:
   - Webapp: `http://app.codebook.local:3000`
   - IdentityServer: `http://id.codebook.local:5001`
   - API: `http://api.codebook.local:5000`
 
 **References:**
-- Feature spec: `@context/features/auth-phase-1-spec.md`
+- Feature spec: `@context/features/auth-phase-2-spec.md`
 - Identity template reference: https://docs.duendesoftware.com/identityserver/quickstarts/0-overview/#preparation
 - NextAuth Duende reference: https://next-auth.js.org/providers/duende-identityserver6
 - Follow `@context/coding-standards.md` for TypeScript/Next.js conventions
@@ -69,3 +60,5 @@ Implement authentication phase 1 by introducing a dedicated Duende IdentityServe
 - **Auth Setup - Phase 1**: Updated current feature to implement Duende IdentityServer + NextAuth v5 + dashboard route protection from `auth-phase-1-spec.md`
 - **Auth Setup - Phase 1 Implementation**: Added `CodeBook.Identity` service, NextAuth route/config/proxy wiring, dashboard protection, and auth environment/client configuration
 - **Auth Setup - Phase 1 Stabilization**: Fixed Duende callback/provider ID mismatches, aligned Docker hostnames to `*.codebook.local` on HTTP, and made Duende sign-in button text-only
+- **Auth Setup - Phase 2**: Updated current feature to implement registration via Duende + NextAuth from `auth-phase-2-spec.md`
+- **Auth Setup - Phase 2 Implementation**: Added `/api/auth/register` + `/auth/register`, implemented Duende local registration page/handler, and fixed HTTP cookie policy to complete redirects back to `/dashboard`

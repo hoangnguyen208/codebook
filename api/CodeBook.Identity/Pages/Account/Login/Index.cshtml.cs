@@ -46,6 +46,11 @@ public class Index : PageModel
 
     public async Task<IActionResult> OnGet(string? returnUrl)
     {
+        if (await IsSignupRequestedAsync(returnUrl))
+        {
+            return RedirectToPage("/Account/Register/Index", new { returnUrl });
+        }
+
         await BuildModelAsync(returnUrl);
 
         if (View.IsExternalLoginOnly)
@@ -216,5 +221,18 @@ public class Index : PageModel
             EnableLocalLogin = allowLocal && LoginOptions.AllowLocalLogin,
             ExternalProviders = providers.ToArray()
         };
+    }
+
+    private async Task<bool> IsSignupRequestedAsync(string? returnUrl)
+    {
+        if (string.IsNullOrWhiteSpace(returnUrl))
+        {
+            return false;
+        }
+
+        var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
+        var screenHint = context?.Parameters?["screen_hint"];
+
+        return string.Equals(screenHint, "signup", StringComparison.OrdinalIgnoreCase);
     }
 }
