@@ -145,6 +145,13 @@ public class Index : PageModel
                 }
             }
 
+            if (result.IsNotAllowed)
+            {
+                ModelState.AddModelError(string.Empty, "Email verification is required before you can sign in. Please check your inbox.");
+                await BuildModelAsync(Input.ReturnUrl);
+                return Page();
+            }
+
             const string error = "invalid credentials";
             await _events.RaiseAsync(new UserLoginFailureEvent(Input.Username, error, clientId: context?.Client.ClientId));
             Telemetry.Metrics.UserLoginFailure(context?.Client.ClientId, IdentityServerConstants.LocalIdentityProvider, error);

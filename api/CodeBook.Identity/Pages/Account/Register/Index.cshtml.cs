@@ -1,11 +1,14 @@
 using System.Security.Claims;
+using System.Text;
 using Duende.IdentityModel;
 using Duende.IdentityServer.Services;
 using CodeBook.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace CodeBook.Identity.Pages.Account.Register;
 
@@ -14,19 +17,21 @@ namespace CodeBook.Identity.Pages.Account.Register;
 public class Index : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly IEmailSender _emailSender;
     private readonly IIdentityServerInteractionService _interaction;
 
     [BindProperty]
     public InputModel Input { get; set; } = default!;
 
+    public string? LoginReturnUrl => ReturnUrlHelper.StripSignupScreenHint(Input.ReturnUrl);
+
     public Index(
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
+        IEmailSender emailSender,
         IIdentityServerInteractionService interaction)
     {
         _userManager = userManager;
-        _signInManager = signInManager;
+        _emailSender = emailSender;
         _interaction = interaction;
     }
 
@@ -75,32 +80,13 @@ public class Index : PageModel
         }
 
         await EnsureUserProfileClaimsAsync(user);
-        await _signInManager.SignInAsync(user, isPersistent: false);
+        await SendEmailConfirmationLinkAsync(user, Input.ReturnUrl);
 
-        var context = await _interaction.GetAuthorizationContextAsync(Input.ReturnUrl);
-        if (context != null)
+        return RedirectToPage("/Account/Register/CheckEmail", new
         {
-            ArgumentNullException.ThrowIfNull(Input.ReturnUrl, nameof(Input.ReturnUrl));
-
-            if (context.IsNativeClient())
-            {
-                return this.LoadingPage(Input.ReturnUrl);
-            }
-
-            return Redirect(Input.ReturnUrl);
-        }
-
-        if (Url.IsLocalUrl(Input.ReturnUrl))
-        {
-            return Redirect(Input.ReturnUrl);
-        }
-
-        if (string.IsNullOrEmpty(Input.ReturnUrl))
-        {
-            return Redirect("~/");
-        }
-
-        throw new ArgumentException("invalid return URL");
+            email = user.Email,
+            returnUrl = Input.ReturnUrl
+        });
     }
 
     private async Task EnsureUserProfileClaimsAsync(ApplicationUser user)
@@ -141,6 +127,37 @@ public class Index : PageModel
             var errors = string.Join("; ", addClaimsResult.Errors.Select(error => error.Description));
             throw new InvalidOperationException($"Failed to add profile claims for user '{user.Id}': {errors}");
         }
+    }
+
+    private async Task SendEmailConfirmationLinkAsync(ApplicationUser user, string? returnUrl)
+    {
+        var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedConfirmationToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(confirmationToken));
+        var callbackUrl = Url.Page(
+            "/Account/Register/ConfirmEmail",
+            null,
+            new
+            {
+                userId = user.Id,
+                code = encodedConfirmationToken,
+                returnUrl
+            },
+            Request.Scheme);
+
+        if (string.IsNullOrWhiteSpace(callbackUrl))
+        {
+            throw new InvalidOperationException("Unable to generate confirmation email callback URL.");
+        }
+
+        var username = user.UserName ?? user.Email ?? "there";
+        var message = $"""
+                       <p>Hello {username},</p>
+                       <p>Please confirm your email address by clicking the link below:</p>
+                       <p><a href="{callbackUrl}">Confirm your email</a></p>
+                       <p>If you did not create this account, you can safely ignore this email.</p>
+                       """;
+
+        await _emailSender.SendEmailAsync(user.Email!, "Confirm your CodeBook account", message);
     }
 
     private bool IsInvalidReturnUrl(string? returnUrl)

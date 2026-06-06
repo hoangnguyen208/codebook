@@ -2,10 +2,12 @@ using System.Globalization;
 using Duende.IdentityServer;
 using CodeBook.Identity.Data;
 using CodeBook.Identity.Models;
+using CodeBook.Identity.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Filters;
@@ -55,9 +57,24 @@ internal static class HostingExtensions
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-        builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+        builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = true;
+            })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
+        builder.Services.Configure<ResendEmailOptions>(builder.Configuration.GetSection(ResendEmailOptions.SectionName));
+        builder.Services.PostConfigure<ResendEmailOptions>(options =>
+        {
+            options.ApiKey = builder.Configuration["RESEND_API_KEY"] ?? options.ApiKey;
+            options.FromEmail = builder.Configuration["RESEND_FROM_EMAIL"] ?? options.FromEmail;
+            options.FromName = builder.Configuration["RESEND_FROM_NAME"] ?? options.FromName;
+        });
+        builder.Services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.resend.com/");
+        });
 
         builder.Services.ConfigureApplicationCookie(options =>
         {

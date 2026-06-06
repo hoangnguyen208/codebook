@@ -1,0 +1,26 @@
+@page
+@model CodeBook.Identity.Pages.Account.Register.ConfirmEmail
+
+<div class="login-page">
+    <div class="lead">
+        <h1>Email verification</h1>
+        <p>@Model.StatusMessage</p>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-body">
+                    @if (Model.IsSuccess)
+                    {
+                        <a class="btn btn-primary" asp-page="/Account/Login/Index" asp-route-returnUrl="@Model.ReturnUrl">Back to login</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-secondary" asp-page="/Account/Register/Index" asp-route-returnUrl="@Model.ReturnUrl">Create account again</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

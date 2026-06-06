@@ -1,0 +1,20 @@
+@page
+@model CodeBook.Identity.Pages.Account.Register.CheckEmail
+
+<div class="login-page">
+    <div class="lead">
+        <h1>Check your email</h1>
+        <p>We've sent a verification link to @Model.Email</p>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-body">
+                    <p>Please open the email and click the confirmation link before signing in.</p>
+                    <a class="btn btn-primary" asp-page="/Account/Login/Index" asp-route-returnUrl="@Model.LoginReturnUrl">Back to login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

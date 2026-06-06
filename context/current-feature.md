@@ -1,6 +1,6 @@
 # Current Feature
 
-Auth UI - Phase 3
+Auth Email Verification
 
 ## Status
 
@@ -12,28 +12,24 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Replace default NextAuth entry points with custom landing page auth UI
-- Show authenticated user avatar + name/email in dashboard top nav and sidebar
-- Add profile entry point and custom sign-out flow back to landing page
+- Send registration verification email through Resend using `RESEND_API_KEY`
+- Require confirmed email before local sign-in
+- Provide clear verification UX for check-email, confirm-email, and return-to-login flows
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement authentication phase 3 by shipping a custom auth landing page, session-backed dashboard identity UI, and profile/sign-out flows.
+Implement Duende Identity email verification with Resend and complete the user flow from register to verified sign-in.
 
 **Implementation notes:**
-- `/` now renders custom auth actions (Duende sign-in, GitHub sign-in, and Duende registration) and redirects authenticated users to `/dashboard`
-- Dashboard identity data now comes from NextAuth session (name/email/image) instead of hardcoded demo values
-- Added reusable `UserAvatar` component that displays provider image when available, with initials fallback
-- Dashboard top nav now includes avatar-triggered profile/sign-out menu
-- Added `/profile` page and `/api/auth/signout-all` route for explicit app sign-out redirect to `/`
-- Updated profile dropdown behavior to close on outside click and Escape
-- Removed the sidebar bottom-left profile card to keep profile actions in top nav only
-- Local development auth topology:
-  - Webapp: `http://app.codebook.local:3000`
-  - IdentityServer: `http://id.codebook.local:5001`
-  - API: `http://api.codebook.local:5000`
+- Identity registration now sends confirmation links via Resend (`IEmailSender` implementation)
+- Confirmed email is required before password login (`RequireConfirmedEmail = true`)
+- Added `/Account/Register/CheckEmail` and `/Account/Register/ConfirmEmail` pages for user guidance
+- Confirm email success now shows explicit verified message and returns users to login (no silent redirect)
+- Login return URLs strip `screen_hint=signup` to avoid register-loop on "Back to login"
+- Identity service now loads Resend secrets from `api/CodeBook.Identity/.env.production` in docker-compose
+- `api/CodeBook.Identity/.env` and `.env.production` are ignored from Git
 
 **References:**
 - Feature spec: `@context/features/auth-phase-3-spec.md`
@@ -69,3 +65,4 @@ Implement authentication phase 3 by shipping a custom auth landing page, session
 - **Auth UI - Phase 3**: Updated current feature to implement custom auth UI + user identity interactions from `auth-phase-3-spec.md`
 - **Auth UI - Phase 3 Implementation**: Added custom landing auth actions, session-backed dashboard avatar/name display, profile route, and `/api/auth/signout-all` flow
 - **Auth UI - Phase 3 Stabilization**: Fixed Duende identity mapping/session claims, improved logout/login re-entry flow, and finalized top-nav profile dropdown behavior
+- **Auth Email Verification**: Added Duende registration email confirmation flow, enforced confirmed email sign-in, and integrated Resend as the Identity email sender via `RESEND_API_KEY`

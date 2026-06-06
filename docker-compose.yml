@@ -52,6 +52,8 @@ services:
     build:
       context: .
       dockerfile: api/CodeBook.Identity/Dockerfile
+    env_file:
+      - ./api/CodeBook.Identity/.env.production
     container_name: identity
     ports:
       - "5001:5001"
