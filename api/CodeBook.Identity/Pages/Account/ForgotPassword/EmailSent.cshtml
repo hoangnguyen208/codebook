@@ -1,0 +1,23 @@
+@page
+@model CodeBook.Identity.Pages.Account.ForgotPassword.EmailSent
+
+<div class="login-page">
+    <div class="lead">
+        <h1>Check your email</h1>
+        <p>A password reset link has been sent.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-body">
+                    <p>
+                        If an account matching <strong>@Model.UsernameOrEmail</strong> exists, we've sent a
+                        password reset link to the associated email address. Please check your inbox.
+                    </p>
+                    <a class="btn btn-primary" asp-page="/Account/Login/Index" asp-route-returnUrl="@Model.ReturnUrl">Back to login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

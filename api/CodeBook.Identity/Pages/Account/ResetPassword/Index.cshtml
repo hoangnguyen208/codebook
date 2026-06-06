@@ -1,0 +1,51 @@
+@page
+@model CodeBook.Identity.Pages.Account.ResetPassword.Index
+
+<div class="login-page">
+    <div class="lead">
+        <h1>Create new password</h1>
+        <p>Choose a new password for your account</p>
+    </div>
+
+    <partial name="_ValidationSummary" />
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2>New password</h2>
+                </div>
+
+                <div class="card-body">
+                    @if (Model.IsInvalidLink)
+                    {
+                        <div class="alert alert-danger">
+                            This password reset link is invalid or has expired. Please request a new one.
+                        </div>
+                        <a class="btn btn-primary" asp-page="/Account/ForgotPassword/Index">Request new link</a>
+                    }
+                    else
+                    {
+                        <form asp-page="/Account/ResetPassword/Index" method="post">
+                            <input type="hidden" asp-for="Input.UserId" />
+                            <input type="hidden" asp-for="Input.Code" />
+                            <input type="hidden" asp-for="Input.ReturnUrl" />
+
+                            <div class="form-group">
+                                <label asp-for="Input.Password"></label>
+                                <input type="password" class="form-control" placeholder="New password" asp-for="Input.Password" autofocus autocomplete="new-password">
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Input.ConfirmPassword"></label>
+                                <input type="password" class="form-control" placeholder="Confirm new password" asp-for="Input.ConfirmPassword" autocomplete="new-password">
+                            </div>
+
+                            <button class="btn btn-primary" type="submit">Save new password</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,35 @@
+@page
+@model CodeBook.Identity.Pages.Account.ForgotPassword.Index
+
+<div class="login-page">
+    <div class="lead">
+        <h1>Forgot password</h1>
+        <p>Enter your username or email to receive a reset link</p>
+    </div>
+
+    <partial name="_ValidationSummary" />
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Reset your password</h2>
+                </div>
+
+                <div class="card-body">
+                    <form asp-page="/Account/ForgotPassword/Index" method="post">
+                        <input type="hidden" asp-for="Input.ReturnUrl" />
+
+                        <div class="form-group">
+                            <label asp-for="Input.UsernameOrEmail"></label>
+                            <input class="form-control" placeholder="Username or email" asp-for="Input.UsernameOrEmail" autofocus>
+                        </div>
+
+                        <button class="btn btn-primary" type="submit">Send reset link</button>
+                        <a class="btn btn-secondary" asp-page="/Account/Login/Index" asp-route-returnUrl="@Model.Input.ReturnUrl">Back to login</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

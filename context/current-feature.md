@@ -1,6 +1,6 @@
 # Current Feature
 
-Auth Email Verification
+Forgot Password
 
 ## Status
 
@@ -12,24 +12,23 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Send registration verification email through Resend using `RESEND_API_KEY`
-- Require confirmed email before local sign-in
-- Provide clear verification UX for check-email, confirm-email, and return-to-login flows
+- Add "Forgot password?" link to the login form
+- User submits username or email; system generates a reset token and sends a password reset link via Resend
+- Reset link routes to a create-new-password page with token validation
+- User enters and confirms a new password; on success redirects to login
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement Duende Identity email verification with Resend and complete the user flow from register to verified sign-in.
+Implement a full forgot-password / reset-password flow on Duende Identity backed by Resend email delivery.
 
 **Implementation notes:**
-- Identity registration now sends confirmation links via Resend (`IEmailSender` implementation)
-- Confirmed email is required before password login (`RequireConfirmedEmail = true`)
-- Added `/Account/Register/CheckEmail` and `/Account/Register/ConfirmEmail` pages for user guidance
-- Confirm email success now shows explicit verified message and returns users to login (no silent redirect)
-- Login return URLs strip `screen_hint=signup` to avoid register-loop on "Back to login"
-- Identity service now loads Resend secrets from `api/CodeBook.Identity/.env.production` in docker-compose
-- `api/CodeBook.Identity/.env` and `.env.production` are ignored from Git
+- Add "Forgot password?" link in `/Account/Login/Index.cshtml`
+- `/Account/ForgotPassword/Index` — accepts username or email, sends Resend email with reset link
+- `/Account/ForgotPassword/EmailSent` — confirmation page after link is dispatched
+- `/Account/ResetPassword/Index` — form to enter new password + confirm using the signed token from the email
+- On successful reset, redirect to `/Account/Login` so the user can sign in with their new password
 
 **References:**
 - Feature spec: `@context/features/auth-phase-3-spec.md`
@@ -66,3 +65,4 @@ Implement Duende Identity email verification with Resend and complete the user f
 - **Auth UI - Phase 3 Implementation**: Added custom landing auth actions, session-backed dashboard avatar/name display, profile route, and `/api/auth/signout-all` flow
 - **Auth UI - Phase 3 Stabilization**: Fixed Duende identity mapping/session claims, improved logout/login re-entry flow, and finalized top-nav profile dropdown behavior
 - **Auth Email Verification**: Added Duende registration email confirmation flow, enforced confirmed email sign-in, and integrated Resend as the Identity email sender via `RESEND_API_KEY`
+- **Forgot Password**: Added forgot-password / reset-password flow on Duende Identity; Resend sends the reset link, `returnUrl` threads through ForgotPassword pages, and Confirmation redirects to a fresh webapp OIDC sign-in to avoid PKCE mismatch
