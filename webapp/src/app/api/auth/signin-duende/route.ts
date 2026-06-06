@@ -7,6 +7,6 @@ export async function GET(request: Request) {
   return signIn(
     "duende-identity-server6",
     { redirectTo: callbackUrl },
-    { prompt: "login", screen_hint: "signup" },
+    { prompt: "login" },
   );
 }

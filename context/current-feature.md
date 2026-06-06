@@ -1,6 +1,6 @@
 # Current Feature
 
-Auth Setup - Phase 2
+Auth UI - Phase 3
 
 ## Status
 
@@ -12,27 +12,31 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Create registration API route at `/api/auth/register`
-- Route registration requests to Duende Identity Server
-- Redirect successfully registered users to `/dashboard`
+- Replace default NextAuth entry points with custom landing page auth UI
+- Show authenticated user avatar + name/email in dashboard top nav and sidebar
+- Add profile entry point and custom sign-out flow back to landing page
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement authentication phase 2 by adding username/password registration flow via Duende Identity Server and exposing a dedicated registration entry route from the Next.js app.
+Implement authentication phase 3 by shipping a custom auth landing page, session-backed dashboard identity UI, and profile/sign-out flows.
 
 **Implementation notes:**
-- `/api/auth/register` starts the Duende login flow with signup intent (`screen_hint=signup`)
-- Duende login page routes signup requests to a new local registration page while preserving OIDC `returnUrl`
-- Successful registration signs in the new user and continues the auth flow back to NextAuth
+- `/` now renders custom auth actions (Duende sign-in, GitHub sign-in, and Duende registration) and redirects authenticated users to `/dashboard`
+- Dashboard identity data now comes from NextAuth session (name/email/image) instead of hardcoded demo values
+- Added reusable `UserAvatar` component that displays provider image when available, with initials fallback
+- Dashboard top nav now includes avatar-triggered profile/sign-out menu
+- Added `/profile` page and `/api/auth/signout-all` route for explicit app sign-out redirect to `/`
+- Updated profile dropdown behavior to close on outside click and Escape
+- Removed the sidebar bottom-left profile card to keep profile actions in top nav only
 - Local development auth topology:
   - Webapp: `http://app.codebook.local:3000`
   - IdentityServer: `http://id.codebook.local:5001`
   - API: `http://api.codebook.local:5000`
 
 **References:**
-- Feature spec: `@context/features/auth-phase-2-spec.md`
+- Feature spec: `@context/features/auth-phase-3-spec.md`
 - Identity template reference: https://docs.duendesoftware.com/identityserver/quickstarts/0-overview/#preparation
 - NextAuth Duende reference: https://next-auth.js.org/providers/duende-identityserver6
 - Follow `@context/coding-standards.md` for TypeScript/Next.js conventions
@@ -62,3 +66,6 @@ Implement authentication phase 2 by adding username/password registration flow v
 - **Auth Setup - Phase 1 Stabilization**: Fixed Duende callback/provider ID mismatches, aligned Docker hostnames to `*.codebook.local` on HTTP, and made Duende sign-in button text-only
 - **Auth Setup - Phase 2**: Updated current feature to implement registration via Duende + NextAuth from `auth-phase-2-spec.md`
 - **Auth Setup - Phase 2 Implementation**: Added `/api/auth/register` + `/auth/register`, implemented Duende local registration page/handler, and fixed HTTP cookie policy to complete redirects back to `/dashboard`
+- **Auth UI - Phase 3**: Updated current feature to implement custom auth UI + user identity interactions from `auth-phase-3-spec.md`
+- **Auth UI - Phase 3 Implementation**: Added custom landing auth actions, session-backed dashboard avatar/name display, profile route, and `/api/auth/signout-all` flow
+- **Auth UI - Phase 3 Stabilization**: Fixed Duende identity mapping/session claims, improved logout/login re-entry flow, and finalized top-nav profile dropdown behavior

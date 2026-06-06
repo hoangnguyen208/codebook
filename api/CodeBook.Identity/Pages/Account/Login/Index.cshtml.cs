@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Duende.IdentityModel;
 using Duende.IdentityServer;
 using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Models;
@@ -106,7 +108,9 @@ public class Index : PageModel
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByNameAsync(Input.Username!);
-                await _events.RaiseAsync(new UserLoginSuccessEvent(user!.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
+                ArgumentNullException.ThrowIfNull(user, nameof(user));
+                await EnsureUserProfileClaimsAsync(user);
+                await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
                 Telemetry.Metrics.UserLogin(context?.Client.ClientId, IdentityServerConstants.LocalIdentityProvider);
 
                 if (context != null)
@@ -234,5 +238,45 @@ public class Index : PageModel
         var screenHint = context?.Parameters?["screen_hint"];
 
         return string.Equals(screenHint, "signup", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task EnsureUserProfileClaimsAsync(ApplicationUser user)
+    {
+        var existingClaims = await _userManager.GetClaimsAsync(user);
+
+        var nameValue = user.UserName?.Trim();
+        var emailValue = user.Email?.Trim();
+        var claimsToAdd = new List<Claim>();
+
+        if (!string.IsNullOrWhiteSpace(nameValue))
+        {
+            if (!existingClaims.Any(claim => claim.Type == JwtClaimTypes.Name))
+            {
+                claimsToAdd.Add(new Claim(JwtClaimTypes.Name, nameValue));
+            }
+
+            if (!existingClaims.Any(claim => claim.Type == JwtClaimTypes.PreferredUserName))
+            {
+                claimsToAdd.Add(new Claim(JwtClaimTypes.PreferredUserName, nameValue));
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(emailValue) &&
+            !existingClaims.Any(claim => claim.Type == JwtClaimTypes.Email))
+        {
+            claimsToAdd.Add(new Claim(JwtClaimTypes.Email, emailValue));
+        }
+
+        if (claimsToAdd.Count == 0)
+        {
+            return;
+        }
+
+        var addClaimsResult = await _userManager.AddClaimsAsync(user, claimsToAdd);
+        if (!addClaimsResult.Succeeded)
+        {
+            var errors = string.Join("; ", addClaimsResult.Errors.Select(error => error.Description));
+            throw new InvalidOperationException($"Failed to add profile claims for user '{user.Id}': {errors}");
+        }
     }
 }
