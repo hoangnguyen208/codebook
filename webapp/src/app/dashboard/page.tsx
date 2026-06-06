@@ -1,15 +1,22 @@
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { auth } from "@/auth";
+import { getDisplayName } from "@/lib/auth/user";
 import { getDashboardCollections } from "@/lib/db/collections";
 import { getRecentDashboardItems, getSystemDashboardItemTypes } from "@/lib/db/items";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const session = await auth();
   const [collections, items, itemTypes] = await Promise.all([
     getDashboardCollections(100),
     getRecentDashboardItems(100),
     getSystemDashboardItemTypes(),
   ]);
+
+  const userName = session?.user?.name ?? null;
+  const userEmail = session?.user?.email ?? null;
+  const displayName = getDisplayName(userName, userEmail);
   const recentCollections = [...collections]
     .sort((left, right) =>
       (right.lastUpdatedAt ?? "").localeCompare(left.lastUpdatedAt ?? ""),
@@ -20,11 +27,11 @@ export default async function DashboardPage() {
     <DashboardShell
       data={{
         user: {
-          id: "user-demo",
-          name: "Demo User",
-          email: "demo@codebook.io",
-          avatarLabel: "DU",
-          plan: "pro",
+          id: session?.user?.id ?? "user-session",
+          name: displayName,
+          email: userEmail ?? displayName,
+          image: session?.user?.image ?? null,
+          plan: "free",
         },
         itemTypes,
         collections: collections.map((collection) => ({

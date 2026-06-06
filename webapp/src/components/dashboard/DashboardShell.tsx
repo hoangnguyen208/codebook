@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowUpRight,
   Bookmark,
+  ChevronUp,
   Clock3,
   Code2,
   File,
@@ -27,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 
+import { UserAvatar } from "@/components/auth/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -35,7 +37,7 @@ type DashboardUser = {
   id: string;
   name: string;
   email: string;
-  avatarLabel: string;
+  image?: string | null;
   plan: "free" | "pro";
 };
 
@@ -159,10 +161,6 @@ function getDotColorClass(color: string) {
   return dotClasses[color] ?? "bg-muted-foreground";
 }
 
-function formatPlanLabel(plan: DashboardUser["plan"]) {
-  return plan === "pro" ? "Pro plan" : "Free plan";
-}
-
 function formatRelativeDateLabel(value: string | null) {
   if (!value) {
     return "No recent activity";
@@ -212,7 +210,6 @@ function DashboardSidebar({
   itemCountByType,
   favoriteCollections,
   recentCollections,
-  user,
   pathname,
   isExpanded,
   onNavigate,
@@ -221,7 +218,6 @@ function DashboardSidebar({
   itemCountByType: Record<string, number>;
   favoriteCollections: CollectionSummary[];
   recentCollections: CollectionSummary[];
-  user: DashboardUser;
   pathname: string;
   isExpanded: boolean;
   onNavigate?: () => void;
@@ -370,28 +366,6 @@ function DashboardSidebar({
         ) : null}
       </div>
 
-      <div className="border-t border-sidebar-border/70 p-3">
-        <div
-          className={cn(
-            "flex rounded-2xl border border-sidebar-border/80 bg-sidebar-accent/50 p-3",
-            isExpanded ? "items-center gap-3" : "justify-center",
-          )}
-        >
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
-            {user.avatarLabel}
-          </div>
-
-          {isExpanded ? (
-            <div className="min-w-0">
-              <p className="truncate font-medium text-sidebar-foreground">{user.name}</p>
-              <p className="truncate text-sm text-sidebar-foreground/65">{user.email}</p>
-              <p className="mt-1 text-xs font-medium text-sidebar-foreground/50">
-                {formatPlanLabel(user.plan)}
-              </p>
-            </div>
-          ) : null}
-        </div>
-      </div>
     </div>
   );
 }
@@ -403,6 +377,39 @@ export function DashboardShell({
   const pathname = usePathname();
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (!profileMenuRef.current?.contains(target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isProfileMenuOpen]);
 
   const collectionSummaries = useMemo<CollectionSummary[]>(() => {
     return data.collections.map((collection) => {
@@ -539,7 +546,6 @@ export function DashboardShell({
             itemCountByType={itemCountByType}
             favoriteCollections={favoriteCollections}
             recentCollections={recentCollections}
-            user={data.user}
             pathname={pathname}
             isExpanded={isDesktopSidebarExpanded}
           />
@@ -586,6 +592,48 @@ export function DashboardShell({
                 <Plus className="size-4" />
                 New Item
               </Button>
+
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  type="button"
+                  className="flex h-11 cursor-pointer items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 text-sm hover:bg-accent"
+                  onClick={() => setIsProfileMenuOpen((open) => !open)}
+                  aria-label="Open profile menu"
+                  aria-expanded={isProfileMenuOpen}
+                >
+                  <UserAvatar
+                    nameOrEmail={data.user.name || data.user.email}
+                    imageUrl={data.user.image}
+                    className="size-7"
+                    textClassName="text-xs"
+                  />
+                  <span className="hidden max-w-32 truncate sm:inline">{data.user.name}</span>
+                  <ChevronUp
+                    className={cn(
+                      "size-4 text-muted-foreground transition-transform",
+                      isProfileMenuOpen ? "rotate-180" : "",
+                    )}
+                  />
+                </button>
+                {isProfileMenuOpen ? (
+                  <div className="absolute top-full right-0 z-10 mt-2 min-w-40 rounded-xl border border-border/70 bg-popover p-1 shadow-lg">
+                    <Link
+                      href="/profile"
+                      className="block rounded-lg px-3 py-2 text-sm hover:bg-accent"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      href="/api/auth/signout-all"
+                      className="block rounded-lg px-3 py-2 text-sm text-destructive hover:bg-accent"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Sign out
+                    </Link>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </header>
 
@@ -876,7 +924,6 @@ export function DashboardShell({
               itemCountByType={itemCountByType}
               favoriteCollections={favoriteCollections}
               recentCollections={recentCollections}
-              user={data.user}
               pathname={pathname}
               isExpanded
               onNavigate={() => setIsMobileSidebarOpen(false)}

@@ -6,12 +6,9 @@ export const proxy = auth((request) => {
     return NextResponse.next();
   }
 
-  const signInUrl = new URL("/api/auth/signin", request.nextUrl.origin);
-  signInUrl.searchParams.set("callbackUrl", request.nextUrl.href);
-
-  return NextResponse.redirect(signInUrl);
+  return NextResponse.redirect(new URL("/", request.nextUrl.origin));
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/profile/:path*"],
 };

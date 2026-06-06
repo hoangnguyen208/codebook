@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Duende.IdentityModel;
 using Duende.IdentityServer.Services;
 using CodeBook.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -72,6 +74,7 @@ public class Index : PageModel
             return Page();
         }
 
+        await EnsureUserProfileClaimsAsync(user);
         await _signInManager.SignInAsync(user, isPersistent: false);
 
         var context = await _interaction.GetAuthorizationContextAsync(Input.ReturnUrl);
@@ -98,6 +101,46 @@ public class Index : PageModel
         }
 
         throw new ArgumentException("invalid return URL");
+    }
+
+    private async Task EnsureUserProfileClaimsAsync(ApplicationUser user)
+    {
+        var existingClaims = await _userManager.GetClaimsAsync(user);
+
+        var nameValue = user.UserName?.Trim();
+        var emailValue = user.Email?.Trim();
+        var claimsToAdd = new List<Claim>();
+
+        if (!string.IsNullOrWhiteSpace(nameValue))
+        {
+            if (!existingClaims.Any(claim => claim.Type == JwtClaimTypes.Name))
+            {
+                claimsToAdd.Add(new Claim(JwtClaimTypes.Name, nameValue));
+            }
+
+            if (!existingClaims.Any(claim => claim.Type == JwtClaimTypes.PreferredUserName))
+            {
+                claimsToAdd.Add(new Claim(JwtClaimTypes.PreferredUserName, nameValue));
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(emailValue) &&
+            !existingClaims.Any(claim => claim.Type == JwtClaimTypes.Email))
+        {
+            claimsToAdd.Add(new Claim(JwtClaimTypes.Email, emailValue));
+        }
+
+        if (claimsToAdd.Count == 0)
+        {
+            return;
+        }
+
+        var addClaimsResult = await _userManager.AddClaimsAsync(user, claimsToAdd);
+        if (!addClaimsResult.Succeeded)
+        {
+            var errors = string.Join("; ", addClaimsResult.Errors.Select(error => error.Description));
+            throw new InvalidOperationException($"Failed to add profile claims for user '{user.Id}': {errors}");
+        }
     }
 
     private bool IsInvalidReturnUrl(string? returnUrl)

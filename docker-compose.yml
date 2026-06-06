@@ -78,6 +78,8 @@ services:
       dockerfile: webapp/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: "http://api.codebook.local:5000"
+    env_file:
+      - ./webapp/.env.production
     container_name: webapp
     ports:
       - "3000:3000"
@@ -87,8 +89,7 @@ services:
       AUTH_TRUST_HOST: "true"
       AUTH_DUENDE_ISSUER: "http://id.codebook.local:5001"
       AUTH_DUENDE_CLIENT_ID: "codebook-webapp"
-      AUTH_DUENDE_CLIENT_SECRET: "codebook-webapp-secret"
-      NODE_ENV: development
+      NODE_ENV: production
     depends_on:
       codebook-api:
         condition: service_started
