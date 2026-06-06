@@ -99,6 +99,10 @@ const authConfig: NextAuthConfig = {
   ],
   callbacks: {
     async jwt({ token, account, profile }) {
+      if (account) {
+        token.provider = account.provider;
+      }
+
       if (account?.provider === "duende-identity-server6") {
         const profileClaims = (profile ?? {}) as Record<string, unknown>;
         const idTokenClaims = parseJwtPayload(account.id_token);
@@ -167,6 +171,10 @@ const authConfig: NextAuthConfig = {
 
       if (typeof token.refreshToken === "string") {
         session.refreshToken = token.refreshToken;
+      }
+
+      if (typeof token.provider === "string") {
+        session.user.provider = token.provider;
       }
 
       return session;

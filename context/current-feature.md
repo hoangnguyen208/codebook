@@ -1,39 +1,40 @@
 # Current Feature
 
-Forgot Password
+Profile Page
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Completed
+In Progress
 
 ## Goals
 
 <!-- Goals & requirements -->
 
-- Add "Forgot password?" link to the login form
-- User submits username or email; system generates a reset token and sends a password reset link via Resend
-- Reset link routes to a create-new-password page with token validation
-- User enters and confirms a new password; on success redirects to login
+- Display user info: avatar (GitHub or initials), username, email, provider badge (Email/Password vs GitHub)
+- Show usage stats: total items, total collections, breakdown by item type
+- Change password action (Duende users only) — links to Identity server change-password page
+- Delete account with confirmation dialog (Duende users delete from Identity; GitHub users sign out)
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement a full forgot-password / reset-password flow on Duende Identity backed by Resend email delivery.
+Implement the full profile page per `context/features/profile-spec.md`.
 
 **Implementation notes:**
-- Add "Forgot password?" link in `/Account/Login/Index.cshtml`
-- `/Account/ForgotPassword/Index` — accepts username or email, sends Resend email with reset link
-- `/Account/ForgotPassword/EmailSent` — confirmation page after link is dispatched
-- `/Account/ResetPassword/Index` — form to enter new password + confirm using the signed token from the email
-- On successful reset, redirect to `/Account/Login` so the user can sign in with their new password
+- New `GET /api/profile/stats` endpoint in `CodeBook.Api`
+- Store `provider` in NextAuth JWT/session (`auth.config.ts`)
+- `webapp/src/lib/db/profile.ts` — fetches profile stats
+- `webapp/src/app/profile/page.tsx` — full Server Component profile page
+- `webapp/src/components/profile/DeleteAccountDialog.tsx` — Client Component modal
+- `webapp/src/actions/profile.ts` — delete account Server Action
+- `api/CodeBook.Identity/Pages/Account/Manage/ChangePassword` — new Razor Page
+- `api/CodeBook.Identity/Pages/Account/Manage/DeleteAccount` — new Razor Page
 
 **References:**
-- Feature spec: `@context/features/auth-phase-3-spec.md`
-- Identity template reference: https://docs.duendesoftware.com/identityserver/quickstarts/0-overview/#preparation
-- NextAuth Duende reference: https://next-auth.js.org/providers/duende-identityserver6
+- Feature spec: `@context/features/profile-spec.md`
 - Follow `@context/coding-standards.md` for TypeScript/Next.js conventions
 
 ## History

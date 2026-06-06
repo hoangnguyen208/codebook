@@ -1,0 +1,29 @@
+@page
+@model CodeBook.Identity.Pages.Account.Manage.DeleteAccount
+
+<div class="login-page">
+    <div class="lead">
+        <h1>Delete account</h1>
+        <p>This action is permanent and cannot be undone</p>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Confirm deletion</h2>
+                </div>
+
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <strong>Warning:</strong> Deleting your account will permanently remove all your data, collections, and items.
+                    </div>
+
+                    <form asp-page="/Account/Manage/DeleteAccount" method="post">
+                        <button class="btn btn-danger" type="submit">Yes, delete my account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
