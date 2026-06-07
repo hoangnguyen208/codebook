@@ -14,18 +14,21 @@ type ItemCardType = {
 type ItemCardProps = {
   item: DashboardItem;
   itemType: ItemCardType;
+  onClick?: (itemId: string) => void;
 };
 
-export function ItemCard({ item, itemType }: ItemCardProps) {
+export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
   const TypeIcon = itemType.icon;
 
   return (
     <article
+      onClick={onClick ? () => onClick(item.id) : undefined}
       className={cn(
         "rounded-3xl border bg-background/70 p-5",
         "border-l-4",
         itemType.borderColorClass,
         "border-r-border/70 border-t-border/70 border-b-border/70",
+        onClick && "cursor-pointer hover:bg-background/90 transition-colors",
       )}
     >
       <div className="flex items-start justify-between gap-3">

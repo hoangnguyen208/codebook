@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 
 import { UserAvatar } from "@/components/auth/UserAvatar";
+import { ItemDrawerProvider } from "@/components/items/ItemDrawerProvider";
+import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -378,6 +380,7 @@ export function DashboardShell({
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [drawerItemId, setDrawerItemId] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -534,6 +537,10 @@ export function DashboardShell({
 
   return (
     <main className="min-h-screen bg-background">
+      <ItemDrawerProvider
+        selectedItemId={drawerItemId}
+        onOpenChange={setDrawerItemId}
+      >
       <div className="lg:grid lg:min-h-screen lg:grid-cols-[auto_minmax(0,1fr)]">
         <aside
           className={cn(
@@ -784,7 +791,8 @@ export function DashboardShell({
                       return (
                         <article
                           key={item.id}
-                          className="rounded-3xl border border-border/70 bg-background/70 p-5"
+                          onClick={() => setDrawerItemId(item.id)}
+                          className="rounded-3xl border border-border/70 bg-background/70 p-5 cursor-pointer hover:bg-background/90 transition-colors"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div
@@ -850,7 +858,8 @@ export function DashboardShell({
                     return (
                       <article
                         key={item.id}
-                        className="grid gap-4 px-4 py-4 sm:grid-cols-[auto_minmax(0,1.2fr)_minmax(0,0.9fr)_auto] sm:items-center sm:px-6"
+                        onClick={() => setDrawerItemId(item.id)}
+                        className="grid gap-4 px-4 py-4 sm:grid-cols-[auto_minmax(0,1.2fr)_minmax(0,0.9fr)_auto] sm:items-center sm:px-6 cursor-pointer hover:bg-background/90 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <span className="w-6 text-sm font-medium text-muted-foreground">
@@ -896,6 +905,8 @@ export function DashboardShell({
           </section>
         </div>
       </div>
+      <ItemDrawerSheet />
+      </ItemDrawerProvider>
 
       {isMobileSidebarOpen ? (
         <div className="lg:hidden">

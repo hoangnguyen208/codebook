@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Code2, File, FileImage, FileText, Link2, Sparkles, Terminal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { ItemCard } from "@/components/items/ItemCard";
+import { ItemsGridClient } from "@/components/items/ItemsGridClient";
 import { buttonVariants } from "@/components/ui/button";
 import { getItemsByType, getSystemDashboardItemTypes, type DashboardItemType } from "@/lib/db/items";
 import { cn } from "@/lib/utils";
@@ -103,20 +103,13 @@ export default async function ItemsByTypePage({
             </p>
           </section>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {items.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                itemType={{
-                  label: itemType.label.slice(0, -1),
-                  icon: Icon,
-                  colorClasses: typeColorClasses,
-                  borderColorClass: typeBorderColorClass,
-                }}
-              />
-            ))}
-          </div>
+          <ItemsGridClient
+            items={items}
+            itemTypeIcon={Icon}
+            itemTypeColorClasses={typeColorClasses}
+            itemTypeBorderColorClass={typeBorderColorClass}
+            itemTypeLabel={itemType.label.slice(0, -1)}
+          />
         )}
       </section>
     </main>

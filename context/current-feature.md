@@ -1,28 +1,30 @@
 # Current Feature
 
-API Unit Tests
+Item Drawer
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Completed
+In Progress
 
 ## Goals
 
 <!-- Goals & requirements -->
 
-- Create separate .NET test project inside `tests/` folder
-- Test all 5 API controllers in `CodeBook.Api`
-- Use Microsoft.NET.Test.Sdk, Moq, and xunit
-- Mock EF Core DbContext with async query provider
-- Achieve 34 passing tests covering all controller actions
+- Right-side slide-in drawer using shadcn Sheet
+- Clicking ItemCard opens drawer with full item data
+- Works on dashboard and items list pages
+- Action bar: Favorite (yellow star), Pin, Copy, Edit, Delete
+- Client wrapper for state management (server-compatible)
+- Fetch full item detail on click from CodeBook.Api
+- Skeleton loading state while fetching
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Add unit tests for CodeBook.Api controllers. 34 tests across DashboardItems, DashboardItemTypes, DashboardCollections, Profile, and Users controllers.
+Implement item drawer per `context/features/item-drawer-spec.md`.
 
 ## History
 
@@ -57,3 +59,4 @@ Add unit tests for CodeBook.Api controllers. 34 tests across DashboardItems, Das
 - **Rate Limiting for Auth**: Added rate limiting to Login, Register, ForgotPassword, ResetPassword, and Email Verification endpoints via `RateLimiterService` with per-IP and IP+email limiting
 - **Items List View**: Created feature branch, added backend `/api/dashboard/items/by-type/{typeName}` endpoint, `getItemsByType` fetcher, `ItemCard` component with type-colored left border, and rewired `items/[type]/page.tsx` from mock data to real API data
 - **API Unit Tests**: Created `tests/CodeBook.Api.Tests` xUnit project with Moq + EF Core async query provider, added 34 tests across all 5 controllers, made DbSet properties virtual for testability, and added test project to solution file
+- **Item Drawer**: Created feature branch
