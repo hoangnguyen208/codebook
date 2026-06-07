@@ -1,6 +1,6 @@
 # Current Feature
 
-Items List View
+API Unit Tests
 
 ## Status
 
@@ -12,18 +12,17 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Create dynamic route /items/[type] (e.g., /items/snippets, /items/notes)
-- Fetch and display items filtered by type
-- Responsive grid of ItemCard components
-- Two columns on medium and up
-- Each card has left border colored by item type
-- Follow existing codebase patterns
+- Create separate .NET test project inside `tests/` folder
+- Test all 5 API controllers in `CodeBook.Api`
+- Use Microsoft.NET.Test.Sdk, Moq, and xunit
+- Mock EF Core DbContext with async query provider
+- Achieve 34 passing tests covering all controller actions
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement items list view per `context/features/item-list-view-spec.md`.
+Add unit tests for CodeBook.Api controllers. 34 tests across DashboardItems, DashboardItemTypes, DashboardCollections, Profile, and Users controllers.
 
 ## History
 
@@ -57,3 +56,4 @@ Implement items list view per `context/features/item-list-view-spec.md`.
 - **Forgot Password**: Added forgot-password / reset-password flow on Duende Identity; Resend sends the reset link, `returnUrl` threads through ForgotPassword pages, and Confirmation redirects to a fresh webapp OIDC sign-in to avoid PKCE mismatch
 - **Rate Limiting for Auth**: Added rate limiting to Login, Register, ForgotPassword, ResetPassword, and Email Verification endpoints via `RateLimiterService` with per-IP and IP+email limiting
 - **Items List View**: Created feature branch, added backend `/api/dashboard/items/by-type/{typeName}` endpoint, `getItemsByType` fetcher, `ItemCard` component with type-colored left border, and rewired `items/[type]/page.tsx` from mock data to real API data
+- **API Unit Tests**: Created `tests/CodeBook.Api.Tests` xUnit project with Moq + EF Core async query provider, added 34 tests across all 5 controllers, made DbSet properties virtual for testability, and added test project to solution file
