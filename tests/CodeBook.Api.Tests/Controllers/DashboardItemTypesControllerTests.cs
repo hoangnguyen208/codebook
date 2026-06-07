@@ -9,12 +9,12 @@ using Xunit;
 
 namespace CodeBook.Api.Tests.Controllers;
 
-public class DashboardItemTypesControllerTests
+public class ItemsControllerItemTypesTests
 {
     private readonly CodeBookDbContext _dbContext;
     private readonly List<ItemType> _itemTypes;
 
-    public DashboardItemTypesControllerTests()
+    public ItemsControllerItemTypesTests()
     {
         _itemTypes =
         [
@@ -31,7 +31,7 @@ public class DashboardItemTypesControllerTests
     [Fact]
     public async Task GetSystemItemTypes_ReturnsOnlySystemTypes()
     {
-        var controller = new DashboardItemTypesController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetSystemItemTypes();
 
@@ -44,7 +44,7 @@ public class DashboardItemTypesControllerTests
     [Fact]
     public async Task GetSystemItemTypes_ReturnsOrderedByName()
     {
-        var controller = new DashboardItemTypesController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetSystemItemTypes();
 
@@ -57,7 +57,7 @@ public class DashboardItemTypesControllerTests
     [Fact]
     public async Task GetSystemItemTypes_MapsAllFields()
     {
-        var controller = new DashboardItemTypesController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetSystemItemTypes();
 
@@ -79,7 +79,7 @@ public class DashboardItemTypesControllerTests
         var mockDbContext = new Mock<CodeBookDbContext>(new DbContextOptions<CodeBookDbContext>());
         mockDbContext.Setup(db => db.ItemTypes).Returns(MockDbSetHelper.CreateDbSetMock(emptyTypes).Object);
 
-        var controller = new DashboardItemTypesController(mockDbContext.Object);
+        var controller = new ItemsController(mockDbContext.Object);
 
         var result = await controller.GetSystemItemTypes();
 

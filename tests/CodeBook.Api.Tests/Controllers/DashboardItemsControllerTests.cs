@@ -9,7 +9,7 @@ using Xunit;
 
 namespace CodeBook.Api.Tests.Controllers;
 
-public class DashboardItemsControllerTests
+public class ItemsControllerDashboardTests
 {
     private readonly CodeBookDbContext _dbContext;
     private readonly List<Item> _items;
@@ -17,7 +17,7 @@ public class DashboardItemsControllerTests
     private readonly List<Tag> _tags;
     private readonly List<ItemType> _itemTypes;
 
-    public DashboardItemsControllerTests()
+    public ItemsControllerDashboardTests()
     {
         _itemTypes =
         [
@@ -77,7 +77,7 @@ public class DashboardItemsControllerTests
     [Fact]
     public async Task GetRecentItems_ReturnsOrderedByUpdatedAtDesc()
     {
-        var controller = new DashboardItemsController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetRecentItems(100);
 
@@ -90,7 +90,7 @@ public class DashboardItemsControllerTests
     [Fact]
     public async Task GetRecentItems_RespectsLimit()
     {
-        var controller = new DashboardItemsController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetRecentItems(1);
 
@@ -102,7 +102,7 @@ public class DashboardItemsControllerTests
     [Fact]
     public async Task GetRecentItems_MapsFavoriteAndPinned()
     {
-        var controller = new DashboardItemsController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetRecentItems(100);
 
@@ -116,7 +116,7 @@ public class DashboardItemsControllerTests
     [Fact]
     public async Task GetRecentItems_FiltersEmptyTags()
     {
-        var controller = new DashboardItemsController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetRecentItems(100);
 
@@ -129,7 +129,7 @@ public class DashboardItemsControllerTests
     [Fact]
     public async Task GetItemsByType_ReturnsOnlyMatchingType()
     {
-        var controller = new DashboardItemsController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetItemsByType("snippet");
 
@@ -142,7 +142,7 @@ public class DashboardItemsControllerTests
     [Fact]
     public async Task GetItemsByType_UnknownTypeReturnsEmpty()
     {
-        var controller = new DashboardItemsController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetItemsByType("nonexistent");
 
@@ -154,7 +154,7 @@ public class DashboardItemsControllerTests
     [Fact]
     public async Task GetItemsByType_RespectsLimit()
     {
-        var controller = new DashboardItemsController(_dbContext);
+        var controller = new ItemsController(_dbContext);
 
         var result = await controller.GetItemsByType("snippet", 1);
 

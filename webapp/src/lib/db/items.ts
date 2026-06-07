@@ -1,25 +1,8 @@
 import "server-only";
 
-export type DashboardItem = {
-  id: string;
-  title: string;
-  description: string;
-  typeId: string;
-  collectionId: string;
-  tags: string[];
-  isFavorite: boolean;
-  isPinned: boolean;
-  updatedAt: string;
-};
+import type { DashboardItem, DashboardItemType, ItemDetail } from "@/types/items";
 
-export type DashboardItemType = {
-  id: string;
-  name: string;
-  label: string;
-  icon: "code" | "sparkles" | "terminal" | "file-text" | "file" | "image" | "link";
-  color: string;
-  isSystem: boolean;
-};
+export type { DashboardItem, DashboardItemType, ItemDetail };
 
 type DashboardItemApiDto = {
   id: string;
@@ -209,4 +192,69 @@ export async function getItemsByType(
     isPinned: item.isPinned,
     updatedAt: toDateLabel(item.updatedAt),
   }));
+}
+
+export async function getItemById(
+  id: string,
+): Promise<ItemDetail | null> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/items/${encodeURIComponent(id)}`,
+    { cache: "no-store" },
+  );
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch item "${id}": ${response.status}`);
+  }
+
+  const item = (await response.json()) as {
+    id: string;
+    title: string;
+    description: string | null;
+    content: string | null;
+    contentType: string;
+    language: string | null;
+    fileUrl: string | null;
+    fileName: string | null;
+    fileSize: number | null;
+    url: string | null;
+    isFavorite: boolean;
+    isPinned: boolean;
+    typeId: string;
+    typeName: string;
+    typeIcon: string | null;
+    typeColor: string | null;
+    collectionId: string | null;
+    collectionName: string | null;
+    tags: string[];
+    createdAt: string;
+    updatedAt: string;
+  };
+
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    content: item.content,
+    contentType: item.contentType,
+    language: item.language,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
+    url: item.url,
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    typeId: item.typeId,
+    typeName: item.typeName,
+    typeIcon: item.typeIcon,
+    typeColor: item.typeColor,
+    collectionId: item.collectionId,
+    collectionName: item.collectionName,
+    tags: item.tags.filter((tag) => tag.trim().length > 0),
+    createdAt: toDateLabel(item.createdAt),
+    updatedAt: toDateLabel(item.updatedAt),
+  };
 }
