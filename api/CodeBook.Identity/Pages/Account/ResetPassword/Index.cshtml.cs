@@ -1,5 +1,6 @@
 using System.Text;
 using CodeBook.Identity.Models;
+using CodeBook.Identity.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,15 +14,17 @@ namespace CodeBook.Identity.Pages.Account.ResetPassword;
 public class Index : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly AuthRateLimiter _rateLimiter;
 
     [BindProperty]
     public InputModel Input { get; set; } = default!;
 
     public bool IsInvalidLink { get; private set; }
 
-    public Index(UserManager<ApplicationUser> userManager)
+    public Index(UserManager<ApplicationUser> userManager, AuthRateLimiter rateLimiter)
     {
         _userManager = userManager;
+        _rateLimiter = rateLimiter;
     }
 
     public IActionResult OnGet(string? userId, string? code, string? returnUrl)
@@ -46,6 +49,16 @@ public class Index : PageModel
         if (string.IsNullOrWhiteSpace(Input.UserId) || string.IsNullOrWhiteSpace(Input.Code))
         {
             IsInvalidLink = true;
+            return Page();
+        }
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var (isAllowed, retryAfter) = _rateLimiter.TryAcquireFixed($"reset-password:{ip}", permitLimit: 5, TimeSpan.FromMinutes(15));
+
+        if (!isAllowed)
+        {
+            Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+            ModelState.AddModelError(string.Empty, $"Too many attempts. Please try again in {RateLimitFormat.FormatRetryAfter(retryAfter)}.");
             return Page();
         }
 

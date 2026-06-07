@@ -1,5 +1,6 @@
 using System.Text;
 using CodeBook.Identity.Models;
+using CodeBook.Identity.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -15,14 +16,16 @@ public class Index : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IEmailSender _emailSender;
+    private readonly AuthRateLimiter _rateLimiter;
 
     [BindProperty]
     public InputModel Input { get; set; } = default!;
 
-    public Index(UserManager<ApplicationUser> userManager, IEmailSender emailSender)
+    public Index(UserManager<ApplicationUser> userManager, IEmailSender emailSender, AuthRateLimiter rateLimiter)
     {
         _userManager = userManager;
         _emailSender = emailSender;
+        _rateLimiter = rateLimiter;
     }
 
     public IActionResult OnGet(string? returnUrl)
@@ -35,6 +38,16 @@ public class Index : PageModel
     {
         if (!ModelState.IsValid)
         {
+            return Page();
+        }
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var (isAllowed, retryAfter) = _rateLimiter.TryAcquireFixed($"forgot-password:{ip}", permitLimit: 3, TimeSpan.FromHours(1));
+
+        if (!isAllowed)
+        {
+            Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+            ModelState.AddModelError(string.Empty, $"Too many attempts. Please try again in {RateLimitFormat.FormatRetryAfter(retryAfter)}.");
             return Page();
         }
 

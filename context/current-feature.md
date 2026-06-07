@@ -1,6 +1,6 @@
 # Current Feature
 
-Profile Page
+Rate Limiting for Auth
 
 ## Status
 
@@ -12,30 +12,23 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Display user info: avatar (GitHub or initials), username, email, provider badge (Email/Password vs GitHub)
-- Show usage stats: total items, total collections, breakdown by item type
-- Change password action (Duende users only) — links to Identity server change-password page
-- Delete account with confirmation dialog (Duende users delete from Identity; GitHub users sign out)
+- Add rate limiting to auth-related API routes
+- Create reusable rate limiting utility
+- Return appropriate error responses (429 Too Many Requests)
+- Display user-friendly error messages on the frontend
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement the full profile page per `context/features/profile-spec.md`.
+Implement rate limiting on authentication endpoints per `context/features/rate-limiting-spec.md`.
 
 **Implementation notes:**
-- New `GET /api/profile/stats` endpoint in `CodeBook.Api`
-- Store `provider` in NextAuth JWT/session (`auth.config.ts`)
-- `webapp/src/lib/db/profile.ts` — fetches profile stats
-- `webapp/src/app/profile/page.tsx` — full Server Component profile page
-- `webapp/src/components/profile/DeleteAccountDialog.tsx` — Client Component modal
-- `webapp/src/actions/profile.ts` — delete account Server Action
-- `api/CodeBook.Identity/Pages/Account/Manage/ChangePassword` — new Razor Page
-- `api/CodeBook.Identity/Pages/Account/Manage/DeleteAccount` — new Razor Page
-
-**References:**
-- Feature spec: `@context/features/profile-spec.md`
-- Follow `@context/coding-standards.md` for TypeScript/Next.js conventions
+- `AuthRateLimiter` service uses a sliding window (list of timestamps) for Login and fixed window (count + expiry) for all other endpoints
+- Rate checks performed in page handlers (not middleware) so the login form always renders and errors display on-page via `_ValidationSummary`
+- `RetryAfter` calculated directly from tracked window expiry — no dependency on `RateLimitLease.TryGetMetadata` metadata which was returning `TimeSpan.Zero`
+- Login: 5/15min sliding window, IP+email | Register: 3/1hr fixed, IP | ForgotPassword: 3/1hr fixed, IP | ResetPassword: 5/15min fixed, IP | EmailVerify: 3/15min fixed, IP+userId
+- IP extracted via `HttpContext.Connection.RemoteIpAddress`
 
 ## History
 
@@ -67,3 +60,4 @@ Implement the full profile page per `context/features/profile-spec.md`.
 - **Auth UI - Phase 3 Stabilization**: Fixed Duende identity mapping/session claims, improved logout/login re-entry flow, and finalized top-nav profile dropdown behavior
 - **Auth Email Verification**: Added Duende registration email confirmation flow, enforced confirmed email sign-in, and integrated Resend as the Identity email sender via `RESEND_API_KEY`
 - **Forgot Password**: Added forgot-password / reset-password flow on Duende Identity; Resend sends the reset link, `returnUrl` threads through ForgotPassword pages, and Confirmation redirects to a fresh webapp OIDC sign-in to avoid PKCE mismatch
+- **Rate Limiting for Auth**: Added rate limiting to Login, Register, ForgotPassword, ResetPassword, and Email Verification endpoints via `RateLimiterService` with per-IP and IP+email limiting

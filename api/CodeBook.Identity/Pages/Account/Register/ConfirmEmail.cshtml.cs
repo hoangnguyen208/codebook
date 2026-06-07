@@ -1,5 +1,6 @@
 using System.Text;
 using CodeBook.Identity.Models;
+using CodeBook.Identity.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +14,12 @@ namespace CodeBook.Identity.Pages.Account.Register;
 public class ConfirmEmail : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly AuthRateLimiter _rateLimiter;
 
-    public ConfirmEmail(UserManager<ApplicationUser> userManager)
+    public ConfirmEmail(UserManager<ApplicationUser> userManager, AuthRateLimiter rateLimiter)
     {
         _userManager = userManager;
+        _rateLimiter = rateLimiter;
     }
 
     public string StatusMessage { get; private set; } = string.Empty;
@@ -32,6 +35,17 @@ public class ConfirmEmail : PageModel
         if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(code))
         {
             StatusMessage = "Invalid email confirmation link.";
+            IsSuccess = false;
+            return Page();
+        }
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var (isAllowed, retryAfter) = _rateLimiter.TryAcquireFixed($"email-verify:{ip}:{userId}", permitLimit: 3, TimeSpan.FromMinutes(15));
+
+        if (!isAllowed)
+        {
+            Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+            StatusMessage = $"Too many attempts. Please try again in {RateLimitFormat.FormatRetryAfter(retryAfter)}.";
             IsSuccess = false;
             return Page();
         }

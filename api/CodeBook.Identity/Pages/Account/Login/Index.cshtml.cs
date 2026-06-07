@@ -6,6 +6,7 @@ using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
 using CodeBook.Identity.Models;
+using CodeBook.Identity.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -24,6 +25,7 @@ public class Index : PageModel
     private readonly IEventService _events;
     private readonly IAuthenticationSchemeProvider _schemeProvider;
     private readonly IIdentityProviderStore _identityProviderStore;
+    private readonly AuthRateLimiter _rateLimiter;
 
     public ViewModel View { get; set; } = default!;
 
@@ -36,7 +38,8 @@ public class Index : PageModel
         IIdentityProviderStore identityProviderStore,
         IEventService events,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager)
+        SignInManager<ApplicationUser> signInManager,
+        AuthRateLimiter rateLimiter)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -44,6 +47,7 @@ public class Index : PageModel
         _schemeProvider = schemeProvider;
         _identityProviderStore = identityProviderStore;
         _events = events;
+        _rateLimiter = rateLimiter;
     }
 
     public async Task<IActionResult> OnGet(string? returnUrl)
@@ -101,6 +105,18 @@ public class Index : PageModel
 
         if (ModelState.IsValid)
         {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var emailKey = Input.Username?.Trim().ToLowerInvariant() ?? "unknown";
+            var (isAllowed, retryAfter) = _rateLimiter.TryAcquireSliding($"login:{ip}:{emailKey}", permitLimit: 5, TimeSpan.FromMinutes(15));
+
+            if (!isAllowed)
+            {
+                Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+                ModelState.AddModelError(string.Empty, $"Too many attempts. Please try again in {RateLimitFormat.FormatRetryAfter(retryAfter)}.");
+                await BuildModelAsync(Input.ReturnUrl);
+                return Page();
+            }
+
             // Only remember login if allowed
             var rememberLogin = LoginOptions.AllowRememberLogin && Input.RememberLogin;
 
