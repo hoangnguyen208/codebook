@@ -9,12 +9,16 @@ public class CodeBookDbContext : DbContext
     {
     }
 
-    public DbSet<User> Users { get; set; }
-    public DbSet<Item> Items { get; set; }
-    public DbSet<ItemType> ItemTypes { get; set; }
-    public DbSet<Collection> Collections { get; set; }
-    public DbSet<Tag> Tags { get; set; }
-    public DbSet<ItemTag> ItemTags { get; set; }
+    protected CodeBookDbContext()
+    {
+    }
+
+    public virtual DbSet<User> Users { get; set; } = null!;
+    public virtual DbSet<Item> Items { get; set; } = null!;
+    public virtual DbSet<ItemType> ItemTypes { get; set; } = null!;
+    public virtual DbSet<Collection> Collections { get; set; } = null!;
+    public virtual DbSet<Tag> Tags { get; set; } = null!;
+    public virtual DbSet<ItemTag> ItemTags { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
