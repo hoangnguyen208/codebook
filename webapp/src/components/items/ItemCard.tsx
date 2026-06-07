@@ -1,12 +1,22 @@
+import { Code2, File, FileImage, FileText, Link2, Pin, Sparkles, Terminal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Pin } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import type { DashboardItem } from "@/types/items";
+import type { DashboardItem, DashboardItemType } from "@/types/items";
+
+const itemTypeIconMap: Record<DashboardItemType["icon"], LucideIcon> = {
+  code: Code2,
+  sparkles: Sparkles,
+  terminal: Terminal,
+  "file-text": FileText,
+  file: File,
+  image: FileImage,
+  link: Link2,
+};
 
 type ItemCardType = {
   label: string;
-  icon: LucideIcon;
+  iconName: DashboardItemType["icon"];
   colorClasses: string;
   borderColorClass: string;
 };
@@ -18,7 +28,7 @@ type ItemCardProps = {
 };
 
 export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
-  const TypeIcon = itemType.icon;
+  const TypeIcon = itemTypeIconMap[itemType.iconName] ?? FileText;
 
   return (
     <article

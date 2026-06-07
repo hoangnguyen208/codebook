@@ -106,7 +106,7 @@ export default async function ItemsByTypePage({
         ) : (
           <ItemsGridClient
             items={items}
-            itemTypeIcon={Icon}
+            itemTypeIconName={itemType.icon}
             itemTypeColorClasses={typeColorClasses}
             itemTypeBorderColorClass={typeBorderColorClass}
             itemTypeLabel={itemType.label.slice(0, -1)}

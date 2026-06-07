@@ -1,15 +1,13 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
-
 import { ItemCard } from "@/components/items/ItemCard";
 import { ItemDrawerProvider, useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
-import type { DashboardItem } from "@/types/items";
+import type { DashboardItem, DashboardItemType } from "@/types/items";
 
 type ItemsGridClientProps = {
   items: DashboardItem[];
-  itemTypeIcon: LucideIcon;
+  itemTypeIconName: DashboardItemType["icon"];
   itemTypeColorClasses: string;
   itemTypeBorderColorClass: string;
   itemTypeLabel: string;
@@ -17,7 +15,7 @@ type ItemsGridClientProps = {
 
 function ItemsGridInner({
   items,
-  itemTypeIcon,
+  itemTypeIconName,
   itemTypeColorClasses,
   itemTypeBorderColorClass,
   itemTypeLabel,
@@ -33,7 +31,7 @@ function ItemsGridInner({
             item={item}
             itemType={{
               label: itemTypeLabel,
-              icon: itemTypeIcon,
+              iconName: itemTypeIconName,
               colorClasses: itemTypeColorClasses,
               borderColorClass: itemTypeBorderColorClass,
             }}
