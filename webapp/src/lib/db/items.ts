@@ -183,3 +183,30 @@ export async function getRecentDashboardItems(
     updatedAt: toDateLabel(item.updatedAt),
   }));
 }
+
+export async function getItemsByType(
+  typeName: string,
+): Promise<DashboardItem[]> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/dashboard/items/by-type/${encodeURIComponent(typeName)}`,
+    { cache: "no-store" },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch items by type "${typeName}": ${response.status}`);
+  }
+
+  const payload = (await response.json()) as DashboardItemApiDto[];
+
+  return payload.map((item) => ({
+    id: item.id,
+    title: item.title,
+    description: item.description ?? "",
+    typeId: item.typeId,
+    collectionId: item.collectionId ?? "",
+    tags: item.tags.filter((tag) => tag.trim().length > 0),
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    updatedAt: toDateLabel(item.updatedAt),
+  }));
+}

@@ -1,6 +1,6 @@
 # Current Feature
 
-Rate Limiting for Auth
+Items List View
 
 ## Status
 
@@ -12,23 +12,18 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Add rate limiting to auth-related API routes
-- Create reusable rate limiting utility
-- Return appropriate error responses (429 Too Many Requests)
-- Display user-friendly error messages on the frontend
+- Create dynamic route /items/[type] (e.g., /items/snippets, /items/notes)
+- Fetch and display items filtered by type
+- Responsive grid of ItemCard components
+- Two columns on medium and up
+- Each card has left border colored by item type
+- Follow existing codebase patterns
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement rate limiting on authentication endpoints per `context/features/rate-limiting-spec.md`.
-
-**Implementation notes:**
-- `AuthRateLimiter` service uses a sliding window (list of timestamps) for Login and fixed window (count + expiry) for all other endpoints
-- Rate checks performed in page handlers (not middleware) so the login form always renders and errors display on-page via `_ValidationSummary`
-- `RetryAfter` calculated directly from tracked window expiry — no dependency on `RateLimitLease.TryGetMetadata` metadata which was returning `TimeSpan.Zero`
-- Login: 5/15min sliding window, IP+email | Register: 3/1hr fixed, IP | ForgotPassword: 3/1hr fixed, IP | ResetPassword: 5/15min fixed, IP | EmailVerify: 3/15min fixed, IP+userId
-- IP extracted via `HttpContext.Connection.RemoteIpAddress`
+Implement items list view per `context/features/item-list-view-spec.md`.
 
 ## History
 
@@ -61,3 +56,4 @@ Implement rate limiting on authentication endpoints per `context/features/rate-l
 - **Auth Email Verification**: Added Duende registration email confirmation flow, enforced confirmed email sign-in, and integrated Resend as the Identity email sender via `RESEND_API_KEY`
 - **Forgot Password**: Added forgot-password / reset-password flow on Duende Identity; Resend sends the reset link, `returnUrl` threads through ForgotPassword pages, and Confirmation redirects to a fresh webapp OIDC sign-in to avoid PKCE mismatch
 - **Rate Limiting for Auth**: Added rate limiting to Login, Register, ForgotPassword, ResetPassword, and Email Verification endpoints via `RateLimiterService` with per-IP and IP+email limiting
+- **Items List View**: Created feature branch, added backend `/api/dashboard/items/by-type/{typeName}` endpoint, `getItemsByType` fetcher, `ItemCard` component with type-colored left border, and rewired `items/[type]/page.tsx` from mock data to real API data

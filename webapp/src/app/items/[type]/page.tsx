@@ -1,16 +1,44 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, FolderOpen } from "lucide-react";
+import { ArrowLeft, Code2, File, FileImage, FileText, Link2, Sparkles, Terminal } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
+import { ItemCard } from "@/components/items/ItemCard";
 import { buttonVariants } from "@/components/ui/button";
+import { getItemsByType, getSystemDashboardItemTypes, type DashboardItemType } from "@/lib/db/items";
 import { cn } from "@/lib/utils";
-import { mockDashboardData } from "@/lib/mock-data";
 
-export function generateStaticParams() {
-  return mockDashboardData.itemTypes.map((itemType) => ({
-    type: itemType.name,
-  }));
-}
+export const dynamic = "force-dynamic";
+
+const itemTypeIcons: Record<DashboardItemType["icon"], LucideIcon> = {
+  code: Code2,
+  sparkles: Sparkles,
+  terminal: Terminal,
+  "file-text": FileText,
+  file: File,
+  image: FileImage,
+  link: Link2,
+};
+
+const colorClasses: Record<string, string> = {
+  blue: "border-blue-500/30 bg-blue-500/10 text-blue-300",
+  purple: "border-purple-500/30 bg-purple-500/10 text-purple-300",
+  orange: "border-orange-500/30 bg-orange-500/10 text-orange-300",
+  yellow: "border-yellow-500/30 bg-yellow-500/10 text-yellow-300",
+  slate: "border-slate-500/30 bg-slate-500/10 text-slate-300",
+  pink: "border-pink-500/30 bg-pink-500/10 text-pink-300",
+  emerald: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+};
+
+const borderColorClasses: Record<string, string> = {
+  blue: "border-l-blue-500/40",
+  purple: "border-l-purple-500/40",
+  orange: "border-l-orange-500/40",
+  yellow: "border-l-yellow-500/40",
+  slate: "border-l-slate-500/40",
+  pink: "border-l-pink-500/40",
+  emerald: "border-l-emerald-500/40",
+};
 
 export default async function ItemsByTypePage({
   params,
@@ -19,7 +47,8 @@ export default async function ItemsByTypePage({
 }) {
   const { type } = await params;
 
-  const itemType = mockDashboardData.itemTypes.find(
+  const itemTypes = await getSystemDashboardItemTypes();
+  const itemType = itemTypes.find(
     (candidate) => candidate.name === type,
   );
 
@@ -27,10 +56,10 @@ export default async function ItemsByTypePage({
     notFound();
   }
 
-  const matchingItems = mockDashboardData.items.filter(
-    (item) => item.typeId === itemType.id,
-  );
-  const collectionCount = new Set(matchingItems.map((item) => item.collectionId)).size;
+  const items = await getItemsByType(type);
+  const Icon = itemTypeIcons[itemType.icon] ?? FileText;
+  const typeColorClasses = colorClasses[itemType.color] ?? "border-border bg-muted text-muted-foreground";
+  const typeBorderColorClass = borderColorClasses[itemType.color] ?? "border-l-border/70";
 
   return (
     <main className="min-h-screen bg-background">
@@ -45,67 +74,50 @@ export default async function ItemsByTypePage({
           </Link>
         </div>
 
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-muted-foreground">
-            Item type route
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            {itemType.label}
-          </h1>
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-            This phase adds working routes for dashboard item types. The{" "}
-            {itemType.label.toLowerCase()} category currently includes{" "}
-            {matchingItems.length} items across {collectionCount} collections.
-          </p>
+        <div className="flex items-center gap-4">
+          <div
+            className={cn(
+              "flex size-12 items-center justify-center rounded-2xl border",
+              typeColorClasses,
+            )}
+          >
+            <Icon className="size-5" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              {itemType.label}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {items.length} {items.length === 1 ? "item" : "items"}
+            </p>
+          </div>
         </div>
 
-        <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-2xl border border-border/70 bg-background/70 text-muted-foreground">
-              <FolderOpen className="size-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight">
-                Recent {itemType.label.toLowerCase()}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Mock data rendered from the current dashboard dataset.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4">
-            {matchingItems.map((item) => (
-              <article
+        {items.length === 0 ? (
+          <section className="rounded-3xl border border-border/70 bg-card p-12 text-center shadow-sm">
+            <p className="text-lg font-medium text-muted-foreground">
+              No {itemType.label.toLowerCase()} yet
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Create your first {itemType.label.toLowerCase().slice(0, -1)} to get started.
+            </p>
+          </section>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {items.map((item) => (
+              <ItemCard
                 key={item.id}
-                className="rounded-2xl border border-border/70 bg-background/70 p-4"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium">{item.title}</h3>
-                    <p className="text-sm leading-6 text-muted-foreground">
-                      {item.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {item.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium text-muted-foreground"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <p className="shrink-0 text-sm text-muted-foreground">
-                    {item.updatedAt}
-                  </p>
-                </div>
-              </article>
+                item={item}
+                itemType={{
+                  label: itemType.label.slice(0, -1),
+                  icon: Icon,
+                  colorClasses: typeColorClasses,
+                  borderColorClass: typeBorderColorClass,
+                }}
+              />
             ))}
           </div>
-        </section>
+        )}
       </section>
     </main>
   );
