@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
-import type { ItemDetail } from "@/lib/db/items";
+import type { ItemDetail } from "@/types/items";
 
 const itemTypeIcons: Record<string, LucideIcon> = {
   code: Code2,

@@ -34,6 +34,7 @@ import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import type { DashboardItem, DashboardItemType } from "@/types/items";
 
 type DashboardUser = {
   id: string;
@@ -43,33 +44,12 @@ type DashboardUser = {
   plan: "free" | "pro";
 };
 
-type DashboardItemType = {
-  id: string;
-  name: string;
-  label: string;
-  icon: "code" | "sparkles" | "terminal" | "file-text" | "file" | "image" | "link";
-  color: string;
-  isSystem: boolean;
-};
-
 type DashboardCollection = {
   id: string;
   name: string;
   description: string;
   color: string;
   isFavorite: boolean;
-};
-
-type DashboardItem = {
-  id: string;
-  title: string;
-  description: string;
-  typeId: string;
-  collectionId: string;
-  tags: string[];
-  isFavorite: boolean;
-  isPinned: boolean;
-  updatedAt: string;
 };
 
 type DashboardShellProps = {

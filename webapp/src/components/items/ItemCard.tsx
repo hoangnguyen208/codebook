@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { Pin } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import type { DashboardItem } from "@/lib/db/items";
+import type { DashboardItem } from "@/types/items";
 
 type ItemCardType = {
   label: string;

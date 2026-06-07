@@ -5,7 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { ItemCard } from "@/components/items/ItemCard";
 import { ItemDrawerProvider, useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
-import type { DashboardItem } from "@/lib/db/items";
+import type { DashboardItem } from "@/types/items";
 
 type ItemsGridClientProps = {
   items: DashboardItem[];

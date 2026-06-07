@@ -5,7 +5,8 @@ import type { LucideIcon } from "lucide-react";
 
 import { ItemsGridClient } from "@/components/items/ItemsGridClient";
 import { buttonVariants } from "@/components/ui/button";
-import { getItemsByType, getSystemDashboardItemTypes, type DashboardItemType } from "@/lib/db/items";
+import { getItemsByType, getSystemDashboardItemTypes } from "@/lib/db/items";
+import type { DashboardItemType } from "@/types/items";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
