@@ -6,7 +6,7 @@ Item Drawer
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Completed
 
 ## Goals
 
@@ -59,4 +59,4 @@ Implement item drawer per `context/features/item-drawer-spec.md`.
 - **Rate Limiting for Auth**: Added rate limiting to Login, Register, ForgotPassword, ResetPassword, and Email Verification endpoints via `RateLimiterService` with per-IP and IP+email limiting
 - **Items List View**: Created feature branch, added backend `/api/dashboard/items/by-type/{typeName}` endpoint, `getItemsByType` fetcher, `ItemCard` component with type-colored left border, and rewired `items/[type]/page.tsx` from mock data to real API data
 - **API Unit Tests**: Created `tests/CodeBook.Api.Tests` xUnit project with Moq + EF Core async query provider, added 34 tests across all 5 controllers, made DbSet properties virtual for testability, and added test project to solution file
-- **Item Drawer**: Created feature branch
+- **Item Drawer**: Added shadcn Sheet right-side drawer with ItemDrawerProvider/Sheet, skeleton loading, action bar (Favorite/Pin/Copy/Edit/Delete), wired into dashboard and items list pages; merged DashboardItems/DashboardItemTypes controllers into ItemsController; extracted shared types to fix server-client serialization
