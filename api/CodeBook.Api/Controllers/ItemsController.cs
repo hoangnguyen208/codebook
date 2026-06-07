@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 namespace CodeBook.Api.Controllers;
 
 [ApiController]
-[Route("api/items")]
 public class ItemsController : ControllerBase
 {
     private readonly CodeBookDbContext _dbContext;
@@ -15,7 +14,7 @@ public class ItemsController : ControllerBase
         _dbContext = dbContext;
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("api/items/{id}")]
     public async Task<ActionResult<ItemDetailDto>> GetItem(string id)
     {
         var item = await _dbContext.Items
@@ -60,6 +59,119 @@ public class ItemsController : ControllerBase
             UpdatedAt = item.UpdatedAt
         });
     }
+
+    [HttpGet("api/dashboard/items/recent")]
+    public async Task<ActionResult<IEnumerable<RecentDashboardItemDto>>> GetRecentItems(
+        [FromQuery] int limit = 100)
+    {
+        var safeLimit = Math.Clamp(limit, 1, 200);
+
+        var items = await _dbContext.Items
+            .AsNoTracking()
+            .Include(item => item.Tags)
+                .ThenInclude(itemTag => itemTag.Tag)
+            .OrderByDescending(item => item.UpdatedAt)
+            .Take(safeLimit)
+            .ToListAsync();
+
+        var response = items.Select(item => new RecentDashboardItemDto
+        {
+            Id = item.Id,
+            Title = item.Title,
+            Description = item.Description,
+            TypeId = item.TypeId,
+            CollectionId = item.CollectionId,
+            Tags = item.Tags
+                .Select(itemTag => itemTag.Tag.Name)
+                .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            IsFavorite = item.IsFavorite,
+            IsPinned = item.IsPinned,
+            UpdatedAt = item.UpdatedAt
+        });
+
+        return Ok(response);
+    }
+
+    [HttpGet("api/dashboard/items/by-type/{typeName}")]
+    public async Task<ActionResult<IEnumerable<RecentDashboardItemDto>>> GetItemsByType(
+        [FromRoute] string typeName,
+        [FromQuery] int limit = 200)
+    {
+        var safeLimit = Math.Clamp(limit, 1, 200);
+
+        var items = await _dbContext.Items
+            .AsNoTracking()
+            .Include(item => item.Tags)
+                .ThenInclude(itemTag => itemTag.Tag)
+            .Include(item => item.Type)
+            .Where(item => item.Type.IsSystem && item.Type.Name == typeName)
+            .OrderByDescending(item => item.UpdatedAt)
+            .Take(safeLimit)
+            .ToListAsync();
+
+        var response = items.Select(item => new RecentDashboardItemDto
+        {
+            Id = item.Id,
+            Title = item.Title,
+            Description = item.Description,
+            TypeId = item.TypeId,
+            CollectionId = item.CollectionId,
+            Tags = item.Tags
+                .Select(itemTag => itemTag.Tag.Name)
+                .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            IsFavorite = item.IsFavorite,
+            IsPinned = item.IsPinned,
+            UpdatedAt = item.UpdatedAt
+        });
+
+        return Ok(response);
+    }
+
+    [HttpGet("api/dashboard/item-types/system")]
+    public async Task<ActionResult<IEnumerable<DashboardItemTypeDto>>> GetSystemItemTypes()
+    {
+        var itemTypes = await _dbContext.ItemTypes
+            .AsNoTracking()
+            .Where(itemType => itemType.IsSystem)
+            .OrderBy(itemType => itemType.Name)
+            .Select(itemType => new DashboardItemTypeDto
+            {
+                Id = itemType.Id,
+                Name = itemType.Name,
+                Icon = itemType.Icon,
+                Color = itemType.Color,
+                IsSystem = itemType.IsSystem
+            })
+            .ToListAsync();
+
+        return Ok(itemTypes);
+    }
+}
+
+public class RecentDashboardItemDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string TypeId { get; set; } = string.Empty;
+    public string? CollectionId { get; set; }
+    public List<string> Tags { get; set; } = [];
+    public bool IsFavorite { get; set; }
+    public bool IsPinned { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class DashboardItemTypeDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Icon { get; set; }
+    public string? Color { get; set; }
+    public bool IsSystem { get; set; }
 }
 
 public class ItemDetailDto
