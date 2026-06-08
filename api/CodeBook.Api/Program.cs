@@ -1,3 +1,6 @@
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using CodeBook.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,6 +38,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHttpClient();
+
 var app = builder.Build();
 
 // Apply migrations on startup with retry logic
@@ -48,7 +53,9 @@ while (retryCount < maxRetries)
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<CodeBookDbContext>();
             dbContext.Database.Migrate();
-            DatabaseSeeder.SeedAsync(dbContext).GetAwaiter().GetResult();
+
+            var userId = await GetDemoUserIdAsync(scope.ServiceProvider.GetRequiredService<IHttpClientFactory>());
+            await DatabaseSeeder.SeedAsync(dbContext, userId);
             break;
         }
     }
@@ -59,7 +66,7 @@ while (retryCount < maxRetries)
         {
             throw new InvalidOperationException($"Failed to apply migrations after {maxRetries} attempts", ex);
         }
-        System.Threading.Thread.Sleep(5000 * retryCount); // Exponential backoff: 5s, 10s, 15s, 20s, 25s
+        System.Threading.Thread.Sleep(5000 * retryCount);
     }
 }
 
@@ -77,3 +84,39 @@ app.MapGet("/", () => "CodeBook API - Running Successfully!");
 app.MapGet("/health", () => new { status = "healthy", timestamp = DateTime.UtcNow });
 
 app.Run();
+
+static async Task<string?> GetDemoUserIdAsync(IHttpClientFactory httpClientFactory)
+{
+    var httpClient = httpClientFactory.CreateClient();
+    var identityUrl = Environment.GetEnvironmentVariable("IDENTITY_URL") ?? "http://id.codebook.local:5001";
+
+    // Get token for bob using resource owner password grant
+    var tokenRequest = new Dictionary<string, string>
+    {
+        ["grant_type"] = "password",
+        ["client_id"] = "codebook-webapp",
+        ["client_secret"] = "codebook-webapp-secret",
+        ["username"] = "bob",
+        ["password"] = "Pass123$",
+        ["scope"] = "openid profile email codebook.api offline_access"
+    };
+
+    var tokenResponse = await httpClient.PostAsync(
+        $"{identityUrl}/connect/token",
+        new FormUrlEncodedContent(tokenRequest));
+
+    tokenResponse.EnsureSuccessStatusCode();
+
+    var tokenJson = await tokenResponse.Content.ReadAsStringAsync();
+    using var tokenDoc = JsonDocument.Parse(tokenJson);
+    var accessToken = tokenDoc.RootElement.GetProperty("access_token").GetString()!;
+
+    // Call userinfo to get sub claim
+    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    var userInfoResponse = await httpClient.GetAsync($"{identityUrl}/connect/userinfo");
+    userInfoResponse.EnsureSuccessStatusCode();
+
+    var userInfoJson = await userInfoResponse.Content.ReadAsStringAsync();
+    using var userInfoDoc = JsonDocument.Parse(userInfoJson);
+    return userInfoDoc.RootElement.GetProperty("sub").GetString();
+}

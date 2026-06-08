@@ -32,7 +32,7 @@ public static class Config
                 ClientName = "CodeBook Web App",
                 ClientSecrets = { new Secret(clientSecret.Sha256()) },
 
-                AllowedGrantTypes = GrantTypes.Code,
+                AllowedGrantTypes = { GrantType.AuthorizationCode, GrantType.ResourceOwnerPassword },
                 RequirePkce = true,
                 RequireClientSecret = true,
                 AllowAccessTokensViaBrowser = false,

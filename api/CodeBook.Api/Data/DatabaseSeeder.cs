@@ -5,11 +5,16 @@ namespace CodeBook.Api.Data;
 
 public static class DatabaseSeeder
 {
-    public static async Task SeedAsync(CodeBookDbContext dbContext)
+    public static async Task SeedAsync(CodeBookDbContext dbContext, string? userId = null)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return;
+        }
+
         var hasExistingData = await dbContext.ItemTypes.AnyAsync()
-            || await dbContext.Collections.AnyAsync()
-            || await dbContext.Items.AnyAsync();
+            || await dbContext.Collections.AnyAsync(c => c.UserId == userId)
+            || await dbContext.Items.AnyAsync(i => i.UserId == userId);
 
         if (hasExistingData)
         {
@@ -33,11 +38,11 @@ public static class DatabaseSeeder
 
         var collections = new[]
         {
-            CreateCollection("React Patterns", "Reusable React patterns and hooks", now, isFavorite: true),
-            CreateCollection("AI Workflows", "AI prompts and workflow automations", now),
-            CreateCollection("DevOps", "Infrastructure and deployment resources", now, isFavorite: true),
-            CreateCollection("Terminal Commands", "Useful shell commands for everyday development", now),
-            CreateCollection("Design Resources", "UI/UX resources and references", now)
+            CreateCollection(userId, "React Patterns", "Reusable React patterns and hooks", now, isFavorite: true),
+            CreateCollection(userId, "AI Workflows", "AI prompts and workflow automations", now),
+            CreateCollection(userId, "DevOps", "Infrastructure and deployment resources", now, isFavorite: true),
+            CreateCollection(userId, "Terminal Commands", "Useful shell commands for everyday development", now),
+            CreateCollection(userId, "Design Resources", "UI/UX resources and references", now)
         };
 
         var collectionsByName = collections.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
@@ -45,7 +50,7 @@ public static class DatabaseSeeder
         var items = new List<Item>
         {
             // React Patterns (3 snippets)
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["snippet"].Id,
                 collectionsByName["React Patterns"].Id,
                 "useDebounce Hook",
@@ -54,14 +59,14 @@ public static class DatabaseSeeder
                 now,
                 isFavorite: true,
                 isPinned: true),
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["snippet"].Id,
                 collectionsByName["React Patterns"].Id,
                 "Context Provider Pattern",
                 "type Theme = \"light\" | \"dark\";\nconst ThemeContext = createContext<{ theme: Theme; toggle: () => void } | null>(null);\n\nexport function ThemeProvider({ children }: { children: React.ReactNode }) {\n  const [theme, setTheme] = useState<Theme>(\"light\");\n  const toggle = () => setTheme((t) => (t === \"light\" ? \"dark\" : \"light\"));\n  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;\n}",
                 "typescript",
                 now),
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["snippet"].Id,
                 collectionsByName["React Patterns"].Id,
                 "Class Name Utility",
@@ -70,21 +75,21 @@ public static class DatabaseSeeder
                 now),
 
             // AI Workflows (3 prompts)
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["prompt"].Id,
                 collectionsByName["AI Workflows"].Id,
                 "Code Review Prompt",
                 "Review this pull request for correctness, security, and edge cases. Prioritize actionable feedback and include concrete fixes when possible.",
                 null,
                 now),
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["prompt"].Id,
                 collectionsByName["AI Workflows"].Id,
                 "Documentation Prompt",
                 "Generate developer-facing documentation for this module: purpose, public API, usage examples, and known limitations.",
                 null,
                 now),
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["prompt"].Id,
                 collectionsByName["AI Workflows"].Id,
                 "Refactoring Prompt",
@@ -93,14 +98,14 @@ public static class DatabaseSeeder
                 now),
 
             // DevOps (1 snippet, 1 command, 2 links)
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["snippet"].Id,
                 collectionsByName["DevOps"].Id,
                 "GitHub Actions .NET Build",
                 "name: ci\non: [push, pull_request]\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-dotnet@v4\n        with:\n          dotnet-version: \"10.0.x\"\n      - run: dotnet restore\n      - run: dotnet build --no-restore",
                 "yaml",
                 now),
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["command"].Id,
                 collectionsByName["DevOps"].Id,
                 "Docker Compose Deploy",
@@ -109,13 +114,13 @@ public static class DatabaseSeeder
                 now,
                 isFavorite: true,
                 isPinned: true),
-            CreateLinkItem(
+            CreateLinkItem(userId,
                 typesByName["link"].Id,
                 collectionsByName["DevOps"].Id,
                 "Docker Compose docs",
                 "https://docs.docker.com/compose/",
                 now),
-            CreateLinkItem(
+            CreateLinkItem(userId,
                 typesByName["link"].Id,
                 collectionsByName["DevOps"].Id,
                 "GitHub Actions docs",
@@ -123,28 +128,28 @@ public static class DatabaseSeeder
                 now),
 
             // Terminal Commands (4 commands)
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["command"].Id,
                 collectionsByName["Terminal Commands"].Id,
                 "Git Branch Cleanup",
                 "git fetch --prune && git branch --merged | grep -v \"\\*\\|main\\|master\" | xargs -n 1 git branch -d",
                 "bash",
                 now),
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["command"].Id,
                 collectionsByName["Terminal Commands"].Id,
                 "Docker Log Tail",
                 "docker compose logs -f --tail=200 api",
                 "bash",
                 now),
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["command"].Id,
                 collectionsByName["Terminal Commands"].Id,
                 "Kill Process on Port 3000",
                 "lsof -ti :3000 | xargs kill -9",
                 "bash",
                 now),
-            CreateTextItem(
+            CreateTextItem(userId,
                 typesByName["command"].Id,
                 collectionsByName["Terminal Commands"].Id,
                 "NPM Clean Install",
@@ -153,26 +158,26 @@ public static class DatabaseSeeder
                 now),
 
             // Design Resources (4 links)
-            CreateLinkItem(
+            CreateLinkItem(userId,
                 typesByName["link"].Id,
                 collectionsByName["Design Resources"].Id,
                 "Tailwind CSS",
                 "https://tailwindcss.com/docs",
                 now,
                 isFavorite: true),
-            CreateLinkItem(
+            CreateLinkItem(userId,
                 typesByName["link"].Id,
                 collectionsByName["Design Resources"].Id,
                 "shadcn/ui",
                 "https://ui.shadcn.com/",
                 now),
-            CreateLinkItem(
+            CreateLinkItem(userId,
                 typesByName["link"].Id,
                 collectionsByName["Design Resources"].Id,
                 "Material Design",
                 "https://m3.material.io/",
                 now),
-            CreateLinkItem(
+            CreateLinkItem(userId,
                 typesByName["link"].Id,
                 collectionsByName["Design Resources"].Id,
                 "Lucide Icons",
@@ -197,12 +202,14 @@ public static class DatabaseSeeder
     };
 
     private static Collection CreateCollection(
+        string userId,
         string name,
         string description,
         DateTime now,
         bool isFavorite = false) => new()
     {
         Id = Guid.NewGuid().ToString(),
+        UserId = userId,
         Name = name,
         Description = description,
         IsFavorite = isFavorite,
@@ -211,6 +218,7 @@ public static class DatabaseSeeder
     };
 
     private static Item CreateTextItem(
+        string userId,
         string typeId,
         string collectionId,
         string title,
@@ -227,6 +235,7 @@ public static class DatabaseSeeder
         Language = language,
         IsFavorite = isFavorite,
         IsPinned = isPinned,
+        UserId = userId,
         TypeId = typeId,
         CollectionId = collectionId,
         CreatedAt = now,
@@ -234,6 +243,7 @@ public static class DatabaseSeeder
     };
 
     private static Item CreateLinkItem(
+        string userId,
         string typeId,
         string collectionId,
         string title,
@@ -249,6 +259,7 @@ public static class DatabaseSeeder
         Description = url,
         IsFavorite = isFavorite,
         IsPinned = isPinned,
+        UserId = userId,
         TypeId = typeId,
         CollectionId = collectionId,
         CreatedAt = now,

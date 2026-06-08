@@ -6,6 +6,7 @@ public class Collection
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
     public bool IsFavorite { get; set; }
+    public string? UserId { get; set; }
 
     // Navigation properties
     public ICollection<Item> Items { get; set; } = new List<Item>();

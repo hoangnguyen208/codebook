@@ -36,6 +36,12 @@ public class CodeBookDbContext : DbContext
             .HasForeignKey(i => i.CollectionId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<Item>()
+            .HasIndex(i => i.UserId);
+
+        modelBuilder.Entity<Collection>()
+            .HasIndex(c => c.UserId);
+
         // ItemTag configuration (composite key)
         modelBuilder.Entity<ItemTag>()
             .HasKey(it => new { it.ItemId, it.TagId });

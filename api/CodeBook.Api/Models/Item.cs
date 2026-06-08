@@ -14,6 +14,7 @@ public class Item
     public bool IsFavorite { get; set; }
     public bool IsPinned { get; set; }
     public string? Language { get; set; }
+    public string? UserId { get; set; }
 
     public string TypeId { get; set; } = null!;
     public ItemType Type { get; set; } = null!;
