@@ -1,12 +1,11 @@
 # Current Feature
 
-Item Drawer
+Item Delete
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 Completed
-
 ## Goals
 
 <!-- Goals & requirements -->
@@ -23,7 +22,7 @@ Completed
 
 <!-- Any extra notes -->
 
-Implement item drawer per `context/features/item-drawer-spec.md`.
+Implement item delete per `context/features/item-drawer-spec.md` action bar requirements.
 
 ## History
 
@@ -60,3 +59,4 @@ Implement item drawer per `context/features/item-drawer-spec.md`.
 - **API Unit Tests**: Created `tests/CodeBook.Api.Tests` xUnit project with Moq + EF Core async query provider, added 34 tests across all 5 controllers, made DbSet properties virtual for testability, and added test project to solution file
 - **Item Drawer**: Added shadcn Sheet right-side drawer with ItemDrawerProvider/Sheet, skeleton loading, action bar (Favorite/Pin/Copy/Edit/Delete), wired into dashboard and items list pages; merged DashboardItems/DashboardItemTypes controllers into ItemsController; extracted shared types to fix server-client serialization
 - **Item Drawer — Edit Mode**: Added inline edit mode to item drawer with type-specific inputs (title/description/tags/content/language/url), Zod-validated server action, `PUT api/items/{id}` endpoint with tag disconnect-and-reconnect logic, 26 unit tests for ItemsController, and item types tests merged into ItemsControllerTests.cs
+- **Item Drawer — Delete**: Added `DELETE api/items/{id}` endpoint with ownership validation, `deleteItem` server action, confirmation dialog with warning in the item drawer, auto-close + list refresh after delete, and 3 unit tests (42 total)

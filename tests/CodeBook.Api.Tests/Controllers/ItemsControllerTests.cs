@@ -119,8 +119,12 @@ public class ItemsControllerTests
                 }
             });
 
+        var mockItemsDbSet = MockDbSetHelper.CreateDbSetMock(_items);
+        mockItemsDbSet.Setup(m => m.Remove(It.IsAny<Item>()))
+            .Callback<Item>(e => _items.Remove(e));
+
         var mockDbContext = new Mock<CodeBookDbContext>(new DbContextOptions<CodeBookDbContext>());
-        mockDbContext.Setup(db => db.Items).Returns(MockDbSetHelper.CreateDbSetMock(_items).Object);
+        mockDbContext.Setup(db => db.Items).Returns(mockItemsDbSet.Object);
         mockDbContext.Setup(db => db.ItemTypes).Returns(MockDbSetHelper.CreateDbSetMock(_itemTypes).Object);
         mockDbContext.Setup(db => db.Tags).Returns(MockDbSetHelper.CreateDbSetMock(_tags).Object);
         mockDbContext.Setup(db => db.ItemTags).Returns(mockItemTagsDbSet.Object);
@@ -547,5 +551,42 @@ public class ItemsControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var types = Assert.IsAssignableFrom<IEnumerable<DashboardItemTypeDto>>(okResult.Value);
         Assert.Empty(types);
+    }
+
+    // ── Delete tests ──
+
+    [Fact]
+    public async Task DeleteItem_RemovesItemAndTags()
+    {
+        var controller = CreateController();
+
+        var result = await controller.DeleteItem("item-1");
+
+        Assert.IsType<NoContentResult>(result);
+        Assert.Equal(2, _items.Count);
+        Assert.DoesNotContain(_items, i => i.Id == "item-1");
+        Assert.DoesNotContain(_itemTags, it => it.ItemId == "item-1");
+    }
+
+    [Fact]
+    public async Task DeleteItem_ReturnsNotFoundForMissingItem()
+    {
+        var controller = CreateController();
+
+        var result = await controller.DeleteItem("non-existent");
+
+        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(3, _items.Count);
+    }
+
+    [Fact]
+    public async Task DeleteItem_ReturnsNotFoundForOtherUsersItem()
+    {
+        var otherController = CreateController("different-user");
+
+        var result = await otherController.DeleteItem("item-1");
+
+        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(3, _items.Count);
     }
 }

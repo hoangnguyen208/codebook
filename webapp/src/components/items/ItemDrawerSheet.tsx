@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  AlertTriangle,
   Check,
   Code2,
   Copy,
@@ -29,7 +30,7 @@ import {
 } from "@/components/ui/sheet";
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
-import { updateItem } from "@/actions/items";
+import { updateItem, deleteItem } from "@/actions/items";
 import type { ItemDetail } from "@/types/items";
 
 const itemTypeIcons: Record<string, LucideIcon> = {
@@ -120,6 +121,8 @@ export function ItemDrawerSheet() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [status, setStatus] = useState<StatusBanner | null>(null);
 
   // Edit form local state
@@ -136,6 +139,7 @@ export function ItemDrawerSheet() {
     }
 
     setIsEditing(false);
+    setShowDeleteConfirm(false);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional loading UX
     setLoading(true);
     fetch(`/api/items/${encodeURIComponent(selectedItemId)}`)
@@ -195,6 +199,26 @@ export function ItemDrawerSheet() {
       setStatus({ type: "success", message: "Item updated" });
       router.refresh();
       setTimeout(() => setStatus(null), 3000);
+    } else {
+      setStatus({ type: "error", message: result.error });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!item) return;
+    setDeleting(true);
+    setStatus(null);
+
+    const result = await deleteItem(item.id);
+
+    setDeleting(false);
+
+    if (result.success) {
+      setStatus({ type: "success", message: "Item deleted" });
+      setTimeout(() => {
+        closeDrawer();
+        router.refresh();
+      }, 600);
     } else {
       setStatus({ type: "error", message: result.error });
     }
@@ -495,6 +519,7 @@ export function ItemDrawerSheet() {
                   </div>
                   <button
                     type="button"
+                    onClick={() => setShowDeleteConfirm(true)}
                     className="rounded-lg p-2 hover:bg-red-500/10 transition-colors"
                     aria-label="Delete"
                   >
@@ -503,6 +528,37 @@ export function ItemDrawerSheet() {
                 </>
               )}
             </div>
+
+            {showDeleteConfirm ? (
+              <div className="border-t border-border/70 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm text-red-400">
+                  <AlertTriangle className="size-4" />
+                  <span className="font-medium">Delete this item?</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This action cannot be undone. The item and all its tags will be permanently removed.
+                </p>
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={deleting}
+                    className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+                  >
+                    <Trash2 className="size-4" />
+                    {deleting ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">

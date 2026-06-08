@@ -44,6 +44,26 @@ public class ItemsController : ControllerBase
         return Ok(ToItemDetailDto(item));
     }
 
+    [HttpDelete("api/items/{id}")]
+    public async Task<IActionResult> DeleteItem(string id)
+    {
+        var userId = GetUserId();
+        var item = await _dbContext.Items
+            .Include(i => i.Tags)
+            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
+
+        if (item == null)
+        {
+            return NotFound();
+        }
+
+        _dbContext.ItemTags.RemoveRange(item.Tags);
+        _dbContext.Items.Remove(item);
+        await _dbContext.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     [HttpPut("api/items/{id}")]
     public async Task<ActionResult<ItemDetailDto>> UpdateItem(string id, [FromBody] UpdateItemRequest request)
     {

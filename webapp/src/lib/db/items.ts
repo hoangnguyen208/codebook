@@ -281,6 +281,23 @@ export async function getItemById(
   };
 }
 
+export async function deleteItem(
+  id: string,
+  options?: FetchOptions,
+): Promise<void> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/items/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+      headers: authHeaders(options?.accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete item "${id}": ${response.status}`);
+  }
+}
+
 type UpdateItemPayload = {
   title: string;
   description?: string | null;
