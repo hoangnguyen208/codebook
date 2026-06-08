@@ -1,11 +1,11 @@
 # Current Feature
 
-Item Delete
+Item Create
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
-Completed
+In Progress
 ## Goals
 
 <!-- Goals & requirements -->
@@ -22,7 +22,7 @@ Completed
 
 <!-- Any extra notes -->
 
-Implement item delete per `context/features/item-drawer-spec.md` action bar requirements.
+Implement item create per `context/features/item-create-spec.md`.
 
 ## History
 
@@ -60,3 +60,4 @@ Implement item delete per `context/features/item-drawer-spec.md` action bar requ
 - **Item Drawer**: Added shadcn Sheet right-side drawer with ItemDrawerProvider/Sheet, skeleton loading, action bar (Favorite/Pin/Copy/Edit/Delete), wired into dashboard and items list pages; merged DashboardItems/DashboardItemTypes controllers into ItemsController; extracted shared types to fix server-client serialization
 - **Item Drawer — Edit Mode**: Added inline edit mode to item drawer with type-specific inputs (title/description/tags/content/language/url), Zod-validated server action, `PUT api/items/{id}` endpoint with tag disconnect-and-reconnect logic, 26 unit tests for ItemsController, and item types tests merged into ItemsControllerTests.cs
 - **Item Drawer — Delete**: Added `DELETE api/items/{id}` endpoint with ownership validation, `deleteItem` server action, confirmation dialog with warning in the item drawer, auto-close + list refresh after delete, and 3 unit tests (42 total)
+- **Item Create**: Added `POST api/items` endpoint, `createItem` server action with Zod validation, shadcn Dialog modal with type selector and dynamic fields (content/language/url), wired New Item button in top bar, and 5 unit tests (47 total)

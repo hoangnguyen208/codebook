@@ -589,4 +589,100 @@ public class ItemsControllerTests
         Assert.IsType<NotFoundResult>(result);
         Assert.Equal(3, _items.Count);
     }
+
+    // ── Create tests ──
+
+    [Fact]
+    public async Task CreateItem_ReturnsCreatedWithDetails()
+    {
+        var controller = CreateController();
+
+        var result = await controller.CreateItem(new CreateItemRequest
+        {
+            Title = "New Hook",
+            TypeName = "snippet",
+            Description = "A new hook",
+            Content = "export function useStuff() {}",
+            Language = "typescript",
+            Tags = ["react", "hooks"]
+        });
+
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(createdResult.Value);
+        Assert.Equal("New Hook", item.Title);
+        Assert.Equal("A new hook", item.Description);
+        Assert.Equal("snippet", item.TypeName);
+        Assert.Equal("typescript", item.Language);
+        Assert.Equal(TestUserId, _items.Last().UserId);
+        Assert.Equal(4, _items.Count);
+    }
+
+    [Fact]
+    public async Task CreateItem_WithTags()
+    {
+        var controller = CreateController();
+
+        var result = await controller.CreateItem(new CreateItemRequest
+        {
+            Title = "Tagged Item",
+            TypeName = "snippet",
+            Tags = ["react", "typescript"]
+        });
+
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(createdResult.Value);
+        Assert.Equal(2, item.Tags.Count);
+        Assert.Contains("react", item.Tags);
+        Assert.Contains("typescript", item.Tags);
+    }
+
+    [Fact]
+    public async Task CreateItem_WithNewTag()
+    {
+        var controller = CreateController();
+
+        var result = await controller.CreateItem(new CreateItemRequest
+        {
+            Title = "New Tag Item",
+            TypeName = "snippet",
+            Tags = ["brand-new"]
+        });
+
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(createdResult.Value);
+        Assert.Single(item.Tags);
+        Assert.Contains("brand-new", item.Tags);
+    }
+
+    [Fact]
+    public async Task CreateItem_FiltersEmptyTags()
+    {
+        var controller = CreateController();
+
+        var result = await controller.CreateItem(new CreateItemRequest
+        {
+            Title = "Filtered",
+            TypeName = "snippet",
+            Tags = ["valid", "", "  "]
+        });
+
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(createdResult.Value);
+        Assert.Single(item.Tags);
+        Assert.Contains("valid", item.Tags);
+    }
+
+    [Fact]
+    public async Task CreateItem_ReturnsBadRequestForUnknownType()
+    {
+        var controller = CreateController();
+
+        var result = await controller.CreateItem(new CreateItemRequest
+        {
+            Title = "Bad Type",
+            TypeName = "unknown"
+        });
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+    }
 }

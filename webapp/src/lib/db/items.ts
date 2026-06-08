@@ -298,6 +298,79 @@ export async function deleteItem(
   }
 }
 
+type CreateItemPayload = {
+  title: string;
+  typeName: string;
+  description?: string | null;
+  content?: string | null;
+  url?: string | null;
+  language?: string | null;
+  tags: string[];
+};
+
+export async function createItem(
+  data: CreateItemPayload,
+  options?: FetchOptions,
+): Promise<ItemDetail> {
+  const response = await fetch(`${getApiBaseUrl()}/api/items`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(options?.accessToken),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create item: ${response.status}`);
+  }
+
+  const item = (await response.json()) as {
+    id: string;
+    title: string;
+    description: string | null;
+    content: string | null;
+    contentType: string;
+    language: string | null;
+    url: string | null;
+    isFavorite: boolean;
+    isPinned: boolean;
+    typeId: string;
+    typeName: string;
+    typeIcon: string | null;
+    typeColor: string | null;
+    collectionId: string | null;
+    collectionName: string | null;
+    tags: string[];
+    createdAt: string;
+    updatedAt: string;
+  };
+
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    content: item.content,
+    contentType: item.contentType,
+    language: item.language,
+    fileUrl: null,
+    fileName: null,
+    fileSize: null,
+    url: item.url,
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    typeId: item.typeId,
+    typeName: item.typeName,
+    typeIcon: item.typeIcon,
+    typeColor: item.typeColor,
+    collectionId: item.collectionId,
+    collectionName: item.collectionName,
+    tags: item.tags.filter((tag) => tag.trim().length > 0),
+    createdAt: toDateLabel(item.createdAt),
+    updatedAt: toDateLabel(item.updatedAt),
+  };
+}
+
 type UpdateItemPayload = {
   title: string;
   description?: string | null;

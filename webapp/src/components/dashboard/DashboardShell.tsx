@@ -31,6 +31,7 @@ import {
 import { UserAvatar } from "@/components/auth/UserAvatar";
 import { ItemDrawerProvider } from "@/components/items/ItemDrawerProvider";
 import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
+import { CreateItemDialog } from "@/components/items/CreateItemDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -361,6 +362,7 @@ export function DashboardShell({
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [drawerItemId, setDrawerItemId] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -575,7 +577,7 @@ export function DashboardShell({
                 </span>
               </div>
 
-              <Button size="lg" className="h-11 rounded-2xl px-4">
+              <Button size="lg" className="h-11 rounded-2xl px-4" onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="size-4" />
                 New Item
               </Button>
@@ -922,6 +924,8 @@ export function DashboardShell({
           </aside>
         </div>
       ) : null}
+
+      <CreateItemDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </main>
   );
 }

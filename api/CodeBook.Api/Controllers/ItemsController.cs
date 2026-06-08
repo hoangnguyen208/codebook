@@ -24,6 +24,57 @@ public class ItemsController : ControllerBase
             ?? User.FindFirst("sub")?.Value;
     }
 
+    [HttpPost("api/items")]
+    public async Task<ActionResult<ItemDetailDto>> CreateItem([FromBody] CreateItemRequest request)
+    {
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var type = await _dbContext.ItemTypes.FirstOrDefaultAsync(t => t.Name == request.TypeName);
+        if (type == null)
+        {
+            return BadRequest(new { error = $"Unknown item type: {request.TypeName}" });
+        }
+
+        var item = new Item
+        {
+            Id = Guid.NewGuid().ToString(),
+            Title = request.Title.Trim(),
+            Description = request.Description?.Trim(),
+            Content = request.Content?.Trim(),
+            Url = request.Url?.Trim(),
+            Language = request.Language?.Trim(),
+            ContentType = "text",
+            UserId = userId,
+            TypeId = type.Id,
+            Type = type,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        if (request.Tags is { Count: > 0 })
+        {
+            foreach (var tagName in request.Tags)
+            {
+                var trimmedName = tagName.Trim();
+                if (string.IsNullOrWhiteSpace(trimmedName)) continue;
+
+                var tag = await _dbContext.Tags.FirstOrDefaultAsync(t => t.Name == trimmedName)
+                    ?? new Tag { Id = Guid.NewGuid().ToString(), Name = trimmedName };
+
+                item.Tags.Add(new ItemTag { ItemId = item.Id, TagId = tag.Id, Tag = tag });
+            }
+        }
+
+        _dbContext.Items.Add(item);
+        await _dbContext.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetItem), new { id = item.Id }, ToItemDetailDto(item));
+    }
+
     [HttpGet("api/items/{id}")]
     public async Task<ActionResult<ItemDetailDto>> GetItem(string id)
     {
@@ -304,6 +355,17 @@ public class ItemDetailDto
     public List<string> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+public class CreateItemRequest
+{
+    public string Title { get; set; } = string.Empty;
+    public string TypeName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Content { get; set; }
+    public string? Url { get; set; }
+    public string? Language { get; set; }
+    public List<string> Tags { get; set; } = [];
 }
 
 public class UpdateItemRequest
