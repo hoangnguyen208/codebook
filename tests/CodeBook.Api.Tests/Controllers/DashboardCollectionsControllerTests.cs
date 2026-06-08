@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using CodeBook.Api.Controllers;
 using CodeBook.Api.Data;
 using CodeBook.Api.Models;
 using CodeBook.Api.Tests.Helpers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -15,6 +17,7 @@ public class DashboardCollectionsControllerTests
     private readonly List<Collection> _collections;
     private readonly List<Item> _items;
     private readonly List<ItemType> _itemTypes;
+    private const string TestUserId = "test-user";
 
     public DashboardCollectionsControllerTests()
     {
@@ -29,17 +32,17 @@ public class DashboardCollectionsControllerTests
             new()
             {
                 Id = "col-1", Name = "Frontend", Description = "Frontend resources",
-                IsFavorite = true, UpdatedAt = new DateTime(2026, 6, 1)
+                IsFavorite = true, UserId = TestUserId, UpdatedAt = new DateTime(2026, 6, 1)
             },
             new()
             {
                 Id = "col-2", Name = "Backend", Description = null,
-                IsFavorite = false, UpdatedAt = new DateTime(2026, 6, 2)
+                IsFavorite = false, UserId = TestUserId, UpdatedAt = new DateTime(2026, 6, 2)
             },
             new()
             {
                 Id = "col-3", Name = "Empty", Description = "No items",
-                IsFavorite = false, UpdatedAt = new DateTime(2026, 5, 1)
+                IsFavorite = false, UserId = TestUserId, UpdatedAt = new DateTime(2026, 5, 1)
             }
         ];
 
@@ -76,10 +79,27 @@ public class DashboardCollectionsControllerTests
         _dbContext = mockDbContext.Object;
     }
 
+    private DashboardCollectionsController CreateController()
+    {
+        return new DashboardCollectionsController(_dbContext)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [
+                        new Claim("sub", TestUserId)
+                    ]))
+                }
+            }
+        };
+    }
+
     [Fact]
     public async Task GetCollections_ReturnsOrderedByLastUpdatedAtDesc()
     {
-        var controller = new DashboardCollectionsController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetCollections(100);
 
@@ -92,7 +112,7 @@ public class DashboardCollectionsControllerTests
     [Fact]
     public async Task GetCollections_RespectsLimit()
     {
-        var controller = new DashboardCollectionsController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetCollections(2);
 
@@ -104,7 +124,7 @@ public class DashboardCollectionsControllerTests
     [Fact]
     public async Task GetCollections_MapsItemCount()
     {
-        var controller = new DashboardCollectionsController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetCollections(100);
 
@@ -117,7 +137,7 @@ public class DashboardCollectionsControllerTests
     [Fact]
     public async Task GetCollections_EmptyCollection_ReturnsZeroCount()
     {
-        var controller = new DashboardCollectionsController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetCollections(100);
 
@@ -130,7 +150,7 @@ public class DashboardCollectionsControllerTests
     [Fact]
     public async Task GetCollections_MapsDominantColor()
     {
-        var controller = new DashboardCollectionsController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetCollections(100);
 
@@ -143,7 +163,7 @@ public class DashboardCollectionsControllerTests
     [Fact]
     public async Task GetCollections_MapsTypeIcons()
     {
-        var controller = new DashboardCollectionsController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetCollections(100);
 
@@ -158,7 +178,7 @@ public class DashboardCollectionsControllerTests
     [Fact]
     public async Task GetCollection_MapsIsFavorite()
     {
-        var controller = new DashboardCollectionsController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetCollections(100);
 
@@ -174,6 +194,7 @@ public class DashboardCollectionsControllerTests
         var manyCollections = Enumerable.Range(1, 10).Select(i => new Collection
         {
             Id = $"col-{i}", Name = $"Collection {i}",
+            UserId = TestUserId,
             UpdatedAt = new DateTime(2026, 6, i)
         }).ToList();
 
@@ -181,7 +202,19 @@ public class DashboardCollectionsControllerTests
         mockDbContext.Setup(db => db.Collections).Returns(MockDbSetHelper.CreateDbSetMock(manyCollections).Object);
         mockDbContext.Setup(db => db.Items).Returns(MockDbSetHelper.CreateDbSetMock(new List<Item>()).Object);
 
-        var controller = new DashboardCollectionsController(mockDbContext.Object);
+        var controller = new DashboardCollectionsController(mockDbContext.Object)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [
+                        new Claim("sub", TestUserId)
+                    ]))
+                }
+            }
+        };
 
         var result = await controller.GetRecentCollections();
 

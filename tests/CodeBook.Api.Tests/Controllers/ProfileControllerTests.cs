@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using CodeBook.Api.Controllers;
 using CodeBook.Api.Data;
 using CodeBook.Api.Models;
 using CodeBook.Api.Tests.Helpers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -15,6 +17,7 @@ public class ProfileControllerTests
     private readonly List<Item> _items;
     private readonly List<Collection> _collections;
     private readonly List<ItemType> _itemTypes;
+    private const string TestUserId = "test-user";
 
     public ProfileControllerTests()
     {
@@ -30,29 +33,29 @@ public class ProfileControllerTests
             new()
             {
                 Id = "item-1", Title = "Snippet 1", TypeId = "type-snippet",
-                Type = _itemTypes[0]
+                Type = _itemTypes[0], UserId = TestUserId
             },
             new()
             {
                 Id = "item-2", Title = "Snippet 2", TypeId = "type-snippet",
-                Type = _itemTypes[0]
+                Type = _itemTypes[0], UserId = TestUserId
             },
             new()
             {
                 Id = "item-3", Title = "Prompt 1", TypeId = "type-prompt",
-                Type = _itemTypes[1]
+                Type = _itemTypes[1], UserId = TestUserId
             },
             new()
             {
                 Id = "item-4", Title = "Link 1", TypeId = "type-link",
-                Type = _itemTypes[2]
+                Type = _itemTypes[2], UserId = TestUserId
             }
         ];
 
         _collections =
         [
-            new() { Id = "col-1", Name = "Collection 1" },
-            new() { Id = "col-2", Name = "Collection 2" }
+            new() { Id = "col-1", Name = "Collection 1", UserId = TestUserId },
+            new() { Id = "col-2", Name = "Collection 2", UserId = TestUserId }
         ];
 
         var mockDbContext = new Mock<CodeBookDbContext>(new DbContextOptions<CodeBookDbContext>());
@@ -62,10 +65,27 @@ public class ProfileControllerTests
         _dbContext = mockDbContext.Object;
     }
 
+    private ProfileController CreateController()
+    {
+        return new ProfileController(_dbContext)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [
+                        new Claim("sub", TestUserId)
+                    ]))
+                }
+            }
+        };
+    }
+
     [Fact]
     public async Task GetStats_ReturnsTotalCounts()
     {
-        var controller = new ProfileController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetStats();
 
@@ -78,7 +98,7 @@ public class ProfileControllerTests
     [Fact]
     public async Task GetStats_ReturnsTypeBreakdown()
     {
-        var controller = new ProfileController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetStats();
 
@@ -90,7 +110,7 @@ public class ProfileControllerTests
     [Fact]
     public async Task GetStats_BreakdownOrderedByCountDesc()
     {
-        var controller = new ProfileController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetStats();
 
@@ -103,7 +123,7 @@ public class ProfileControllerTests
     [Fact]
     public async Task GetStats_MapsTypeFields()
     {
-        var controller = new ProfileController(_dbContext);
+        var controller = CreateController();
 
         var result = await controller.GetStats();
 
@@ -122,7 +142,19 @@ public class ProfileControllerTests
         mockDbContext.Setup(db => db.Items).Returns(MockDbSetHelper.CreateDbSetMock(new List<Item>()).Object);
         mockDbContext.Setup(db => db.Collections).Returns(MockDbSetHelper.CreateDbSetMock(new List<Collection>()).Object);
 
-        var controller = new ProfileController(mockDbContext.Object);
+        var controller = new ProfileController(mockDbContext.Object)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [
+                        new Claim("sub", TestUserId)
+                    ]))
+                }
+            }
+        };
 
         var result = await controller.GetStats();
 

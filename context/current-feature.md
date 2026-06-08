@@ -5,7 +5,6 @@ Item Drawer
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
-
 Completed
 
 ## Goals
@@ -60,3 +59,4 @@ Implement item drawer per `context/features/item-drawer-spec.md`.
 - **Items List View**: Created feature branch, added backend `/api/dashboard/items/by-type/{typeName}` endpoint, `getItemsByType` fetcher, `ItemCard` component with type-colored left border, and rewired `items/[type]/page.tsx` from mock data to real API data
 - **API Unit Tests**: Created `tests/CodeBook.Api.Tests` xUnit project with Moq + EF Core async query provider, added 34 tests across all 5 controllers, made DbSet properties virtual for testability, and added test project to solution file
 - **Item Drawer**: Added shadcn Sheet right-side drawer with ItemDrawerProvider/Sheet, skeleton loading, action bar (Favorite/Pin/Copy/Edit/Delete), wired into dashboard and items list pages; merged DashboardItems/DashboardItemTypes controllers into ItemsController; extracted shared types to fix server-client serialization
+- **Item Drawer — Edit Mode**: Added inline edit mode to item drawer with type-specific inputs (title/description/tags/content/language/url), Zod-validated server action, `PUT api/items/{id}` endpoint with tag disconnect-and-reconnect logic, 26 unit tests for ItemsController, and item types tests merged into ItemsControllerTests.cs

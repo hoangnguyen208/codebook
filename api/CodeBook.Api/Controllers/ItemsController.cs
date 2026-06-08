@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CodeBook.Api.Data;
+using CodeBook.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +41,80 @@ public class ItemsController : ControllerBase
             return NotFound();
         }
 
-        return Ok(new ItemDetailDto
+        return Ok(ToItemDetailDto(item));
+    }
+
+    [HttpPut("api/items/{id}")]
+    public async Task<ActionResult<ItemDetailDto>> UpdateItem(string id, [FromBody] UpdateItemRequest request)
+    {
+        var userId = GetUserId();
+        var item = await _dbContext.Items
+            .Include(i => i.Tags)
+                .ThenInclude(it => it.Tag)
+            .Include(i => i.Type)
+            .Include(i => i.Collection)
+            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
+
+        if (item == null)
+        {
+            return NotFound();
+        }
+
+        item.Title = request.Title.Trim();
+        item.Description = request.Description?.Trim();
+        item.Content = request.Content?.Trim();
+        item.Url = request.Url?.Trim();
+        item.Language = request.Language?.Trim();
+        item.UpdatedAt = DateTime.UtcNow;
+
+        // Handle tags: disconnect all existing, connect-or-create new ones
+        _dbContext.ItemTags.RemoveRange(item.Tags);
+
+        if (request.Tags is { Count: > 0 })
+        {
+            foreach (var tagName in request.Tags)
+            {
+                var trimmedName = tagName.Trim();
+                if (string.IsNullOrWhiteSpace(trimmedName)) continue;
+
+                var tag = await _dbContext.Tags
+                    .FirstOrDefaultAsync(t => t.Name == trimmedName);
+
+                if (tag == null)
+                {
+                    tag = new Tag
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Name = trimmedName,
+                    };
+                    _dbContext.Tags.Add(tag);
+                }
+
+                item.Tags.Add(new ItemTag
+                {
+                    ItemId = item.Id,
+                    TagId = tag.Id,
+                });
+            }
+        }
+
+        await _dbContext.SaveChangesAsync();
+
+        // Reload with includes for response
+        var updated = await _dbContext.Items
+            .AsNoTracking()
+            .Include(i => i.Type)
+            .Include(i => i.Tags)
+                .ThenInclude(it => it.Tag)
+            .Include(i => i.Collection)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        return Ok(ToItemDetailDto(updated!));
+    }
+
+    private static ItemDetailDto ToItemDetailDto(Item item)
+    {
+        return new ItemDetailDto
         {
             Id = item.Id,
             Title = item.Title,
@@ -61,13 +135,13 @@ public class ItemsController : ControllerBase
             CollectionId = item.CollectionId,
             CollectionName = item.Collection?.Name,
             Tags = item.Tags
-                .Select(it => it.Tag.Name)
+                .Select(it => it.Tag?.Name)
                 .Where(t => !string.IsNullOrWhiteSpace(t))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList(),
+                .ToList()!,
             CreatedAt = item.CreatedAt,
             UpdatedAt = item.UpdatedAt
-        });
+        };
     }
 
     [HttpGet("api/dashboard/items/recent")]
@@ -210,4 +284,14 @@ public class ItemDetailDto
     public List<string> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+public class UpdateItemRequest
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Content { get; set; }
+    public string? Url { get; set; }
+    public string? Language { get; set; }
+    public List<string> Tags { get; set; } = [];
 }

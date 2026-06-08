@@ -280,3 +280,82 @@ export async function getItemById(
     updatedAt: toDateLabel(item.updatedAt),
   };
 }
+
+type UpdateItemPayload = {
+  title: string;
+  description?: string | null;
+  content?: string | null;
+  url?: string | null;
+  language?: string | null;
+  tags: string[];
+};
+
+export async function updateItem(
+  id: string,
+  data: UpdateItemPayload,
+  options?: FetchOptions,
+): Promise<ItemDetail> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/items/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(options?.accessToken),
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to update item "${id}": ${response.status}`);
+  }
+
+  const item = (await response.json()) as {
+    id: string;
+    title: string;
+    description: string | null;
+    content: string | null;
+    contentType: string;
+    language: string | null;
+    fileUrl: string | null;
+    fileName: string | null;
+    fileSize: number | null;
+    url: string | null;
+    isFavorite: boolean;
+    isPinned: boolean;
+    typeId: string;
+    typeName: string;
+    typeIcon: string | null;
+    typeColor: string | null;
+    collectionId: string | null;
+    collectionName: string | null;
+    tags: string[];
+    createdAt: string;
+    updatedAt: string;
+  };
+
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    content: item.content,
+    contentType: item.contentType,
+    language: item.language,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
+    url: item.url,
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    typeId: item.typeId,
+    typeName: item.typeName,
+    typeIcon: item.typeIcon,
+    typeColor: item.typeColor,
+    collectionId: item.collectionId,
+    collectionName: item.collectionName,
+    tags: item.tags.filter((tag) => tag.trim().length > 0),
+    createdAt: toDateLabel(item.createdAt),
+    updatedAt: toDateLabel(item.updatedAt),
+  };
+}
