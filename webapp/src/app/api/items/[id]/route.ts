@@ -14,7 +14,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const item = await getItemById(id);
+    const item = await getItemById(id, { accessToken: session.accessToken });
     if (!item) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

@@ -1,10 +1,13 @@
+using System.Security.Claims;
 using CodeBook.Api.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CodeBook.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/dashboard/collections")]
 public class DashboardCollectionsController : ControllerBase
 {
@@ -15,12 +18,19 @@ public class DashboardCollectionsController : ControllerBase
         _dbContext = dbContext;
     }
 
+    private string? GetUserId()
+    {
+        return User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<RecentDashboardCollectionDto>>> GetCollections(
         [FromQuery] int limit = 100)
     {
+        var userId = GetUserId();
         var safeLimit = Math.Clamp(limit, 1, 500);
-        var response = await BuildCollectionDtosAsync(safeLimit);
+        var response = await BuildCollectionDtosAsync(userId, safeLimit);
         return Ok(response);
     }
 
@@ -28,15 +38,17 @@ public class DashboardCollectionsController : ControllerBase
     public async Task<ActionResult<IEnumerable<RecentDashboardCollectionDto>>> GetRecentCollections(
         [FromQuery] int limit = 6)
     {
+        var userId = GetUserId();
         var safeLimit = Math.Clamp(limit, 1, 100);
-        var response = await BuildCollectionDtosAsync(safeLimit);
+        var response = await BuildCollectionDtosAsync(userId, safeLimit);
         return Ok(response);
     }
 
-    private async Task<List<RecentDashboardCollectionDto>> BuildCollectionDtosAsync(int safeLimit)
+    private async Task<List<RecentDashboardCollectionDto>> BuildCollectionDtosAsync(string? userId, int safeLimit)
     {
         var baseCollections = await _dbContext.Collections
             .AsNoTracking()
+            .Where(c => c.UserId == userId)
             .Select(collection => new
             {
                 collection.Id,

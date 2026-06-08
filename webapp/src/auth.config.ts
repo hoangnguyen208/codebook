@@ -39,29 +39,33 @@ function parseJwtPayload(token?: string | null) {
 }
 
 async function fetchDuendeUserInfo(accessToken?: string) {
-  const issuer = process.env.AUTH_DUENDE_ISSUER;
-  if (!issuer || !accessToken) {
+  try {
+    const issuer = process.env.AUTH_DUENDE_ISSUER;
+    if (!issuer || !accessToken) {
+      return {};
+    }
+
+    const userInfoUrl = new URL("/connect/userinfo", issuer);
+    const response = await fetch(userInfoUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return {};
+    }
+
+    const payload = (await response.json()) as unknown;
+    if (!payload || typeof payload !== "object") {
+      return {};
+    }
+
+    return payload as Record<string, unknown>;
+  } catch {
     return {};
   }
-
-  const userInfoUrl = new URL("/connect/userinfo", issuer);
-  const response = await fetch(userInfoUrl, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    return {};
-  }
-
-  const payload = (await response.json()) as unknown;
-  if (!payload || typeof payload !== "object") {
-    return {};
-  }
-
-  return payload as Record<string, unknown>;
 }
 
 const hasGitHubProviderConfig = Boolean(
@@ -104,6 +108,9 @@ const authConfig: NextAuthConfig = {
       }
 
       if (account?.provider === "duende-identity-server6") {
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+
         const profileClaims = (profile ?? {}) as Record<string, unknown>;
         const idTokenClaims = parseJwtPayload(account.id_token);
         const userInfoClaims = await fetchDuendeUserInfo(account.access_token);
@@ -129,9 +136,6 @@ const authConfig: NextAuthConfig = {
         if (email) {
           token.email = email;
         }
-
-        token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token;
       }
 
       if (token.name === "User") {

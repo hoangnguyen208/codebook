@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Code2, File, FileImage, FileText, Link2, Sparkles, Terminal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { auth } from "@/auth";
 import { ItemsGridClient } from "@/components/items/ItemsGridClient";
 import { buttonVariants } from "@/components/ui/button";
 import { getItemsByType, getSystemDashboardItemTypes } from "@/lib/db/items";
@@ -47,8 +48,10 @@ export default async function ItemsByTypePage({
   params: Promise<{ type: string }>;
 }) {
   const { type } = await params;
+  const session = await auth();
+  const accessToken = session?.accessToken;
 
-  const itemTypes = await getSystemDashboardItemTypes();
+  const itemTypes = await getSystemDashboardItemTypes({ accessToken });
   const itemType = itemTypes.find(
     (candidate) => candidate.name === type,
   );
@@ -57,7 +60,7 @@ export default async function ItemsByTypePage({
     notFound();
   }
 
-  const items = await getItemsByType(type);
+  const items = await getItemsByType(type, { accessToken });
   const Icon = itemTypeIcons[itemType.icon] ?? FileText;
   const typeColorClasses = colorClasses[itemType.color] ?? "border-border bg-muted text-muted-foreground";
   const typeBorderColorClass = borderColorClasses[itemType.color] ?? "border-l-border/70";

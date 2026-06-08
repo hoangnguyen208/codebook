@@ -34,6 +34,15 @@ function getApiBaseUrl() {
   return baseUrl.replace(/\/$/, "");
 }
 
+type FetchOptions = {
+  accessToken?: string;
+};
+
+function authHeaders(accessToken?: string): Record<string, string> {
+  if (!accessToken) return {};
+  return { Authorization: `Bearer ${accessToken}` };
+}
+
 function toTypeLabel(name: string) {
   switch (name.toLowerCase()) {
     case "snippet": return "Snippets";
@@ -59,9 +68,10 @@ function toColorToken(name: string, color: string | null) {
   return byName[name.toLowerCase()] ?? (color ? byHex[color.toLowerCase()] : undefined) ?? "slate";
 }
 
-export async function getProfileStats(): Promise<ProfileStats> {
+export async function getProfileStats(options?: FetchOptions): Promise<ProfileStats> {
   const response = await fetch(`${getApiBaseUrl()}/api/profile/stats`, {
     cache: "no-store",
+    headers: authHeaders(options?.accessToken),
   });
 
   if (!response.ok) {

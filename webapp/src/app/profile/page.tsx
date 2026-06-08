@@ -56,7 +56,8 @@ function getColorClass(colorToken: string) {
 }
 
 export default async function ProfilePage() {
-  const [session, stats] = await Promise.all([auth(), getProfileStats()]);
+  const session = await auth();
+  const stats = await getProfileStats({ accessToken: session?.accessToken });
   const name = getDisplayName(session?.user?.name, session?.user?.email);
   const email = session?.user?.email ?? "No email available";
   const provider = session?.user?.provider;

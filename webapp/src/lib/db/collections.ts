@@ -32,6 +32,15 @@ function getApiBaseUrl() {
   return baseUrl.replace(/\/$/, "");
 }
 
+type FetchOptions = {
+  accessToken?: string;
+};
+
+function authHeaders(accessToken?: string): Record<string, string> {
+  if (!accessToken) return {};
+  return { Authorization: `Bearer ${accessToken}` };
+}
+
 function normalizeIconName(value: string) {
   const lowered = value.trim().toLowerCase();
 
@@ -66,9 +75,11 @@ function toDateLabel(value: string) {
 
 export async function getDashboardCollections(
   limit = 100,
+  options?: FetchOptions,
 ): Promise<DashboardRecentCollection[]> {
   const response = await fetchDashboardCollections(
     `/api/dashboard/collections?limit=${limit}`,
+    options,
   );
 
   return response;
@@ -76,10 +87,14 @@ export async function getDashboardCollections(
 
 async function fetchDashboardCollections(
   path: string,
+  options?: FetchOptions,
 ): Promise<DashboardRecentCollection[]> {
   const response = await fetch(
     `${getApiBaseUrl()}${path}`,
-    { cache: "no-store" },
+    {
+      cache: "no-store",
+      headers: authHeaders(options?.accessToken),
+    },
   );
 
   if (!response.ok) {

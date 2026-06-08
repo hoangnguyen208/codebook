@@ -8,10 +8,11 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const session = await auth();
+  const accessToken = session?.accessToken;
   const [collections, items, itemTypes] = await Promise.all([
-    getDashboardCollections(100),
-    getRecentDashboardItems(100),
-    getSystemDashboardItemTypes(),
+    getDashboardCollections(100, { accessToken }),
+    getRecentDashboardItems(100, { accessToken }),
+    getSystemDashboardItemTypes({ accessToken }),
   ]);
 
   const userName = session?.user?.name ?? null;

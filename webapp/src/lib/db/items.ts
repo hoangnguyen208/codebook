@@ -24,6 +24,10 @@ type DashboardItemTypeApiDto = {
   isSystem: boolean;
 };
 
+type FetchOptions = {
+  accessToken?: string;
+};
+
 function getApiBaseUrl() {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -32,6 +36,11 @@ function getApiBaseUrl() {
   }
 
   return baseUrl.replace(/\/$/, "");
+}
+
+function authHeaders(accessToken?: string): Record<string, string> {
+  if (!accessToken) return {};
+  return { Authorization: `Bearer ${accessToken}` };
 }
 
 function toDateLabel(value: string) {
@@ -117,9 +126,10 @@ function normalizeColorToken(name: string, color: string | null) {
   );
 }
 
-export async function getSystemDashboardItemTypes(): Promise<DashboardItemType[]> {
+export async function getSystemDashboardItemTypes(options?: FetchOptions): Promise<DashboardItemType[]> {
   const response = await fetch(`${getApiBaseUrl()}/api/dashboard/item-types/system`, {
     cache: "no-store",
+    headers: authHeaders(options?.accessToken),
   });
 
   if (!response.ok) {
@@ -142,10 +152,14 @@ export async function getSystemDashboardItemTypes(): Promise<DashboardItemType[]
 
 export async function getRecentDashboardItems(
   limit = 100,
+  options?: FetchOptions,
 ): Promise<DashboardItem[]> {
   const response = await fetch(
     `${getApiBaseUrl()}/api/dashboard/items/recent?limit=${limit}`,
-    { cache: "no-store" },
+    {
+      cache: "no-store",
+      headers: authHeaders(options?.accessToken),
+    },
   );
 
   if (!response.ok) {
@@ -169,10 +183,14 @@ export async function getRecentDashboardItems(
 
 export async function getItemsByType(
   typeName: string,
+  options?: FetchOptions,
 ): Promise<DashboardItem[]> {
   const response = await fetch(
     `${getApiBaseUrl()}/api/dashboard/items/by-type/${encodeURIComponent(typeName)}`,
-    { cache: "no-store" },
+    {
+      cache: "no-store",
+      headers: authHeaders(options?.accessToken),
+    },
   );
 
   if (!response.ok) {
@@ -196,10 +214,14 @@ export async function getItemsByType(
 
 export async function getItemById(
   id: string,
+  options?: FetchOptions,
 ): Promise<ItemDetail | null> {
   const response = await fetch(
     `${getApiBaseUrl()}/api/items/${encodeURIComponent(id)}`,
-    { cache: "no-store" },
+    {
+      cache: "no-store",
+      headers: authHeaders(options?.accessToken),
+    },
   );
 
   if (response.status === 404) {

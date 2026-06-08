@@ -1,10 +1,13 @@
+using System.Security.Claims;
 using CodeBook.Api.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CodeBook.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/profile")]
 public class ProfileController : ControllerBase
 {
@@ -15,14 +18,22 @@ public class ProfileController : ControllerBase
         _dbContext = dbContext;
     }
 
+    private string? GetUserId()
+    {
+        return User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+    }
+
     [HttpGet("stats")]
     public async Task<ActionResult<ProfileStatsDto>> GetStats()
     {
-        var totalItems = await _dbContext.Items.CountAsync();
-        var totalCollections = await _dbContext.Collections.CountAsync();
+        var userId = GetUserId();
+        var totalItems = await _dbContext.Items.CountAsync(i => i.UserId == userId);
+        var totalCollections = await _dbContext.Collections.CountAsync(c => c.UserId == userId);
 
         var typeBreakdown = await _dbContext.Items
             .AsNoTracking()
+            .Where(i => i.UserId == userId)
             .GroupBy(item => new
             {
                 item.TypeId,

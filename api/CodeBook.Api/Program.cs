@@ -1,7 +1,10 @@
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using CodeBook.Api.Data;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +36,31 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader();
     });
 });
+
+var identityAuthority = Environment.GetEnvironmentVariable("IDENTITY_AUTHORITY") ?? "http://id.codebook.local:5001";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = identityAuthority;
+        options.TokenValidationParameters.ValidateAudience = false;
+        options.RequireHttpsMetadata = false;
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -78,10 +106,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowFrontend");
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 
-app.MapGet("/", () => "CodeBook API - Running Successfully!");
-app.MapGet("/health", () => new { status = "healthy", timestamp = DateTime.UtcNow });
+app.MapGet("/", () => "CodeBook API - Running Successfully!").AllowAnonymous();
+app.MapGet("/health", () => new { status = "healthy", timestamp = DateTime.UtcNow }).AllowAnonymous();
 
 app.Run();
 
