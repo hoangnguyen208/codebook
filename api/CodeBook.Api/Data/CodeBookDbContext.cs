@@ -13,7 +13,6 @@ public class CodeBookDbContext : DbContext
     {
     }
 
-    public virtual DbSet<User> Users { get; set; } = null!;
     public virtual DbSet<Item> Items { get; set; } = null!;
     public virtual DbSet<ItemType> ItemTypes { get; set; } = null!;
     public virtual DbSet<Collection> Collections { get; set; } = null!;
@@ -24,28 +23,7 @@ public class CodeBookDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // User configuration
-        modelBuilder.Entity<User>()
-            .HasKey(u => u.Id);
-
-        modelBuilder.Entity<User>()
-            .HasIndex(u => u.Email)
-            .IsUnique();
-
-        // ItemType configuration
-        modelBuilder.Entity<ItemType>()
-            .HasOne(it => it.User)
-            .WithMany(u => u.ItemTypes)
-            .HasForeignKey(it => it.UserId)
-            .OnDelete(DeleteBehavior.SetNull);
-
         // Item configuration
-        modelBuilder.Entity<Item>()
-            .HasOne(i => i.User)
-            .WithMany(u => u.Items)
-            .HasForeignKey(i => i.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<Item>()
             .HasOne(i => i.Type)
             .WithMany(it => it.Items)
@@ -57,20 +35,6 @@ public class CodeBookDbContext : DbContext
             .WithMany(c => c.Items)
             .HasForeignKey(i => i.CollectionId)
             .OnDelete(DeleteBehavior.SetNull);
-
-        // Collection configuration
-        modelBuilder.Entity<Collection>()
-            .HasOne(c => c.User)
-            .WithMany(u => u.Collections)
-            .HasForeignKey(c => c.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // Tag configuration
-        modelBuilder.Entity<Tag>()
-            .HasOne(t => t.User)
-            .WithMany(u => u.Tags)
-            .HasForeignKey(t => t.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         // ItemTag configuration (composite key)
         modelBuilder.Entity<ItemTag>()
@@ -88,15 +52,5 @@ public class CodeBookDbContext : DbContext
             .HasForeignKey(it => it.TagId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        // Add indexes for performance
-        modelBuilder.Entity<Item>()
-            .HasIndex(i => new { i.UserId, i.CreatedAt })
-            .IsDescending(false, true);
-
-        modelBuilder.Entity<Collection>()
-            .HasIndex(c => c.UserId);
-
-        modelBuilder.Entity<Tag>()
-            .HasIndex(t => t.UserId);
     }
 }

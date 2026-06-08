@@ -8,9 +8,6 @@ public class ItemType
     public string? Color { get; set; }
     public bool IsSystem { get; set; }
 
-    public string? UserId { get; set; }
-    public User? User { get; set; }
-
     // Navigation properties
     public ICollection<Item> Items { get; set; } = new List<Item>();
 }

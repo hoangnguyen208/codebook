@@ -15,9 +15,6 @@ public class Item
     public bool IsPinned { get; set; }
     public string? Language { get; set; }
 
-    public string UserId { get; set; } = null!;
-    public User User { get; set; } = null!;
-
     public string TypeId { get; set; } = null!;
     public ItemType Type { get; set; } = null!;
 
