@@ -118,3 +118,6 @@ htmlcov/
 # Next.js
 .next/
 out/
+
+#AI
+.playwright-mcp/
