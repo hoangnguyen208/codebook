@@ -54,9 +54,6 @@ Return Zod errors in the `{ success: false, error }` response so the client can 
 - Create a controller in ItemsController for editing an item to persist data.
 - `updateItem(itemId, data)` in `src/actions/items.ts` following the `{ success, data, error }` return pattern. Validates input with Zod, gets session via `auth()`, validates ownership, calls query function.
 - Implement optimistic update in UI.
-- Implement optimistic concurrency control safety by Entity Framework + SQL Server with RowVersion and then pass by to webapp frontend so the UI tracks it correctly too. In case two users editing the same item, handle with DbUpdateConcurrencyException exception, gracefully tell the one who get rejected "This item has been modified by another user. Please refresh and try again".
-- In case the item has been deleted while editing, handle it gracefully.
-- The server action should be handled async as any I/O operation both in Codebook.API and webapp.
 - Update the unit test for this server action.
 
 ## Data
