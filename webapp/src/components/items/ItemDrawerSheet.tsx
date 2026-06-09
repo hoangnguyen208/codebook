@@ -31,6 +31,7 @@ import {
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
 import { updateItem, deleteItem } from "@/actions/items";
+import { CodeEditor } from "@/components/items/CodeEditor";
 import type { ItemDetail } from "@/types/items";
 
 const itemTypeIcons: Record<string, LucideIcon> = {
@@ -68,6 +69,7 @@ const colorTokenMap: Record<string, string> = {
 };
 
 const HAS_CONTENT_EDIT = new Set(["snippet", "prompt", "command", "note"]);
+const HAS_CODE_EDITOR = new Set(["snippet", "command"]);
 const HAS_LANGUAGE_EDIT = new Set(["snippet", "command"]);
 const HAS_URL_EDIT = new Set(["link"]);
 
@@ -138,10 +140,11 @@ export function ItemDrawerSheet() {
       return;
     }
 
+    /* eslint-disable react-hooks/set-state-in-effect -- reset state when opening drawer */
     setIsEditing(false);
     setShowDeleteConfirm(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional loading UX
     setLoading(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
     fetch(`/api/items/${encodeURIComponent(selectedItemId)}`)
       .then(async (res) => {
         if (!res.ok) return null;
@@ -233,6 +236,7 @@ export function ItemDrawerSheet() {
 
   const typeColorClasses = item ? resolveColorClasses(item.typeName, item.typeColor) : "";
   const showContentEdit = item ? HAS_CONTENT_EDIT.has(item.typeName) : false;
+  const showCodeEditor = item ? HAS_CODE_EDITOR.has(item.typeName) : false;
   const showLanguageEdit = item ? HAS_LANGUAGE_EDIT.has(item.typeName) : false;
   const showUrlEdit = item ? HAS_URL_EDIT.has(item.typeName) : false;
 
@@ -303,18 +307,26 @@ export function ItemDrawerSheet() {
               {isEditing ? (
                 <>
                   {showContentEdit ? (
-                    <div className="rounded-xl border border-border/70 bg-background/70 p-4">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        Content
-                      </p>
-                      <textarea
+                    showCodeEditor ? (
+                      <CodeEditor
                         value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        className={cn(inputClasses, "min-h-[120px] font-mono")}
-                        placeholder="Enter content..."
-                        aria-label="Content"
+                        onChange={setEditContent}
+                        language={editLanguage}
                       />
-                    </div>
+                    ) : (
+                      <div className="rounded-xl border border-border/70 bg-background/70 p-4">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                          Content
+                        </p>
+                        <textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          className={cn(inputClasses, "min-h-[120px] font-mono")}
+                          placeholder="Enter content..."
+                          aria-label="Content"
+                        />
+                      </div>
+                    )
                   ) : null}
 
                   {showUrlEdit ? (
@@ -374,14 +386,22 @@ export function ItemDrawerSheet() {
               ) : (
                 <>
                   {item.content ? (
-                    <div className="rounded-xl border border-border/70 bg-background/70 p-4">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        Content
-                      </p>
-                      <pre className="text-sm whitespace-pre-wrap font-mono text-foreground/90 leading-relaxed">
-                        {item.content}
-                      </pre>
-                    </div>
+                    showCodeEditor ? (
+                      <CodeEditor
+                        value={item.content}
+                        language={item.language ?? undefined}
+                        readOnly
+                      />
+                    ) : (
+                      <div className="rounded-xl border border-border/70 bg-background/70 p-4">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                          Content
+                        </p>
+                        <pre className="text-sm whitespace-pre-wrap font-mono text-foreground/90 leading-relaxed">
+                          {item.content}
+                        </pre>
+                      </div>
+                    )
                   ) : null}
 
                   {item.url ? (

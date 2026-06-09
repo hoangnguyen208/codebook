@@ -97,24 +97,14 @@ export default async function ItemsByTypePage({
           </div>
         </div>
 
-        {items.length === 0 ? (
-          <section className="rounded-3xl border border-border/70 bg-card p-12 text-center shadow-sm">
-            <p className="text-lg font-medium text-muted-foreground">
-              No {itemType.label.toLowerCase()} yet
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Create your first {itemType.label.toLowerCase().slice(0, -1)} to get started.
-            </p>
-          </section>
-        ) : (
-          <ItemsGridClient
-            items={items}
-            itemTypeIconName={itemType.icon}
-            itemTypeColorClasses={typeColorClasses}
-            itemTypeBorderColorClass={typeBorderColorClass}
-            itemTypeLabel={itemType.label.slice(0, -1)}
-          />
-        )}
+        <ItemsGridClient
+          items={items}
+          itemTypeIconName={itemType.icon}
+          itemTypeColorClasses={typeColorClasses}
+          itemTypeBorderColorClass={typeBorderColorClass}
+          itemTypeLabel={itemType.label.slice(0, -1)}
+          typeName={type}
+        />
       </section>
     </main>
   );

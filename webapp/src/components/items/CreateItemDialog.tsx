@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { createItem } from "@/actions/items";
 import { cn } from "@/lib/utils";
+import { CodeEditor } from "@/components/items/CodeEditor";
 
 const ITEM_TYPES = [
   { name: "snippet", label: "Snippet" },
@@ -22,6 +23,7 @@ const ITEM_TYPES = [
 ] as const;
 
 const HAS_CONTENT = new Set(["snippet", "prompt", "command", "note"]);
+const HAS_CODE_EDITOR = new Set(["snippet", "command"]);
 const HAS_LANGUAGE = new Set(["snippet", "command"]);
 const HAS_URL = new Set(["link"]);
 
@@ -31,12 +33,14 @@ const inputClasses =
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialType?: string;
 };
 
-export function CreateItemDialog({ open, onOpenChange }: Props) {
+export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
   const router = useRouter();
+  const hasPresetType = typeof initialType === "string" && initialType.trim().length > 0;
 
-  const [typeName, setTypeName] = useState("snippet");
+  const [typeName, setTypeName] = useState(hasPresetType ? initialType! : "snippet");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
@@ -47,7 +51,7 @@ export function CreateItemDialog({ open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
-    setTypeName("snippet");
+    setTypeName(hasPresetType ? initialType! : "snippet");
     setTitle("");
     setDescription("");
     setContent("");
@@ -97,29 +101,35 @@ export function CreateItemDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <DialogTitle>New item</DialogTitle>
+        <DialogTitle>
+          {hasPresetType
+            ? `New ${typeName.charAt(0).toUpperCase() + typeName.slice(1)}`
+            : "New item"}
+        </DialogTitle>
         <DialogDescription>
           Fill in the details below to create a new item.
         </DialogDescription>
 
         <div className="mt-4 space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {ITEM_TYPES.map((t) => (
-              <button
-                key={t.name}
-                type="button"
-                onClick={() => setTypeName(t.name)}
-                className={cn(
-                  "rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors",
-                  typeName === t.name
-                    ? "border-foreground/30 bg-foreground/10 text-foreground"
-                    : "border-border/70 text-muted-foreground hover:bg-muted",
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          {!hasPresetType ? (
+            <div className="flex flex-wrap gap-2">
+              {ITEM_TYPES.map((t) => (
+                <button
+                  key={t.name}
+                  type="button"
+                  onClick={() => setTypeName(t.name)}
+                  className={cn(
+                    "rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors",
+                    typeName === t.name
+                      ? "border-foreground/30 bg-foreground/10 text-foreground"
+                      : "border-border/70 text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
 
           <input
             type="text"
@@ -140,13 +150,21 @@ export function CreateItemDialog({ open, onOpenChange }: Props) {
           />
 
           {HAS_CONTENT.has(typeName) ? (
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className={cn(inputClasses, "min-h-[100px] font-mono")}
-              placeholder="Content"
-              aria-label="Content"
-            />
+            HAS_CODE_EDITOR.has(typeName) ? (
+              <CodeEditor
+                value={content}
+                onChange={setContent}
+                language={language}
+              />
+            ) : (
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className={cn(inputClasses, "min-h-[100px] font-mono")}
+                placeholder="Content"
+                aria-label="Content"
+              />
+            )
           ) : null}
 
           {HAS_URL.has(typeName) ? (
