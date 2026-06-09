@@ -15,6 +15,10 @@ const createItemSchema = z.object({
   content: z.string().trim().nullable().optional(),
   url: z.string().url("Invalid URL").nullable().optional().or(z.literal("")),
   language: z.string().trim().nullable().optional(),
+  fileUrl: z.string().trim().nullable().optional(),
+  fileName: z.string().trim().nullable().optional(),
+  fileSize: z.number().int().positive().nullable().optional(),
+  contentType: z.string().trim().nullable().optional(),
   tags: z.array(z.string().trim()).default([]),
 });
 
@@ -59,6 +63,10 @@ export async function createItem(
         content: data.content ?? null,
         url: data.url ? data.url : null,
         language: data.language ?? null,
+        fileUrl: data.fileUrl ?? null,
+        fileName: data.fileName ?? null,
+        fileSize: data.fileSize ?? null,
+        contentType: data.contentType ?? null,
         tags: data.tags.filter((t) => t.length > 0),
       },
       { accessToken: session.accessToken },

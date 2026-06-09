@@ -1,4 +1,7 @@
 using System.Security.Claims;
+using Amazon;
+using Amazon.S3;
+using Amazon.Runtime;
 using CodeBook.Api.Data;
 using CodeBook.Api.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -47,7 +50,10 @@ public class ItemsController : ControllerBase
             Content = request.Content?.Trim(),
             Url = request.Url?.Trim(),
             Language = request.Language?.Trim(),
-            ContentType = "text",
+            FileUrl = request.FileUrl?.Trim(),
+            FileName = request.FileName?.Trim(),
+            FileSize = request.FileSize,
+            ContentType = request.ContentType ?? "text",
             UserId = userId,
             TypeId = type.Id,
             Type = type,
@@ -108,6 +114,39 @@ public class ItemsController : ControllerBase
             return NotFound();
         }
 
+        // Delete file from R2 if present
+        if (!string.IsNullOrWhiteSpace(item.FileUrl))
+        {
+            try
+            {
+                var accountId = Environment.GetEnvironmentVariable("R2_ACCOUNT_ID");
+                var accessKey = Environment.GetEnvironmentVariable("R2_ACCESS_KEY_ID");
+                var secretKey = Environment.GetEnvironmentVariable("R2_SECRET_ACCESS_KEY");
+                var bucketName = Environment.GetEnvironmentVariable("R2_BUCKET_NAME");
+                var publicUrl = Environment.GetEnvironmentVariable("R2_PUBLIC_URL");
+
+                if (!string.IsNullOrWhiteSpace(accountId) && !string.IsNullOrWhiteSpace(accessKey)
+                    && !string.IsNullOrWhiteSpace(secretKey) && !string.IsNullOrWhiteSpace(bucketName)
+                    && !string.IsNullOrWhiteSpace(publicUrl) && item.FileUrl.StartsWith(publicUrl))
+                {
+                    var rawKey = item.FileUrl.Substring(publicUrl.Length).TrimStart('/');
+                    var key = Uri.UnescapeDataString(rawKey);
+                    var credentials = new BasicAWSCredentials(accessKey, secretKey);
+                    var config = new AmazonS3Config
+                    {
+                        ServiceURL = $"https://{accountId}.r2.cloudflarestorage.com",
+                    };
+
+                    using var s3Client = new AmazonS3Client(credentials, config);
+                    await s3Client.DeleteObjectAsync(bucketName, key);
+                }
+            }
+            catch
+            {
+                // Log but don't block deletion
+            }
+        }
+
         _dbContext.ItemTags.RemoveRange(item.Tags);
         _dbContext.Items.Remove(item);
         await _dbContext.SaveChangesAsync();
@@ -136,6 +175,13 @@ public class ItemsController : ControllerBase
         item.Content = request.Content?.Trim();
         item.Url = request.Url?.Trim();
         item.Language = request.Language?.Trim();
+        item.FileUrl = request.FileUrl?.Trim();
+        item.FileName = request.FileName?.Trim();
+        item.FileSize = request.FileSize;
+        if (!string.IsNullOrWhiteSpace(request.ContentType))
+        {
+            item.ContentType = request.ContentType;
+        }
         item.UpdatedAt = DateTime.UtcNow;
 
         // Handle tags: disconnect all existing, connect-or-create new ones
@@ -365,6 +411,10 @@ public class CreateItemRequest
     public string? Content { get; set; }
     public string? Url { get; set; }
     public string? Language { get; set; }
+    public string? FileUrl { get; set; }
+    public string? FileName { get; set; }
+    public int? FileSize { get; set; }
+    public string? ContentType { get; set; }
     public List<string> Tags { get; set; } = [];
 }
 
@@ -375,5 +425,9 @@ public class UpdateItemRequest
     public string? Content { get; set; }
     public string? Url { get; set; }
     public string? Language { get; set; }
+    public string? FileUrl { get; set; }
+    public string? FileName { get; set; }
+    public int? FileSize { get; set; }
+    public string? ContentType { get; set; }
     public List<string> Tags { get; set; } = [];
 }

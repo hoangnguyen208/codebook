@@ -14,12 +14,15 @@ import { createItem } from "@/actions/items";
 import { cn } from "@/lib/utils";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
+import { FileUpload } from "@/components/items/FileUpload";
 
 const ITEM_TYPES = [
   { name: "snippet", label: "Snippet" },
   { name: "prompt", label: "Prompt" },
   { name: "command", label: "Command" },
   { name: "note", label: "Note" },
+  { name: "file", label: "File" },
+  { name: "image", label: "Image" },
   { name: "link", label: "Link" },
 ] as const;
 
@@ -27,6 +30,7 @@ const HAS_CONTENT = new Set(["snippet", "prompt", "command", "note"]);
 const HAS_CODE_EDITOR = new Set(["snippet", "command"]);
 const HAS_LANGUAGE = new Set(["snippet", "command"]);
 const HAS_URL = new Set(["link"]);
+const HAS_FILE_UPLOAD = new Set(["file", "image"]);
 
 const inputClasses =
   "w-full rounded-xl border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40";
@@ -47,6 +51,12 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
   const [content, setContent] = useState("");
   const [language, setLanguage] = useState("");
   const [url, setUrl] = useState("");
+  const [fileUpload, setFileUpload] = useState<{
+    fileUrl: string;
+    fileName: string;
+    fileSize: number;
+    contentType: "image" | "file";
+  } | null>(null);
   const [tagsInput, setTagsInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +68,7 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
     setContent("");
     setLanguage("");
     setUrl("");
+    setFileUpload(null);
     setTagsInput("");
     setError(null);
   };
@@ -84,6 +95,10 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
       content: content.trim() || null,
       url: url.trim() || null,
       language: language.trim() || null,
+      fileUrl: fileUpload?.fileUrl ?? null,
+      fileName: fileUpload?.fileName ?? null,
+      fileSize: fileUpload?.fileSize ?? null,
+      contentType: fileUpload?.contentType ?? null,
       tags,
     });
 
@@ -163,6 +178,15 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
                 onChange={setContent}
               />
             )
+          ) : null}
+
+          {HAS_FILE_UPLOAD.has(typeName) ? (
+            <FileUpload
+              value={fileUpload}
+              onChange={setFileUpload}
+              accept={typeName === "image" ? "image" : "file"}
+              disabled={saving}
+            />
           ) : null}
 
           {HAS_URL.has(typeName) ? (

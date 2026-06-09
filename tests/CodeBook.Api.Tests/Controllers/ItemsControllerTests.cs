@@ -685,4 +685,75 @@ public class ItemsControllerTests
 
         Assert.IsType<BadRequestObjectResult>(result.Result);
     }
+
+    [Fact]
+    public async Task CreateItem_WithFileUrl()
+    {
+        var controller = CreateController();
+
+        var result = await controller.CreateItem(new CreateItemRequest
+        {
+            Title = "File Item",
+            TypeName = "snippet",
+            FileUrl = "https://r2.example.com/uploads/file.json",
+            FileName = "config.json",
+            FileSize = 2048,
+            ContentType = "file"
+        });
+
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(createdResult.Value);
+        Assert.Equal("https://r2.example.com/uploads/file.json", item.FileUrl);
+        Assert.Equal("config.json", item.FileName);
+        Assert.Equal(2048, item.FileSize);
+        Assert.Equal("file", item.ContentType);
+    }
+
+    [Fact]
+    public async Task UpdateItem_UpdatesFileFields()
+    {
+        var controller = CreateController();
+
+        var result = await controller.UpdateItem("item-1", new UpdateItemRequest
+        {
+            Title = _items[0].Title,
+            FileUrl = "https://r2.example.com/uploads/image.png",
+            FileName = "screenshot.png",
+            FileSize = 512000,
+            ContentType = "image",
+            Tags = _items[0].Tags.Select(t => t.Tag.Name).ToList()
+        });
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var updated = Assert.IsType<ItemDetailDto>(okResult.Value);
+        Assert.Equal("https://r2.example.com/uploads/image.png", updated.FileUrl);
+        Assert.Equal("screenshot.png", updated.FileName);
+        Assert.Equal(512000, updated.FileSize);
+        Assert.Equal("image", updated.ContentType);
+    }
+
+    [Fact]
+    public async Task DeleteItem_WithFileUrl_Succeeds()
+    {
+        var itemWithFile = new Item
+        {
+            Id = "item-file",
+            Title = "File Item",
+            ContentType = "file",
+            FileUrl = "https://not-matching-url.com/file.txt",
+            UserId = TestUserId,
+            TypeId = "type-snippet",
+            Type = _itemTypes[0],
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        _items.Add(itemWithFile);
+
+        var controller = CreateController();
+
+        var result = await controller.DeleteItem("item-file");
+
+        Assert.IsType<NoContentResult>(result);
+        Assert.DoesNotContain(_items, i => i.Id == "item-file");
+    }
 }

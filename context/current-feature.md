@@ -1,6 +1,6 @@
 # Current Feature
 
-Markdown Editor
+File & Image Upload
 
 ## Status
 
@@ -11,21 +11,24 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Create MarkdownEditor component with tabbed interface (Write/Preview)
-- Replace Textarea with MarkdownEditor for notes and prompts only
-- Keep CodeEditor for snippets and commands (no changes)
-- Use react-markdown with remark-gfm for GitHub Flavored Markdown support
-- Match existing dark theme styling (bg-[#1e1e1e] container, bg-[#2d2d2d] header)
-- Add copy button in header (same style as CodeEditor)
-- Support both display (readonly) and edit modes
-- In readonly mode, only show Preview tab
-- In edit mode, default to Write tab with Preview available
+- Create upload API route for R2
+- Stick with backend API in ItemsController and lib/db/items.ts for EF/db functions
+- Create FileUpload component with drag-and-drop
+- Update create item modal to use FileUpload for file/image types
+- Delete files from R2 when items are deleted
+- Create download proxy API route (avoids CORS issues)
+- Add download button in ItemDrawer for file types
+- Show upload progress indicator
+- Display image preview for images, file info for files
+- Finally, make sure the new unit tests for this feature pass.
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement markdown editor per `context/features/markdown-editor-spec.md`.
+All R2 keys and secrets are in .env & .env.production files.
+
+Implement file & image upload per `context/features/file-image-spec.md`.
 
 ## History
 
@@ -66,3 +69,4 @@ Implement markdown editor per `context/features/markdown-editor-spec.md`.
 - **Item Create**: Added `POST api/items` endpoint, `createItem` server action with Zod validation, shadcn Dialog modal with type selector and dynamic fields (content/language/url), wired New Item button in top bar, and 5 unit tests (47 total)
 - **Code Editor**: Created `CodeEditor` component with Monaco Editor dark theme, macOS dots, copy button, language label; wired into CreateItemDialog and ItemDrawerSheet for snippet/command types
 - **Markdown Editor**: Created `MarkdownEditor` component with Write/Preview tabs, copy button, macOS dots; used `@tailwindcss/typography` for `prose prose-invert` dark-theme rendering; replaced Textarea with MarkdownEditor for note/prompt types in CreateItemDialog and ItemDrawerSheet
+- **File & Image Upload**: Added R2 upload/download API routes, FileUpload component with drag-and-drop and progress indicator, file/image type support in CreateItemDialog and ItemDrawerSheet with image preview and download button, R2 file deletion on item delete, 3 new unit tests (50 total)

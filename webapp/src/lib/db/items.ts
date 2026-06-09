@@ -305,6 +305,10 @@ type CreateItemPayload = {
   content?: string | null;
   url?: string | null;
   language?: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+  contentType?: string | null;
   tags: string[];
 };
 
@@ -332,6 +336,9 @@ export async function createItem(
     content: string | null;
     contentType: string;
     language: string | null;
+    fileUrl: string | null;
+    fileName: string | null;
+    fileSize: number | null;
     url: string | null;
     isFavorite: boolean;
     isPinned: boolean;
@@ -353,9 +360,9 @@ export async function createItem(
     content: item.content,
     contentType: item.contentType,
     language: item.language,
-    fileUrl: null,
-    fileName: null,
-    fileSize: null,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
     url: item.url,
     isFavorite: item.isFavorite,
     isPinned: item.isPinned,

@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
   Check,
   Code2,
   Copy,
+  Download,
   File,
   FileImage,
   FileText,
@@ -235,6 +237,12 @@ export function ItemDrawerSheet() {
     }
   };
 
+  const handleDownload = () => {
+    if (item) {
+      window.open(`/api/items/${encodeURIComponent(item.id)}/download`, "_blank");
+    }
+  };
+
   const typeColorClasses = item ? resolveColorClasses(item.typeName, item.typeColor) : "";
   const showContentEdit = item ? HAS_CONTENT_EDIT.has(item.typeName) : false;
   const showCodeEditor = item ? HAS_CODE_EDITOR.has(item.typeName) : false;
@@ -410,18 +418,56 @@ export function ItemDrawerSheet() {
                   ) : null}
 
                   {item.fileName ? (
-                    <div className="rounded-xl border border-border/70 bg-background/70 p-4">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                    <div className="rounded-xl border border-border/70 bg-background/70 p-4 space-y-3">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         File
                       </p>
-                      <p className="text-sm">{item.fileName}</p>
-                      {item.fileSize ? (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {item.fileSize > 1024
-                            ? `${(item.fileSize / 1024).toFixed(1)} KB`
-                            : `${item.fileSize} bytes`}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                          {item.typeName === "image" && item.fileUrl ? (
+                            <Image
+                              src={item.fileUrl}
+                              alt={item.fileName}
+                              width={40}
+                              height={40}
+                              className="size-10 rounded-lg object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <File className="size-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{item.fileName}</p>
+                          {item.fileSize ? (
+                            <p className="text-xs text-muted-foreground">
+                              {item.fileSize > 1024 * 1024
+                                ? `${(item.fileSize / (1024 * 1024)).toFixed(1)} MB`
+                                : item.fileSize > 1024
+                                  ? `${(item.fileSize / 1024).toFixed(1)} KB`
+                                  : `${item.fileSize} bytes`}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                      {item.typeName === "image" && item.fileUrl ? (
+                        <Image
+                          src={item.fileUrl}
+                          alt={item.fileName}
+                          width={400}
+                          height={256}
+                          className="w-full max-h-64 rounded-lg object-cover"
+                          unoptimized
+                        />
                       ) : null}
+                      <button
+                        type="button"
+                        onClick={handleDownload}
+                        className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors"
+                      >
+                        <Download className="size-4" />
+                        Download
+                      </button>
                     </div>
                   ) : null}
 
