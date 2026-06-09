@@ -32,6 +32,7 @@ import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
 import { updateItem, deleteItem } from "@/actions/items";
 import { CodeEditor } from "@/components/items/CodeEditor";
+import { MarkdownEditor } from "@/components/items/MarkdownEditor";
 import type { ItemDetail } from "@/types/items";
 
 const itemTypeIcons: Record<string, LucideIcon> = {
@@ -314,18 +315,10 @@ export function ItemDrawerSheet() {
                         language={editLanguage}
                       />
                     ) : (
-                      <div className="rounded-xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                          Content
-                        </p>
-                        <textarea
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          className={cn(inputClasses, "min-h-[120px] font-mono")}
-                          placeholder="Enter content..."
-                          aria-label="Content"
-                        />
-                      </div>
+                      <MarkdownEditor
+                        value={editContent}
+                        onChange={setEditContent}
+                      />
                     )
                   ) : null}
 
@@ -393,14 +386,10 @@ export function ItemDrawerSheet() {
                         readOnly
                       />
                     ) : (
-                      <div className="rounded-xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                          Content
-                        </p>
-                        <pre className="text-sm whitespace-pre-wrap font-mono text-foreground/90 leading-relaxed">
-                          {item.content}
-                        </pre>
-                      </div>
+                      <MarkdownEditor
+                        value={item.content}
+                        readOnly
+                      />
                     )
                   ) : null}
 

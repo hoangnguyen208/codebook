@@ -13,6 +13,7 @@ import {
 import { createItem } from "@/actions/items";
 import { cn } from "@/lib/utils";
 import { CodeEditor } from "@/components/items/CodeEditor";
+import { MarkdownEditor } from "@/components/items/MarkdownEditor";
 
 const ITEM_TYPES = [
   { name: "snippet", label: "Snippet" },
@@ -157,12 +158,9 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
                 language={language}
               />
             ) : (
-              <textarea
+              <MarkdownEditor
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className={cn(inputClasses, "min-h-[100px] font-mono")}
-                placeholder="Content"
-                aria-label="Content"
+                onChange={setContent}
               />
             )
           ) : null}

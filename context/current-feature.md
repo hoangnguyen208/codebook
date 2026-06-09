@@ -1,6 +1,6 @@
 # Current Feature
 
-Code Editor
+Markdown Editor
 
 ## Status
 
@@ -11,20 +11,21 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Create CodeEditor component using Monaco Editor with dark theme
-- Replace Textarea with CodeEditor for snippets and commands only
-- Keep Textarea for notes, prompts, and other non-code types
-- Add macOS-style window dots (red/yellow/green) at top of editor
-- Add quick copy button in editor header
-- Add the language in editor header next to copy
+- Create MarkdownEditor component with tabbed interface (Write/Preview)
+- Replace Textarea with MarkdownEditor for notes and prompts only
+- Keep CodeEditor for snippets and commands (no changes)
+- Use react-markdown with remark-gfm for GitHub Flavored Markdown support
+- Match existing dark theme styling (bg-[#1e1e1e] container, bg-[#2d2d2d] header)
+- Add copy button in header (same style as CodeEditor)
 - Support both display (readonly) and edit modes
-- Make the height of the editor fluid but a max height of 400px and add a nice looking scrollbar that matches the theme
+- In readonly mode, only show Preview tab
+- In edit mode, default to Write tab with Preview available
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement code editor per `context/features/code-editor-spec.md`.
+Implement markdown editor per `context/features/markdown-editor-spec.md`.
 
 ## History
 
@@ -64,3 +65,4 @@ Implement code editor per `context/features/code-editor-spec.md`.
 - **Item Drawer — Delete**: Added `DELETE api/items/{id}` endpoint with ownership validation, `deleteItem` server action, confirmation dialog with warning in the item drawer, auto-close + list refresh after delete, and 3 unit tests (42 total)
 - **Item Create**: Added `POST api/items` endpoint, `createItem` server action with Zod validation, shadcn Dialog modal with type selector and dynamic fields (content/language/url), wired New Item button in top bar, and 5 unit tests (47 total)
 - **Code Editor**: Created `CodeEditor` component with Monaco Editor dark theme, macOS dots, copy button, language label; wired into CreateItemDialog and ItemDrawerSheet for snippet/command types
+- **Markdown Editor**: Created `MarkdownEditor` component with Write/Preview tabs, copy button, macOS dots; used `@tailwindcss/typography` for `prose prose-invert` dark-theme rendering; replaced Textarea with MarkdownEditor for note/prompt types in CreateItemDialog and ItemDrawerSheet
