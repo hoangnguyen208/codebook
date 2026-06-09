@@ -71,6 +71,8 @@ out/
 .env.production.local
 api/CodeBook.Identity/.env
 api/CodeBook.Identity/.env.production
+api/CodeBook.Api/.env
+api/CodeBook.Api/.env.production
 appsettings.Development.json
 appsettings.*.local.json
 
