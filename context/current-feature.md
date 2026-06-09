@@ -1,28 +1,30 @@
 # Current Feature
 
-Item Create
+Code Editor
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
-In Progress
+Completed
+
 ## Goals
 
 <!-- Goals & requirements -->
 
-- Right-side slide-in drawer using shadcn Sheet
-- Clicking ItemCard opens drawer with full item data
-- Works on dashboard and items list pages
-- Action bar: Favorite (yellow star), Pin, Copy, Edit, Delete
-- Client wrapper for state management (server-compatible)
-- Fetch full item detail on click from CodeBook.Api
-- Skeleton loading state while fetching
+- Create CodeEditor component using Monaco Editor with dark theme
+- Replace Textarea with CodeEditor for snippets and commands only
+- Keep Textarea for notes, prompts, and other non-code types
+- Add macOS-style window dots (red/yellow/green) at top of editor
+- Add quick copy button in editor header
+- Add the language in editor header next to copy
+- Support both display (readonly) and edit modes
+- Make the height of the editor fluid but a max height of 400px and add a nice looking scrollbar that matches the theme
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement item create per `context/features/item-create-spec.md`.
+Implement code editor per `context/features/code-editor-spec.md`.
 
 ## History
 
@@ -61,3 +63,4 @@ Implement item create per `context/features/item-create-spec.md`.
 - **Item Drawer — Edit Mode**: Added inline edit mode to item drawer with type-specific inputs (title/description/tags/content/language/url), Zod-validated server action, `PUT api/items/{id}` endpoint with tag disconnect-and-reconnect logic, 26 unit tests for ItemsController, and item types tests merged into ItemsControllerTests.cs
 - **Item Drawer — Delete**: Added `DELETE api/items/{id}` endpoint with ownership validation, `deleteItem` server action, confirmation dialog with warning in the item drawer, auto-close + list refresh after delete, and 3 unit tests (42 total)
 - **Item Create**: Added `POST api/items` endpoint, `createItem` server action with Zod validation, shadcn Dialog modal with type selector and dynamic fields (content/language/url), wired New Item button in top bar, and 5 unit tests (47 total)
+- **Code Editor**: Created `CodeEditor` component with Monaco Editor dark theme, macOS dots, copy button, language label; wired into CreateItemDialog and ItemDrawerSheet for snippet/command types
