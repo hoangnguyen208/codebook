@@ -403,7 +403,7 @@ export function DashboardShell({
   const collectionSummaries = useMemo<CollectionSummary[]>(() => {
     return data.collections.map((collection) => {
       const collectionItems = data.items.filter(
-        (item) => item.collectionId === collection.id,
+        (item) => item.collectionIds.includes(collection.id),
       );
       const lastUpdatedAt =
         [...collectionItems]

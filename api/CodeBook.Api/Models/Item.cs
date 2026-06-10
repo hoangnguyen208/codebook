@@ -19,11 +19,9 @@ public class Item
     public string TypeId { get; set; } = null!;
     public ItemType Type { get; set; } = null!;
 
-    public string? CollectionId { get; set; }
-    public Collection? Collection { get; set; }
-
     // Navigation properties
     public ICollection<ItemTag> Tags { get; set; } = new List<ItemTag>();
+    public ICollection<ItemCollection> ItemCollections { get; set; } = new List<ItemCollection>();
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

@@ -20,6 +20,7 @@ const createItemSchema = z.object({
   fileSize: z.number().int().positive().nullable().optional(),
   contentType: z.string().trim().nullable().optional(),
   tags: z.array(z.string().trim()).default([]),
+  collectionIds: z.array(z.string().trim()).default([]),
 });
 
 const updateItemSchema = z.object({
@@ -29,6 +30,7 @@ const updateItemSchema = z.object({
   url: z.string().url("Invalid URL").nullable().optional().or(z.literal("")),
   language: z.string().trim().nullable().optional(),
   tags: z.array(z.string().trim()).default([]),
+  collectionIds: z.array(z.string().trim()).default([]),
 });
 
 type CreateItemInput = z.infer<typeof createItemSchema>;
@@ -68,6 +70,7 @@ export async function createItem(
         fileSize: data.fileSize ?? null,
         contentType: data.contentType ?? null,
         tags: data.tags.filter((t) => t.length > 0),
+        collectionIds: data.collectionIds,
       },
       { accessToken: session.accessToken },
     );
@@ -108,6 +111,7 @@ export async function updateItem(
         url: data.url ? data.url : null,
         language: data.language ?? null,
         tags: data.tags.filter((t) => t.length > 0),
+        collectionIds: data.collectionIds,
       },
       { accessToken: session.accessToken },
     );

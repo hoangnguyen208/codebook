@@ -18,6 +18,7 @@ public class CodeBookDbContext : DbContext
     public virtual DbSet<Collection> Collections { get; set; } = null!;
     public virtual DbSet<Tag> Tags { get; set; } = null!;
     public virtual DbSet<ItemTag> ItemTags { get; set; } = null!;
+    public virtual DbSet<ItemCollection> ItemCollections { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,16 +32,26 @@ public class CodeBookDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Item>()
-            .HasOne(i => i.Collection)
-            .WithMany(c => c.Items)
-            .HasForeignKey(i => i.CollectionId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        modelBuilder.Entity<Item>()
             .HasIndex(i => i.UserId);
 
         modelBuilder.Entity<Collection>()
             .HasIndex(c => c.UserId);
+
+        // ItemCollection (many-to-many Item ↔ Collection)
+        modelBuilder.Entity<ItemCollection>()
+            .HasKey(ic => new { ic.ItemId, ic.CollectionId });
+
+        modelBuilder.Entity<ItemCollection>()
+            .HasOne(ic => ic.Item)
+            .WithMany(i => i.ItemCollections)
+            .HasForeignKey(ic => ic.ItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ItemCollection>()
+            .HasOne(ic => ic.Collection)
+            .WithMany(c => c.ItemCollections)
+            .HasForeignKey(ic => ic.CollectionId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // ItemTag configuration (composite key)
         modelBuilder.Entity<ItemTag>()
@@ -57,6 +68,5 @@ public class CodeBookDbContext : DbContext
             .WithMany(t => t.Items)
             .HasForeignKey(it => it.TagId)
             .OnDelete(DeleteBehavior.NoAction);
-
     }
 }

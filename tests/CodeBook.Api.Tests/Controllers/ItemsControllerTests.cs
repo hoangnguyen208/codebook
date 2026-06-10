@@ -19,6 +19,7 @@ public class ItemsControllerTests
     private readonly List<Tag> _tags;
     private readonly List<ItemType> _itemTypes;
     private readonly List<Collection> _collections;
+    private readonly List<ItemCollection> _itemCollections;
     private const string TestUserId = "test-user";
 
     public ItemsControllerTests()
@@ -32,7 +33,7 @@ public class ItemsControllerTests
 
         _collections =
         [
-            new() { Id = "col-1", Name = "React Snippets" }
+            new() { Id = "col-1", Name = "React Snippets", UserId = TestUserId }
         ];
 
         _tags =
@@ -52,7 +53,6 @@ public class ItemsControllerTests
                 Language = "typescript",
                 UserId = TestUserId,
                 TypeId = "type-snippet", Type = _itemTypes[0],
-                CollectionId = "col-1", Collection = _collections[0],
                 IsFavorite = true, IsPinned = true,
                 CreatedAt = new DateTime(2026, 1, 1),
                 UpdatedAt = new DateTime(2026, 6, 1)
@@ -123,12 +123,25 @@ public class ItemsControllerTests
         mockItemsDbSet.Setup(m => m.Remove(It.IsAny<Item>()))
             .Callback<Item>(e => _items.Remove(e));
 
+        _itemCollections = [];
+
+        var mockItemCollectionsDbSet = MockDbSetHelper.CreateDbSetMock(_itemCollections);
+        mockItemCollectionsDbSet.Setup(m => m.RemoveRange(It.IsAny<IEnumerable<ItemCollection>>()))
+            .Callback<IEnumerable<ItemCollection>>(entities =>
+            {
+                foreach (var e in entities)
+                {
+                    _itemCollections.Remove(e);
+                }
+            });
+
         var mockDbContext = new Mock<CodeBookDbContext>(new DbContextOptions<CodeBookDbContext>());
         mockDbContext.Setup(db => db.Items).Returns(mockItemsDbSet.Object);
         mockDbContext.Setup(db => db.ItemTypes).Returns(MockDbSetHelper.CreateDbSetMock(_itemTypes).Object);
         mockDbContext.Setup(db => db.Tags).Returns(MockDbSetHelper.CreateDbSetMock(_tags).Object);
         mockDbContext.Setup(db => db.ItemTags).Returns(mockItemTagsDbSet.Object);
         mockDbContext.Setup(db => db.Collections).Returns(MockDbSetHelper.CreateDbSetMock(_collections).Object);
+        mockDbContext.Setup(db => db.ItemCollections).Returns(mockItemCollectionsDbSet.Object);
         mockDbContext.Setup(db => db.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         _dbContext = mockDbContext.Object;
@@ -260,8 +273,8 @@ public class ItemsControllerTests
         Assert.Equal("text", item.ContentType);
         Assert.Equal("snippet", item.TypeName);
         Assert.Equal("Code", item.TypeIcon);
-        Assert.Equal("col-1", item.CollectionId);
-        Assert.Equal("React Snippets", item.CollectionName);
+        Assert.Empty(item.CollectionIds);
+        Assert.Empty(item.CollectionNames);
         Assert.Equal(2, item.Tags.Count);
         Assert.Contains("typescript", item.Tags);
         Assert.Contains("react", item.Tags);
@@ -470,8 +483,8 @@ public class ItemsControllerTests
         Assert.Equal("snippet", updated.TypeName);
         Assert.Equal("Code", updated.TypeIcon);
         Assert.Equal("#3b82f6", updated.TypeColor);
-        Assert.Equal("col-1", updated.CollectionId);
-        Assert.Equal("React Snippets", updated.CollectionName);
+        Assert.Empty(updated.CollectionIds);
+        Assert.Empty(updated.CollectionNames);
     }
 
     [Fact]
@@ -755,5 +768,170 @@ public class ItemsControllerTests
 
         Assert.IsType<NoContentResult>(result);
         Assert.DoesNotContain(_items, i => i.Id == "item-file");
+    }
+
+    // ── Collection assignment tests ──
+
+    [Fact]
+    public async Task CreateItem_WithCollectionIds()
+    {
+        var controller = CreateController();
+
+        var result = await controller.CreateItem(new CreateItemRequest
+        {
+            Title = "Collection Item",
+            TypeName = "snippet",
+            CollectionIds = ["col-1"]
+        });
+
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(createdResult.Value);
+        Assert.Single(item.CollectionIds);
+        Assert.Equal("col-1", item.CollectionIds[0]);
+        Assert.Contains("React Snippets", item.CollectionNames);
+        Assert.Single(_items.Last().ItemCollections);
+    }
+
+    [Fact]
+    public async Task CreateItem_IgnoresNonExistentCollectionIds()
+    {
+        var controller = CreateController();
+
+        var result = await controller.CreateItem(new CreateItemRequest
+        {
+            Title = "Bad Collections",
+            TypeName = "snippet",
+            CollectionIds = ["non-existent"]
+        });
+
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(createdResult.Value);
+        Assert.Empty(item.CollectionIds);
+        Assert.Empty(_items.Last().ItemCollections);
+    }
+
+    [Fact]
+    public async Task CreateItem_WithEmptyCollectionIds()
+    {
+        var controller = CreateController();
+
+        var result = await controller.CreateItem(new CreateItemRequest
+        {
+            Title = "No Collections",
+            TypeName = "snippet",
+            CollectionIds = []
+        });
+
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(createdResult.Value);
+        Assert.Empty(item.CollectionIds);
+    }
+
+    [Fact]
+    public async Task UpdateItem_AddsCollectionIds()
+    {
+        var controller = CreateController();
+
+        var result = await controller.UpdateItem("item-1", new UpdateItemRequest
+        {
+            Title = _items[0].Title,
+            Tags = _items[0].Tags.Select(t => t.Tag.Name).ToList(),
+            CollectionIds = ["col-1"]
+        });
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var updated = Assert.IsType<ItemDetailDto>(okResult.Value);
+        Assert.Single(updated.CollectionIds);
+        Assert.Equal("col-1", updated.CollectionIds[0]);
+        Assert.Contains("React Snippets", updated.CollectionNames);
+    }
+
+    [Fact]
+    public async Task UpdateItem_ReplacesCollectionIds()
+    {
+        // Seed an item-collection link first
+        _itemCollections.Add(new ItemCollection { ItemId = "item-1", CollectionId = "col-1", Item = _items[0], Collection = _collections[0] });
+        _items[0].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-1").ToList();
+
+        var controller = CreateController();
+
+        // Update with empty list should remove
+        var result = await controller.UpdateItem("item-1", new UpdateItemRequest
+        {
+            Title = _items[0].Title,
+            Tags = _items[0].Tags.Select(t => t.Tag.Name).ToList(),
+            CollectionIds = []
+        });
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var updated = Assert.IsType<ItemDetailDto>(okResult.Value);
+        Assert.Empty(updated.CollectionIds);
+        Assert.Empty(_items[0].ItemCollections);
+    }
+
+    [Fact]
+    public async Task UpdateItem_RemovesAllCollectionsWithEmptyList()
+    {
+        // Seed item with a collection
+        _itemCollections.Add(new ItemCollection { ItemId = "item-1", CollectionId = "col-1", Item = _items[0], Collection = _collections[0] });
+        _items[0].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-1").ToList();
+
+        var controller = CreateController();
+
+        var result = await controller.UpdateItem("item-1", new UpdateItemRequest
+        {
+            Title = _items[0].Title,
+            Tags = [],
+            CollectionIds = []
+        });
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var updated = Assert.IsType<ItemDetailDto>(okResult.Value);
+        Assert.Empty(updated.CollectionIds);
+        Assert.Empty(_items[0].ItemCollections);
+    }
+
+    [Fact]
+    public async Task GetItem_ReturnsCollectionIdsAndNames()
+    {
+        _itemCollections.Add(new ItemCollection { ItemId = "item-1", CollectionId = "col-1", Item = _items[0], Collection = _collections[0] });
+        _items[0].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-1").ToList();
+
+        var controller = CreateController();
+
+        var result = await controller.GetItem("item-1");
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(okResult.Value);
+        Assert.Single(item.CollectionIds);
+        Assert.Equal("col-1", item.CollectionIds[0]);
+        Assert.Contains("React Snippets", item.CollectionNames);
+    }
+
+    [Fact]
+    public async Task GetItem_ReturnsEmptyCollectionsWhenNone()
+    {
+        var controller = CreateController();
+
+        var result = await controller.GetItem("item-1");
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var item = Assert.IsType<ItemDetailDto>(okResult.Value);
+        Assert.Empty(item.CollectionIds);
+        Assert.Empty(item.CollectionNames);
+    }
+
+    [Fact]
+    public async Task DeleteItem_RemovesItemCollections()
+    {
+        _itemCollections.Add(new ItemCollection { ItemId = "item-3", CollectionId = "col-1", Item = _items[2], Collection = _collections[0] });
+        _items[2].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-3").ToList();
+
+        var controller = CreateController();
+
+        var result = await controller.DeleteItem("item-3");
+
+        Assert.IsType<NoContentResult>(result);
+        Assert.DoesNotContain(_itemCollections, ic => ic.ItemId == "item-3");
     }
 }

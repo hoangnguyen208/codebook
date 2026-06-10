@@ -1,6 +1,6 @@
 # Current Feature
 
-Collection Create
+Add Items to Collections
 
 ## Status
 
@@ -11,18 +11,19 @@ Completed
 
 <!-- Goals & requirements -->
 
-- "New Collection" button in the dashboard top bar alongside "New Item"
-- CreateCollectionDialog modal with Name (required) and Description (optional) fields
-- User-scoped: collections are created with the authenticated user's ID
-- Sonner toast library for success/failure notifications
-- Full-stack: .NET `POST /api/collections` → `lib/db/collections.ts` → `actions/collections.ts` → `CreateCollectionDialog`
-- Dashboard updates with new collection on save
+- Many-to-many Item ↔ Collection relationship via join table
+- Collection selector as a multi-select input in CreateItemDialog and ItemDrawerSheet edit mode
+- Fetches available user-scoped collections via API
+- Backend: `CollectionIds` field in `CreateItemRequest` and `UpdateItemRequest`
+- Full-stack: .NET endpoint → `lib/db/items.ts` → `actions/items.ts` → UI forms
+- Token refresh: JWT callback auto-refreshes expired access tokens via Duende refresh token grant
+- Empty-state fallback UI when no collections exist yet
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Follows the same pattern as item creation (Dialog → Server Action → lib/db → .NET API). Uses sonner for toast notifications instead of inline banners.
+Changes the Item-Collection relationship from one-to-many (Item.CollectionId) to many-to-many (ItemCollections join table). An item can belong to multiple collections simultaneously. Added 9 new unit tests (72 total). Fixed server-only import leak via server action wrapper.
 
 ## History
 
@@ -68,3 +69,4 @@ Follows the same pattern as item creation (Dialog → Server Action → lib/db �
 - **File List View**: Added `FileRow` single-column list component for `/items/files`, extended `RecentDashboardItemDto` with `FileName`/`FileSize`/`CreatedAt` fields, wired `ItemsGridClient` to use `FileRow` for file type with download button and responsive layout
 - **Quick Copy Icons on Cards**: Added copy-to-clipboard button with Check feedback to ItemCard for text-type items; implemented `document.execCommand("copy")` fallback for HTTP environments; extended `RecentDashboardItemDto` with `Content`/`Url` so list endpoints expose copyable content; removed copy icon from FileRow, ImageCard, and from the drawer for file/image types; fixed cleanup (deleted orphaned `mock-data.ts`, deleted unreachable `/auth/register` page)
 - **Collection Create**: Added "New Collection" button in dashboard top bar alongside "New Item"; created `CreateCollectionDialog` modal with Name/Description fields using sonner toasts; implemented full-stack flow: `POST /api/collections` .NET endpoint → `lib/db/collections.ts` createCollection → `actions/collections.ts` server action with Zod validation; added 13 unit tests for CollectionsController; added `.dockerignore` and optimized Dockerfiles with NuGet/npm cache mounts, non-root users, and proper layer ordering; fixed identity `UnauthorizedAccessException` for `/app/keys` directory; added API + Identity healthchecks to docker-compose with `condition: service_healthy` ordering; created `fetchWithRetry` with exponential backoff for all API calls; added graceful error fallback UI in dashboard and items pages
+- **Add Items to Collections**: Added many-to-many Item↔Collection relationship via `ItemCollection` join table with data migration from old `Item.CollectionId` FK; added `CollectionIds` to Create/Update DTOs and request schemas; added collection multi-select pill UI to CreateItemDialog and ItemDrawerSheet edit mode via server action; added 9 unit tests (72 total); fixed `server-only` import leak by wrapping client-facing calls in server action; added OIDC token refresh in NextAuth JWT callback to prevent 401 on expired access tokens

@@ -2,6 +2,7 @@ import "server-only";
 
 import { fetchWithRetry, getApiBaseUrl, authHeaders } from "@/lib/fetch";
 import type { FetchOptions } from "@/lib/fetch";
+import type { CollectionForSelect } from "@/types/items";
 
 export type CreateCollectionPayload = {
   name: string;
@@ -155,4 +156,27 @@ export async function createCollection(
     isFavorite: payload.isFavorite,
     createdAt: payload.createdAt,
   };
+}
+
+export async function getCollectionsForSelect(
+  options?: FetchOptions,
+): Promise<CollectionForSelect[]> {
+  const response = await fetchWithRetry(
+    `${getApiBaseUrl()}/api/dashboard/collections?limit=500`,
+    {
+      cache: "no-store",
+      headers: authHeaders(options?.accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch collections for select: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as {
+    id: string;
+    name: string;
+  }[];
+
+  return payload.map((c) => ({ id: c.id, name: c.name }));
 }

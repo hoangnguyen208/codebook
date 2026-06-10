@@ -54,9 +54,9 @@ public class DashboardCollectionsController : ControllerBase
                 collection.Id,
                 collection.Name,
                 collection.Description,
-                ItemCount = collection.Items.Count,
-                LastUpdatedAt = collection.Items
-                    .Select(item => (DateTime?)item.UpdatedAt)
+                ItemCount = collection.ItemCollections.Count,
+                LastUpdatedAt = collection.ItemCollections
+                    .Select(ic => (DateTime?)ic.Item.UpdatedAt)
                     .Max() ?? collection.UpdatedAt,
                 collection.IsFavorite
             })
@@ -66,14 +66,14 @@ public class DashboardCollectionsController : ControllerBase
 
         var collectionIds = baseCollections.Select(collection => collection.Id).ToList();
 
-        var typeStats = await _dbContext.Items
-            .Where(item => item.CollectionId != null && collectionIds.Contains(item.CollectionId))
-            .GroupBy(item => new
+        var typeStats = await _dbContext.ItemCollections
+            .Where(ic => collectionIds.Contains(ic.CollectionId))
+            .GroupBy(ic => new
             {
-                CollectionId = item.CollectionId!,
-                TypeName = item.Type.Name,
-                item.Type.Icon,
-                item.Type.Color
+                ic.CollectionId,
+                TypeName = ic.Item.Type.Name,
+                ic.Item.Type.Icon,
+                ic.Item.Type.Color
             })
             .Select(group => new
             {

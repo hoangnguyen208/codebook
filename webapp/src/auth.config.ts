@@ -38,6 +38,57 @@ function parseJwtPayload(token?: string | null) {
   }
 }
 
+function isTokenExpired(token?: string | null): boolean {
+  if (!token) return true;
+  const payload = parseJwtPayload(token);
+  const exp = payload.exp as number | undefined;
+  if (!exp) return true;
+  // Refresh if expiring within 60 seconds
+  return Date.now() >= (exp - 60) * 1000;
+}
+
+async function refreshAccessToken(refreshToken: string) {
+  try {
+    const issuer = process.env.AUTH_DUENDE_ISSUER;
+    const clientId = process.env.AUTH_DUENDE_CLIENT_ID;
+    const clientSecret = process.env.AUTH_DUENDE_CLIENT_SECRET;
+
+    if (!issuer || !clientId || !clientSecret) {
+      return null;
+    }
+
+    const response = await fetch(`${issuer}/connect/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+      }),
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+
+    const tokens = (await response.json()) as {
+      access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
+    };
+
+    return {
+      accessToken: tokens.access_token ?? null,
+      refreshToken: tokens.refresh_token ?? refreshToken,
+      expiresAt: tokens.expires_in
+        ? Math.floor(Date.now() / 1000) + tokens.expires_in
+        : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchDuendeUserInfo(accessToken?: string) {
   try {
     const issuer = process.env.AUTH_DUENDE_ISSUER;
@@ -110,6 +161,9 @@ const authConfig: NextAuthConfig = {
       if (account?.provider === "duende-identity-server6") {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
+        token.expiresAt = account.expires_at
+          ? account.expires_at
+          : Math.floor(Date.now() / 1000) + (account.expires_in ?? 3600);
 
         const profileClaims = (profile ?? {}) as Record<string, unknown>;
         const idTokenClaims = parseJwtPayload(account.id_token);
@@ -135,6 +189,21 @@ const authConfig: NextAuthConfig = {
 
         if (email) {
           token.email = email;
+        }
+      }
+
+      // Refresh token if expired
+      if (
+        typeof token.refreshToken === "string" &&
+        isTokenExpired(token.accessToken as string | undefined)
+      ) {
+        const refreshed = await refreshAccessToken(token.refreshToken);
+        if (refreshed?.accessToken) {
+          token.accessToken = refreshed.accessToken;
+          if (refreshed.refreshToken) {
+            token.refreshToken = refreshed.refreshToken;
+          }
+          token.expiresAt = refreshed.expiresAt;
         }
       }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 
@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createItem } from "@/actions/items";
+import { getCollectionsForSelectAction } from "@/actions/collections";
+import type { CollectionForSelect } from "@/types/items";
 import { cn } from "@/lib/utils";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
@@ -60,6 +62,14 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
   const [tagsInput, setTagsInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableCollections, setAvailableCollections] = useState<CollectionForSelect[]>([]);
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      getCollectionsForSelectAction().then(setAvailableCollections).catch(() => {});
+    }
+  }, [open]);
 
   const reset = () => {
     setTypeName(hasPresetType ? initialType! : "snippet");
@@ -71,6 +81,7 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
     setFileUpload(null);
     setTagsInput("");
     setError(null);
+    setSelectedCollectionIds([]);
   };
 
   const handleOpenChange = (next: boolean) => {
@@ -100,6 +111,7 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
       fileSize: fileUpload?.fileSize ?? null,
       contentType: fileUpload?.contentType ?? null,
       tags,
+      collectionIds: selectedCollectionIds,
     });
 
     setSaving(false);
@@ -223,6 +235,44 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
             <p className="mt-1 text-xs text-muted-foreground">
               Comma-separated list of tags
             </p>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Collections
+            </p>
+            {availableCollections.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {availableCollections.map((col) => {
+                  const selected = selectedCollectionIds.includes(col.id);
+                  return (
+                    <button
+                      key={col.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedCollectionIds((prev) =>
+                          selected
+                            ? prev.filter((id) => id !== col.id)
+                            : [...prev, col.id],
+                        )
+                      }
+                      className={cn(
+                        "rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors",
+                        selected
+                          ? "border-foreground/30 bg-foreground/10 text-foreground"
+                          : "border-border/70 text-muted-foreground hover:bg-muted",
+                      )}
+                    >
+                      {col.name}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                No collections yet. Create one first from the dashboard to assign items.
+              </p>
+            )}
           </div>
 
           {error ? (

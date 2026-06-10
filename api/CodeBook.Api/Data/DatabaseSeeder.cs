@@ -49,141 +49,87 @@ public static class DatabaseSeeder
 
         var items = new List<Item>
         {
-            // React Patterns (3 snippets)
-            CreateTextItem(userId,
-                typesByName["snippet"].Id,
-                collectionsByName["React Patterns"].Id,
+            CreateTextItem(userId, typesByName["snippet"].Id,
                 "useDebounce Hook",
                 "export function useDebounce<T>(value: T, delay = 300) {\n  const [debounced, setDebounced] = useState(value);\n  useEffect(() => {\n    const id = setTimeout(() => setDebounced(value), delay);\n    return () => clearTimeout(id);\n  }, [value, delay]);\n  return debounced;\n}",
-                "typescript",
-                now,
-                isFavorite: true,
-                isPinned: true),
-            CreateTextItem(userId,
-                typesByName["snippet"].Id,
-                collectionsByName["React Patterns"].Id,
+                "typescript", now, isFavorite: true, isPinned: true),
+            CreateTextItem(userId, typesByName["snippet"].Id,
                 "Context Provider Pattern",
                 "type Theme = \"light\" | \"dark\";\nconst ThemeContext = createContext<{ theme: Theme; toggle: () => void } | null>(null);\n\nexport function ThemeProvider({ children }: { children: React.ReactNode }) {\n  const [theme, setTheme] = useState<Theme>(\"light\");\n  const toggle = () => setTheme((t) => (t === \"light\" ? \"dark\" : \"light\"));\n  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;\n}",
-                "typescript",
-                now),
-            CreateTextItem(userId,
-                typesByName["snippet"].Id,
-                collectionsByName["React Patterns"].Id,
+                "typescript", now),
+            CreateTextItem(userId, typesByName["snippet"].Id,
                 "Class Name Utility",
                 "export function cn(...classes: Array<string | false | null | undefined>) {\n  return classes.filter(Boolean).join(\" \");\n}",
-                "typescript",
-                now),
-
-            // AI Workflows (3 prompts)
-            CreateTextItem(userId,
-                typesByName["prompt"].Id,
-                collectionsByName["AI Workflows"].Id,
+                "typescript", now),
+            CreateTextItem(userId, typesByName["prompt"].Id,
                 "Code Review Prompt",
                 "Review this pull request for correctness, security, and edge cases. Prioritize actionable feedback and include concrete fixes when possible.",
-                null,
-                now),
-            CreateTextItem(userId,
-                typesByName["prompt"].Id,
-                collectionsByName["AI Workflows"].Id,
+                null, now),
+            CreateTextItem(userId, typesByName["prompt"].Id,
                 "Documentation Prompt",
                 "Generate developer-facing documentation for this module: purpose, public API, usage examples, and known limitations.",
-                null,
-                now),
-            CreateTextItem(userId,
-                typesByName["prompt"].Id,
-                collectionsByName["AI Workflows"].Id,
+                null, now),
+            CreateTextItem(userId, typesByName["prompt"].Id,
                 "Refactoring Prompt",
                 "Refactor this code to improve readability and maintainability without changing behavior. Explain major tradeoffs.",
-                null,
-                now),
-
-            // DevOps (1 snippet, 1 command, 2 links)
-            CreateTextItem(userId,
-                typesByName["snippet"].Id,
-                collectionsByName["DevOps"].Id,
+                null, now),
+            CreateTextItem(userId, typesByName["snippet"].Id,
                 "GitHub Actions .NET Build",
                 "name: ci\non: [push, pull_request]\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-dotnet@v4\n        with:\n          dotnet-version: \"10.0.x\"\n      - run: dotnet restore\n      - run: dotnet build --no-restore",
-                "yaml",
-                now),
-            CreateTextItem(userId,
-                typesByName["command"].Id,
-                collectionsByName["DevOps"].Id,
+                "yaml", now),
+            CreateTextItem(userId, typesByName["command"].Id,
                 "Docker Compose Deploy",
                 "docker compose pull && docker compose up -d --remove-orphans",
-                "bash",
-                now,
-                isFavorite: true,
-                isPinned: true),
-            CreateLinkItem(userId,
-                typesByName["link"].Id,
-                collectionsByName["DevOps"].Id,
-                "Docker Compose docs",
-                "https://docs.docker.com/compose/",
-                now),
-            CreateLinkItem(userId,
-                typesByName["link"].Id,
-                collectionsByName["DevOps"].Id,
-                "GitHub Actions docs",
-                "https://docs.github.com/actions",
-                now),
-
-            // Terminal Commands (4 commands)
-            CreateTextItem(userId,
-                typesByName["command"].Id,
-                collectionsByName["Terminal Commands"].Id,
+                "bash", now, isFavorite: true, isPinned: true),
+            CreateLinkItem(userId, typesByName["link"].Id,
+                "Docker Compose docs", "https://docs.docker.com/compose/", now),
+            CreateLinkItem(userId, typesByName["link"].Id,
+                "GitHub Actions docs", "https://docs.github.com/actions", now),
+            CreateTextItem(userId, typesByName["command"].Id,
                 "Git Branch Cleanup",
                 "git fetch --prune && git branch --merged | grep -v \"\\*\\|main\\|master\" | xargs -n 1 git branch -d",
-                "bash",
-                now),
-            CreateTextItem(userId,
-                typesByName["command"].Id,
-                collectionsByName["Terminal Commands"].Id,
+                "bash", now),
+            CreateTextItem(userId, typesByName["command"].Id,
                 "Docker Log Tail",
                 "docker compose logs -f --tail=200 api",
-                "bash",
-                now),
-            CreateTextItem(userId,
-                typesByName["command"].Id,
-                collectionsByName["Terminal Commands"].Id,
+                "bash", now),
+            CreateTextItem(userId, typesByName["command"].Id,
                 "Kill Process on Port 3000",
                 "lsof -ti :3000 | xargs kill -9",
-                "bash",
-                now),
-            CreateTextItem(userId,
-                typesByName["command"].Id,
-                collectionsByName["Terminal Commands"].Id,
+                "bash", now),
+            CreateTextItem(userId, typesByName["command"].Id,
                 "NPM Clean Install",
                 "rm -rf node_modules package-lock.json && npm ci",
-                "bash",
-                now),
-
-            // Design Resources (4 links)
-            CreateLinkItem(userId,
-                typesByName["link"].Id,
-                collectionsByName["Design Resources"].Id,
-                "Tailwind CSS",
-                "https://tailwindcss.com/docs",
-                now,
-                isFavorite: true),
-            CreateLinkItem(userId,
-                typesByName["link"].Id,
-                collectionsByName["Design Resources"].Id,
-                "shadcn/ui",
-                "https://ui.shadcn.com/",
-                now),
-            CreateLinkItem(userId,
-                typesByName["link"].Id,
-                collectionsByName["Design Resources"].Id,
-                "Material Design",
-                "https://m3.material.io/",
-                now),
-            CreateLinkItem(userId,
-                typesByName["link"].Id,
-                collectionsByName["Design Resources"].Id,
-                "Lucide Icons",
-                "https://lucide.dev/icons/",
-                now)
+                "bash", now),
+            CreateLinkItem(userId, typesByName["link"].Id,
+                "Tailwind CSS", "https://tailwindcss.com/docs", now, isFavorite: true),
+            CreateLinkItem(userId, typesByName["link"].Id,
+                "shadcn/ui", "https://ui.shadcn.com/", now),
+            CreateLinkItem(userId, typesByName["link"].Id,
+                "Material Design", "https://m3.material.io/", now),
+            CreateLinkItem(userId, typesByName["link"].Id,
+                "Lucide Icons", "https://lucide.dev/icons/", now)
         };
+
+        // Link items to collections via ItemCollection join table
+        items[0].ItemCollections.Add(new ItemCollection { ItemId = items[0].Id, CollectionId = collectionsByName["React Patterns"].Id });
+        items[1].ItemCollections.Add(new ItemCollection { ItemId = items[1].Id, CollectionId = collectionsByName["React Patterns"].Id });
+        items[2].ItemCollections.Add(new ItemCollection { ItemId = items[2].Id, CollectionId = collectionsByName["React Patterns"].Id });
+        items[3].ItemCollections.Add(new ItemCollection { ItemId = items[3].Id, CollectionId = collectionsByName["AI Workflows"].Id });
+        items[4].ItemCollections.Add(new ItemCollection { ItemId = items[4].Id, CollectionId = collectionsByName["AI Workflows"].Id });
+        items[5].ItemCollections.Add(new ItemCollection { ItemId = items[5].Id, CollectionId = collectionsByName["AI Workflows"].Id });
+        items[6].ItemCollections.Add(new ItemCollection { ItemId = items[6].Id, CollectionId = collectionsByName["DevOps"].Id });
+        items[7].ItemCollections.Add(new ItemCollection { ItemId = items[7].Id, CollectionId = collectionsByName["DevOps"].Id });
+        items[8].ItemCollections.Add(new ItemCollection { ItemId = items[8].Id, CollectionId = collectionsByName["DevOps"].Id });
+        items[9].ItemCollections.Add(new ItemCollection { ItemId = items[9].Id, CollectionId = collectionsByName["DevOps"].Id });
+        items[10].ItemCollections.Add(new ItemCollection { ItemId = items[10].Id, CollectionId = collectionsByName["Terminal Commands"].Id });
+        items[11].ItemCollections.Add(new ItemCollection { ItemId = items[11].Id, CollectionId = collectionsByName["Terminal Commands"].Id });
+        items[12].ItemCollections.Add(new ItemCollection { ItemId = items[12].Id, CollectionId = collectionsByName["Terminal Commands"].Id });
+        items[13].ItemCollections.Add(new ItemCollection { ItemId = items[13].Id, CollectionId = collectionsByName["Terminal Commands"].Id });
+        items[14].ItemCollections.Add(new ItemCollection { ItemId = items[14].Id, CollectionId = collectionsByName["Design Resources"].Id });
+        items[15].ItemCollections.Add(new ItemCollection { ItemId = items[15].Id, CollectionId = collectionsByName["Design Resources"].Id });
+        items[16].ItemCollections.Add(new ItemCollection { ItemId = items[16].Id, CollectionId = collectionsByName["Design Resources"].Id });
+        items[17].ItemCollections.Add(new ItemCollection { ItemId = items[17].Id, CollectionId = collectionsByName["Design Resources"].Id });
 
         dbContext.ItemTypes.AddRange(itemTypes);
         dbContext.Collections.AddRange(collections);
@@ -220,7 +166,6 @@ public static class DatabaseSeeder
     private static Item CreateTextItem(
         string userId,
         string typeId,
-        string collectionId,
         string title,
         string content,
         string? language,
@@ -237,7 +182,6 @@ public static class DatabaseSeeder
         IsPinned = isPinned,
         UserId = userId,
         TypeId = typeId,
-        CollectionId = collectionId,
         CreatedAt = now,
         UpdatedAt = now
     };
@@ -245,7 +189,6 @@ public static class DatabaseSeeder
     private static Item CreateLinkItem(
         string userId,
         string typeId,
-        string collectionId,
         string title,
         string url,
         DateTime now,
@@ -261,9 +204,7 @@ public static class DatabaseSeeder
         IsPinned = isPinned,
         UserId = userId,
         TypeId = typeId,
-        CollectionId = collectionId,
         CreatedAt = now,
         UpdatedAt = now
     };
-
 }

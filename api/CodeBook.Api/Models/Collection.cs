@@ -9,7 +9,7 @@ public class Collection
     public string? UserId { get; set; }
 
     // Navigation properties
-    public ICollection<Item> Items { get; set; } = new List<Item>();
+    public ICollection<ItemCollection> ItemCollections { get; set; } = new List<ItemCollection>();
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

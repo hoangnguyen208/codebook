@@ -13,7 +13,7 @@ type DashboardItemApiDto = {
   content?: string | null;
   url?: string | null;
   typeId: string;
-  collectionId: string | null;
+  collectionIds: string[];
   fileUrl: string | null;
   fileName: string | null;
   fileSize: number | null;
@@ -164,7 +164,7 @@ export async function getRecentDashboardItems(
     content: item.content ?? null,
     url: item.url ?? null,
     typeId: item.typeId,
-    collectionId: item.collectionId ?? "",
+    collectionIds: item.collectionIds ?? [],
     fileUrl: item.fileUrl ?? null,
     fileName: item.fileName ?? null,
     fileSize: item.fileSize ?? null,
@@ -201,7 +201,7 @@ export async function getItemsByType(
     content: item.content ?? null,
     url: item.url ?? null,
     typeId: item.typeId,
-    collectionId: item.collectionId ?? "",
+    collectionIds: item.collectionIds ?? [],
     fileUrl: item.fileUrl ?? null,
     fileName: item.fileName ?? null,
     fileSize: item.fileSize ?? null,
@@ -250,8 +250,8 @@ export async function getItemById(
     typeName: string;
     typeIcon: string | null;
     typeColor: string | null;
-    collectionId: string | null;
-    collectionName: string | null;
+    collectionIds: string[];
+    collectionNames: string[];
     tags: string[];
     createdAt: string;
     updatedAt: string;
@@ -274,8 +274,8 @@ export async function getItemById(
     typeName: item.typeName,
     typeIcon: item.typeIcon,
     typeColor: item.typeColor,
-    collectionId: item.collectionId,
-    collectionName: item.collectionName,
+    collectionIds: item.collectionIds,
+    collectionNames: item.collectionNames,
     tags: item.tags.filter((tag) => tag.trim().length > 0),
     createdAt: toDateLabel(item.createdAt),
     updatedAt: toDateLabel(item.updatedAt),
@@ -311,6 +311,7 @@ type CreateItemPayload = {
   fileSize?: number | null;
   contentType?: string | null;
   tags: string[];
+  collectionIds: string[];
 };
 
 export async function createItem(
@@ -347,8 +348,8 @@ export async function createItem(
     typeName: string;
     typeIcon: string | null;
     typeColor: string | null;
-    collectionId: string | null;
-    collectionName: string | null;
+    collectionIds: string[];
+    collectionNames: string[];
     tags: string[];
     createdAt: string;
     updatedAt: string;
@@ -371,8 +372,8 @@ export async function createItem(
     typeName: item.typeName,
     typeIcon: item.typeIcon,
     typeColor: item.typeColor,
-    collectionId: item.collectionId,
-    collectionName: item.collectionName,
+    collectionIds: item.collectionIds,
+    collectionNames: item.collectionNames,
     tags: item.tags.filter((tag) => tag.trim().length > 0),
     createdAt: toDateLabel(item.createdAt),
     updatedAt: toDateLabel(item.updatedAt),
@@ -386,6 +387,7 @@ type UpdateItemPayload = {
   url?: string | null;
   language?: string | null;
   tags: string[];
+  collectionIds: string[];
 };
 
 export async function updateItem(
@@ -426,8 +428,8 @@ export async function updateItem(
     typeName: string;
     typeIcon: string | null;
     typeColor: string | null;
-    collectionId: string | null;
-    collectionName: string | null;
+    collectionIds: string[];
+    collectionNames: string[];
     tags: string[];
     createdAt: string;
     updatedAt: string;
@@ -450,8 +452,8 @@ export async function updateItem(
     typeName: item.typeName,
     typeIcon: item.typeIcon,
     typeColor: item.typeColor,
-    collectionId: item.collectionId,
-    collectionName: item.collectionName,
+    collectionIds: item.collectionIds,
+    collectionNames: item.collectionNames,
     tags: item.tags.filter((tag) => tag.trim().length > 0),
     createdAt: toDateLabel(item.createdAt),
     updatedAt: toDateLabel(item.updatedAt),

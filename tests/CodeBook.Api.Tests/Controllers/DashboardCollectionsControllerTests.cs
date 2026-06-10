@@ -16,6 +16,7 @@ public class DashboardCollectionsControllerTests
     private readonly CodeBookDbContext _dbContext;
     private readonly List<Collection> _collections;
     private readonly List<Item> _items;
+    private readonly List<ItemCollection> _itemCollections;
     private readonly List<ItemType> _itemTypes;
     private const string TestUserId = "test-user";
 
@@ -50,32 +51,43 @@ public class DashboardCollectionsControllerTests
         [
             new()
             {
-                Id = "item-1", Title = "Item 1", CollectionId = "col-1",
+                Id = "item-1", Title = "Item 1",
                 TypeId = "type-snippet", Type = _itemTypes[0],
-                UpdatedAt = new DateTime(2026, 6, 1)
+                ContentType = "text", UpdatedAt = new DateTime(2026, 6, 1)
             },
             new()
             {
-                Id = "item-2", Title = "Item 2", CollectionId = "col-1",
+                Id = "item-2", Title = "Item 2",
                 TypeId = "type-prompt", Type = _itemTypes[1],
-                UpdatedAt = new DateTime(2026, 5, 15)
+                ContentType = "text", UpdatedAt = new DateTime(2026, 5, 15)
             },
             new()
             {
-                Id = "item-3", Title = "Item 3", CollectionId = "col-2",
+                Id = "item-3", Title = "Item 3",
                 TypeId = "type-snippet", Type = _itemTypes[0],
-                UpdatedAt = new DateTime(2026, 6, 2)
+                ContentType = "text", UpdatedAt = new DateTime(2026, 6, 2)
             }
         ];
 
-        _collections[0].Items = _items.Where(i => i.CollectionId == "col-1").ToList();
-        _collections[1].Items = _items.Where(i => i.CollectionId == "col-2").ToList();
-        _collections[2].Items = [];
+        _itemCollections =
+        [
+            new() { ItemId = "item-1", CollectionId = "col-1", Item = _items[0] },
+            new() { ItemId = "item-2", CollectionId = "col-1", Item = _items[1] },
+            new() { ItemId = "item-3", CollectionId = "col-2", Item = _items[2] },
+        ];
+
+        _collections[0].ItemCollections = [_itemCollections[0], _itemCollections[1]];
+        _collections[1].ItemCollections = [_itemCollections[2]];
+        _collections[2].ItemCollections = [];
+        _items[0].ItemCollections = [_itemCollections[0]];
+        _items[1].ItemCollections = [_itemCollections[1]];
+        _items[2].ItemCollections = [_itemCollections[2]];
 
         var mockDbContext = new Mock<CodeBookDbContext>(new DbContextOptions<CodeBookDbContext>());
         mockDbContext.Setup(db => db.Collections).Returns(MockDbSetHelper.CreateDbSetMock(_collections).Object);
         mockDbContext.Setup(db => db.Items).Returns(MockDbSetHelper.CreateDbSetMock(_items).Object);
         mockDbContext.Setup(db => db.ItemTypes).Returns(MockDbSetHelper.CreateDbSetMock(_itemTypes).Object);
+        mockDbContext.Setup(db => db.ItemCollections).Returns(MockDbSetHelper.CreateDbSetMock(_itemCollections).Object);
         _dbContext = mockDbContext.Object;
     }
 
@@ -201,6 +213,7 @@ public class DashboardCollectionsControllerTests
         var mockDbContext = new Mock<CodeBookDbContext>(new DbContextOptions<CodeBookDbContext>());
         mockDbContext.Setup(db => db.Collections).Returns(MockDbSetHelper.CreateDbSetMock(manyCollections).Object);
         mockDbContext.Setup(db => db.Items).Returns(MockDbSetHelper.CreateDbSetMock(new List<Item>()).Object);
+        mockDbContext.Setup(db => db.ItemCollections).Returns(MockDbSetHelper.CreateDbSetMock(new List<ItemCollection>()).Object);
 
         var controller = new DashboardCollectionsController(mockDbContext.Object)
         {

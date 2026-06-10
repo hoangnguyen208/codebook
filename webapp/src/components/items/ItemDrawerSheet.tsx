@@ -33,9 +33,10 @@ import {
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
 import { updateItem, deleteItem } from "@/actions/items";
+import { getCollectionsForSelectAction } from "@/actions/collections";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
-import type { ItemDetail } from "@/types/items";
+import type { CollectionForSelect, ItemDetail } from "@/types/items";
 
 const itemTypeIcons: Record<string, LucideIcon> = {
   code: Code2,
@@ -137,6 +138,8 @@ export function ItemDrawerSheet() {
   const [editContent, setEditContent] = useState("");
   const [editLanguage, setEditLanguage] = useState("");
   const [editUrl, setEditUrl] = useState("");
+  const [availableCollections, setAvailableCollections] = useState<CollectionForSelect[]>([]);
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!selectedItemId || !isOpen) {
@@ -172,8 +175,10 @@ export function ItemDrawerSheet() {
     setEditContent(item.content ?? "");
     setEditLanguage(item.language ?? "");
     setEditUrl(item.url ?? "");
+    setSelectedCollectionIds(item.collectionIds ?? []);
     setIsEditing(true);
     setStatus(null);
+    getCollectionsForSelectAction().then(setAvailableCollections).catch(() => {});
   };
 
   const cancelEdit = () => {
@@ -195,6 +200,7 @@ export function ItemDrawerSheet() {
       url: editUrl.trim() || null,
       language: editLanguage.trim() || null,
       tags: inputToTags(editTagsInput),
+      collectionIds: selectedCollectionIds,
     });
 
     setSaving(false);
@@ -303,7 +309,7 @@ export function ItemDrawerSheet() {
                   )}
                   <p className="text-xs text-muted-foreground">
                     {item.typeName.charAt(0).toUpperCase() + item.typeName.slice(1)}
-                    {item.collectionName ? ` · ${item.collectionName}` : ""}
+                    {item.collectionNames.length > 0 ? ` · ${item.collectionNames.join(", ")}` : ""}
                   </p>
                 </div>
               </div>
@@ -388,6 +394,44 @@ export function ItemDrawerSheet() {
                     <p className="mt-1 text-xs text-muted-foreground">
                       Comma-separated list of tags
                     </p>
+                  </div>
+
+                  <div className="rounded-xl border border-border/70 bg-background/70 p-4">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                      Collections
+                    </p>
+                    {availableCollections.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {availableCollections.map((col) => {
+                          const selected = selectedCollectionIds.includes(col.id);
+                          return (
+                            <button
+                              key={col.id}
+                              type="button"
+                              onClick={() =>
+                                setSelectedCollectionIds((prev) =>
+                                  selected
+                                    ? prev.filter((id) => id !== col.id)
+                                    : [...prev, col.id],
+                                )
+                              }
+                              className={cn(
+                                "rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors",
+                                selected
+                                  ? "border-foreground/30 bg-foreground/10 text-foreground"
+                                  : "border-border/70 text-muted-foreground hover:bg-muted",
+                              )}
+                            >
+                              {col.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        No collections yet.
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-muted-foreground">

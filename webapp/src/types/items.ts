@@ -5,7 +5,7 @@ export type DashboardItem = {
   content?: string | null;
   url?: string | null;
   typeId: string;
-  collectionId: string;
+  collectionIds: string[];
   fileUrl: string | null;
   fileName: string | null;
   fileSize: number | null;
@@ -33,8 +33,8 @@ export type ItemDetail = {
   typeName: string;
   typeIcon: string | null;
   typeColor: string | null;
-  collectionId: string | null;
-  collectionName: string | null;
+  collectionIds: string[];
+  collectionNames: string[];
   tags: string[];
   createdAt: string;
   updatedAt: string;
@@ -47,4 +47,9 @@ export type DashboardItemType = {
   icon: "code" | "sparkles" | "terminal" | "file-text" | "file" | "image" | "link";
   color: string;
   isSystem: boolean;
+};
+
+export type CollectionForSelect = {
+  id: string;
+  name: string;
 };

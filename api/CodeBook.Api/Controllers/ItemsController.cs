@@ -75,6 +75,18 @@ public class ItemsController : ControllerBase
             }
         }
 
+        if (request.CollectionIds is { Count: > 0 })
+        {
+            var validCollections = await _dbContext.Collections
+                .Where(c => c.UserId == userId && request.CollectionIds.Contains(c.Id))
+                .ToListAsync();
+
+            foreach (var col in validCollections)
+            {
+                item.ItemCollections.Add(new ItemCollection { ItemId = item.Id, CollectionId = col.Id, Collection = col });
+            }
+        }
+
         _dbContext.Items.Add(item);
         await _dbContext.SaveChangesAsync();
 
@@ -90,7 +102,8 @@ public class ItemsController : ControllerBase
             .Include(i => i.Type)
             .Include(i => i.Tags)
                 .ThenInclude(it => it.Tag)
-            .Include(i => i.Collection)
+            .Include(i => i.ItemCollections)
+                .ThenInclude(ic => ic.Collection)
             .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
 
         if (item == null)
@@ -107,6 +120,7 @@ public class ItemsController : ControllerBase
         var userId = GetUserId();
         var item = await _dbContext.Items
             .Include(i => i.Tags)
+            .Include(i => i.ItemCollections)
             .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
 
         if (item == null)
@@ -114,7 +128,6 @@ public class ItemsController : ControllerBase
             return NotFound();
         }
 
-        // Delete file from R2 if present
         if (!string.IsNullOrWhiteSpace(item.FileUrl))
         {
             try
@@ -143,10 +156,10 @@ public class ItemsController : ControllerBase
             }
             catch
             {
-                // Log but don't block deletion
             }
         }
 
+        _dbContext.ItemCollections.RemoveRange(item.ItemCollections);
         _dbContext.ItemTags.RemoveRange(item.Tags);
         _dbContext.Items.Remove(item);
         await _dbContext.SaveChangesAsync();
@@ -162,7 +175,7 @@ public class ItemsController : ControllerBase
             .Include(i => i.Tags)
                 .ThenInclude(it => it.Tag)
             .Include(i => i.Type)
-            .Include(i => i.Collection)
+            .Include(i => i.ItemCollections)
             .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
 
         if (item == null)
@@ -215,22 +228,33 @@ public class ItemsController : ControllerBase
             }
         }
 
+        // Handle collections: disconnect all existing, connect new ones
+        _dbContext.ItemCollections.RemoveRange(item.ItemCollections);
+        item.ItemCollections.Clear();
+
+        if (request.CollectionIds is { Count: > 0 })
+        {
+            var validCollections = await _dbContext.Collections
+                .Where(c => c.UserId == userId && request.CollectionIds.Contains(c.Id))
+                .ToListAsync();
+
+            foreach (var col in validCollections)
+            {
+                item.ItemCollections.Add(new ItemCollection { ItemId = item.Id, CollectionId = col.Id, Collection = col });
+            }
+        }
+
         await _dbContext.SaveChangesAsync();
 
-        // Reload with includes for response
-        var updated = await _dbContext.Items
-            .AsNoTracking()
-            .Include(i => i.Type)
-            .Include(i => i.Tags)
-                .ThenInclude(it => it.Tag)
-            .Include(i => i.Collection)
-            .FirstOrDefaultAsync(i => i.Id == id);
-
-        return Ok(ToItemDetailDto(updated!));
+        return Ok(ToItemDetailDto(item));
     }
 
     private static ItemDetailDto ToItemDetailDto(Item item)
     {
+        var collectionEntries = item.ItemCollections
+            .Where(ic => !string.IsNullOrWhiteSpace(ic.CollectionId))
+            .ToList();
+
         return new ItemDetailDto
         {
             Id = item.Id,
@@ -249,8 +273,10 @@ public class ItemsController : ControllerBase
             TypeName = item.Type.Name,
             TypeIcon = item.Type.Icon,
             TypeColor = item.Type.Color,
-            CollectionId = item.CollectionId,
-            CollectionName = item.Collection?.Name,
+            CollectionIds = collectionEntries.Select(c => c.CollectionId).ToList()!,
+            CollectionNames = collectionEntries
+                .Select(c => c.Collection?.Name ?? c.CollectionId)
+                .ToList()!,
             Tags = item.Tags
                 .Select(it => it.Tag?.Name)
                 .Where(t => !string.IsNullOrWhiteSpace(t))
@@ -272,6 +298,7 @@ public class ItemsController : ControllerBase
             .AsNoTracking()
             .Include(item => item.Tags)
                 .ThenInclude(itemTag => itemTag.Tag)
+            .Include(item => item.ItemCollections)
             .Where(item => item.UserId == userId)
             .OrderByDescending(item => item.UpdatedAt)
             .Take(safeLimit)
@@ -285,7 +312,10 @@ public class ItemsController : ControllerBase
             Content = item.Content,
             Url = item.Url,
             TypeId = item.TypeId,
-            CollectionId = item.CollectionId,
+            CollectionIds = item.ItemCollections
+                .Select(ic => ic.CollectionId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .ToList()!,
             FileUrl = item.FileUrl,
             FileName = item.FileName,
             FileSize = item.FileSize,
@@ -316,6 +346,7 @@ public class ItemsController : ControllerBase
             .Include(item => item.Tags)
                 .ThenInclude(itemTag => itemTag.Tag)
             .Include(item => item.Type)
+            .Include(item => item.ItemCollections)
             .Where(item => item.UserId == userId && item.Type.IsSystem && item.Type.Name == typeName)
             .OrderByDescending(item => item.UpdatedAt)
             .Take(safeLimit)
@@ -329,7 +360,10 @@ public class ItemsController : ControllerBase
             Content = item.Content,
             Url = item.Url,
             TypeId = item.TypeId,
-            CollectionId = item.CollectionId,
+            CollectionIds = item.ItemCollections
+                .Select(ic => ic.CollectionId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .ToList()!,
             FileUrl = item.FileUrl,
             FileName = item.FileName,
             FileSize = item.FileSize,
@@ -376,7 +410,7 @@ public class RecentDashboardItemDto
     public string? Content { get; set; }
     public string? Url { get; set; }
     public string TypeId { get; set; } = string.Empty;
-    public string? CollectionId { get; set; }
+    public List<string> CollectionIds { get; set; } = [];
     public string? FileUrl { get; set; }
     public string? FileName { get; set; }
     public int? FileSize { get; set; }
@@ -414,8 +448,8 @@ public class ItemDetailDto
     public string TypeName { get; set; } = string.Empty;
     public string? TypeIcon { get; set; }
     public string? TypeColor { get; set; }
-    public string? CollectionId { get; set; }
-    public string? CollectionName { get; set; }
+    public List<string> CollectionIds { get; set; } = [];
+    public List<string> CollectionNames { get; set; } = [];
     public List<string> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -434,6 +468,7 @@ public class CreateItemRequest
     public int? FileSize { get; set; }
     public string? ContentType { get; set; }
     public List<string> Tags { get; set; } = [];
+    public List<string> CollectionIds { get; set; } = [];
 }
 
 public class UpdateItemRequest
@@ -448,4 +483,5 @@ public class UpdateItemRequest
     public int? FileSize { get; set; }
     public string? ContentType { get; set; }
     public List<string> Tags { get; set; } = [];
+    public List<string> CollectionIds { get; set; } = [];
 }

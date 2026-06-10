@@ -2,7 +2,11 @@
 
 import { z } from "zod";
 import { auth } from "@/auth";
-import { createCollection as createCollectionInDb } from "@/lib/db/collections";
+import {
+  createCollection as createCollectionInDb,
+  getCollectionsForSelect as getCollectionsForSelectFromDb,
+} from "@/lib/db/collections";
+import type { CollectionForSelect } from "@/types/items";
 
 const createCollectionSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200, "Name must be 200 characters or fewer"),
@@ -47,4 +51,9 @@ export async function createCollection(
       error: error instanceof Error ? error.message : "Failed to create collection",
     };
   }
+}
+
+export async function getCollectionsForSelectAction(): Promise<CollectionForSelect[]> {
+  const session = await auth();
+  return getCollectionsForSelectFromDb({ accessToken: session?.accessToken });
 }
