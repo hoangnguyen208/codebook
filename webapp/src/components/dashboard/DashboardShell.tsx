@@ -32,6 +32,7 @@ import { UserAvatar } from "@/components/auth/UserAvatar";
 import { ItemDrawerProvider } from "@/components/items/ItemDrawerProvider";
 import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
 import { CreateItemDialog } from "@/components/items/CreateItemDialog";
+import { CreateCollectionDialog } from "@/components/collections/CreateCollectionDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,7 @@ type DashboardShellProps = {
     items: DashboardItem[];
   };
   recentCollectionsOverride?: DashboardRecentCollection[];
+  fetchError?: string | null;
 };
 
 type CollectionSummary = DashboardCollection & {
@@ -356,6 +358,7 @@ function DashboardSidebar({
 export function DashboardShell({
   data,
   recentCollectionsOverride,
+  fetchError,
 }: DashboardShellProps) {
   const pathname = usePathname();
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
@@ -363,6 +366,7 @@ export function DashboardShell({
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [drawerItemId, setDrawerItemId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createCollectionDialogOpen, setCreateCollectionDialogOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -577,6 +581,11 @@ export function DashboardShell({
                 </span>
               </div>
 
+              <Button size="lg" className="h-11 rounded-2xl px-4" onClick={() => setCreateCollectionDialogOpen(true)}>
+                <FolderOpen className="size-4" />
+                New Collection
+              </Button>
+
               <Button size="lg" className="h-11 rounded-2xl px-4" onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="size-4" />
                 New Item
@@ -640,6 +649,17 @@ export function DashboardShell({
                 types.
               </p>
             </div>
+
+            {fetchError ? (
+              <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
+                <p className="text-sm font-medium text-red-400">
+                  Could not load dashboard data. The API may still be starting up.
+                </p>
+                <p className="mt-1 text-xs text-red-400/60">
+                  {fetchError}
+                </p>
+              </div>
+            ) : null}
 
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {stats.map((stat) => {
@@ -926,6 +946,7 @@ export function DashboardShell({
       ) : null}
 
       <CreateItemDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+      <CreateCollectionDialog open={createCollectionDialogOpen} onOpenChange={setCreateCollectionDialogOpen} />
     </main>
   );
 }

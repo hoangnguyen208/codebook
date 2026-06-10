@@ -1,0 +1,86 @@
+# ── Git ──
+.git
+.gitattributes
+.gitignore
+.github
+
+# ── IDE & Editors ──
+.vs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-*
+
+# ── Node / npm ──
+**/node_modules
+**/.npm
+**/yarn.lock
+**/npm-debug.log*
+**/yarn-debug.log*
+
+# ── Next.js ──
+webapp/.next
+webapp/out
+webapp/.turbo
+
+# ── .NET build artifacts ──
+**/bin
+**/obj
+**/Debug
+**/Release
+*.user
+*.suo
+*.userprefs
+.nuget
+packages
+*.nupkg
+*.snupkg
+
+# ── Environment & secrets ──
+.env
+.env.*
+
+# ── Documentation & specs ──
+**/*.md
+docs
+context
+
+# ── Tests (not needed for container images) ──
+tests
+
+# ── Docker ──
+.docker
+Dockerfile*
+docker-compose*
+
+# ── CI / Automation ──
+.opencode
+.playwright-mcp
+
+# ── OS junk ──
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN
+
+# ── Logs & coverage ──
+**/logs
+**/*.log
+coverage
+.coverage
+htmlcov
+
+# ── Misc ──
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer

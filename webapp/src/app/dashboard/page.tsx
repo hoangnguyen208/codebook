@@ -9,11 +9,22 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const session = await auth();
   const accessToken = session?.accessToken;
-  const [collections, items, itemTypes] = await Promise.all([
-    getDashboardCollections(100, { accessToken }),
-    getRecentDashboardItems(100, { accessToken }),
-    getSystemDashboardItemTypes({ accessToken }),
-  ]);
+
+  let collections: Awaited<ReturnType<typeof getDashboardCollections>> = [];
+  let items: Awaited<ReturnType<typeof getRecentDashboardItems>> = [];
+  let itemTypes: Awaited<ReturnType<typeof getSystemDashboardItemTypes>> = [];
+  let fetchError: string | null = null;
+
+  try {
+    [collections, items, itemTypes] = await Promise.all([
+      getDashboardCollections(100, { accessToken }),
+      getRecentDashboardItems(100, { accessToken }),
+      getSystemDashboardItemTypes({ accessToken }),
+    ]);
+  } catch (error) {
+    fetchError = error instanceof Error ? error.message : "Failed to fetch dashboard data";
+    console.error("[Dashboard] data fetch failed:", fetchError);
+  }
 
   const userName = session?.user?.name ?? null;
   const userEmail = session?.user?.email ?? null;
@@ -45,6 +56,7 @@ export default async function DashboardPage() {
         items,
       }}
       recentCollectionsOverride={recentCollections}
+      fetchError={fetchError}
     />
   );
 }

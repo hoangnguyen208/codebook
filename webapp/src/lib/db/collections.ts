@@ -1,5 +1,22 @@
 import "server-only";
 
+import { fetchWithRetry, getApiBaseUrl, authHeaders } from "@/lib/fetch";
+import type { FetchOptions } from "@/lib/fetch";
+
+export type CreateCollectionPayload = {
+  name: string;
+  description?: string | null;
+  isFavorite?: boolean;
+};
+
+export type CreatedCollection = {
+  id: string;
+  name: string;
+  description: string | null;
+  isFavorite: boolean;
+  createdAt: string;
+};
+
 export type DashboardRecentCollection = {
   id: string;
   name: string;
@@ -21,25 +38,6 @@ type DashboardRecentCollectionApiDto = {
   isFavorite: boolean;
   typeIcons: string[];
 };
-
-function getApiBaseUrl() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured.");
-  }
-
-  return baseUrl.replace(/\/$/, "");
-}
-
-type FetchOptions = {
-  accessToken?: string;
-};
-
-function authHeaders(accessToken?: string): Record<string, string> {
-  if (!accessToken) return {};
-  return { Authorization: `Bearer ${accessToken}` };
-}
 
 function normalizeIconName(value: string) {
   const lowered = value.trim().toLowerCase();
@@ -89,7 +87,7 @@ async function fetchDashboardCollections(
   path: string,
   options?: FetchOptions,
 ): Promise<DashboardRecentCollection[]> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${getApiBaseUrl()}${path}`,
     {
       cache: "no-store",
@@ -115,4 +113,46 @@ async function fetchDashboardCollections(
     isFavorite: collection.isFavorite,
     typeIcons: [...new Set(collection.typeIcons.map(normalizeIconName))],
   }));
+}
+
+type CollectionApiDto = {
+  id: string;
+  name: string;
+  description: string | null;
+  isFavorite: boolean;
+  createdAt: string;
+};
+
+export async function createCollection(
+  data: CreateCollectionPayload,
+  options?: FetchOptions,
+): Promise<CreatedCollection> {
+  const response = await fetchWithRetry(`${getApiBaseUrl()}/api/collections`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(options?.accessToken),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    let message = `Failed to create collection: ${response.status}`;
+    try {
+      const parsed = JSON.parse(body);
+      if (typeof parsed?.error === "string") message = parsed.error;
+    } catch { /* keep default message */ }
+    throw new Error(message);
+  }
+
+  const payload = (await response.json()) as CollectionApiDto;
+
+  return {
+    id: payload.id,
+    name: payload.name,
+    description: payload.description,
+    isFavorite: payload.isFavorite,
+    createdAt: payload.createdAt,
+  };
 }

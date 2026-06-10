@@ -1,6 +1,6 @@
 # Current Feature
 
-Quick Copy Icons on Cards
+Collection Create
 
 ## Status
 
@@ -11,18 +11,18 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Copy icon on ItemCard only (bottom-right footer) — not on FileRow or ImageCard
-- Copies item content (falls back: content → description → title)
-- Green checkmark feedback for 2 seconds after copy
-- Clipboard API with `document.execCommand("copy")` fallback for non-HTTPS environments
-- Copy icon hidden in ItemDrawerSheet for "file" and "image" types
-- Added `Content` and `Url` to `RecentDashboardItemDto` on the backend so list endpoints expose copyable content
+- "New Collection" button in the dashboard top bar alongside "New Item"
+- CreateCollectionDialog modal with Name (required) and Description (optional) fields
+- User-scoped: collections are created with the authenticated user's ID
+- Sonner toast library for success/failure notifications
+- Full-stack: .NET `POST /api/collections` → `lib/db/collections.ts` → `actions/collections.ts` → `CreateCollectionDialog`
+- Dashboard updates with new collection on save
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Add quick copy icon to text-based item cards (snippet, prompt, command, note, link) and the item detail drawer. File and image types are excluded.
+Follows the same pattern as item creation (Dialog → Server Action → lib/db → .NET API). Uses sonner for toast notifications instead of inline banners.
 
 ## History
 
@@ -66,4 +66,5 @@ Add quick copy icon to text-based item cards (snippet, prompt, command, note, li
 - **File & Image Upload**: Added R2 upload/download API routes, FileUpload component with drag-and-drop and progress indicator, file/image type support in CreateItemDialog and ItemDrawerSheet with image preview and download button, R2 file deletion on item delete, 3 new unit tests (50 total)
 - **Image Gallery View**: Added `ImageCard` component with 3-column gallery grid, 16:9 thumbnail with `object-cover`, hover zoom effect, fallback icon for images without preview; added `FileUrl` to dashboard item DTOs and API responses
 - **File List View**: Added `FileRow` single-column list component for `/items/files`, extended `RecentDashboardItemDto` with `FileName`/`FileSize`/`CreatedAt` fields, wired `ItemsGridClient` to use `FileRow` for file type with download button and responsive layout
-- **Quick Copy Icons on Cards**: Added copy-to-clipboard button with Check feedback to ItemCard for text-type items; implemented `document.execCommand("copy")` fallback for HTTP environments; extended `RecentDashboardItemDto` with `Content`/`Url` so list endpoints expose copyable content; removed copy icon from FileRow, ImageCard, and from the drawer for file/image types; fixed cleanup (deleted orphaned `mock-data.ts`, renamed `proxy.ts` → `middleware.ts`, deleted unreachable `/auth/register` page)
+- **Quick Copy Icons on Cards**: Added copy-to-clipboard button with Check feedback to ItemCard for text-type items; implemented `document.execCommand("copy")` fallback for HTTP environments; extended `RecentDashboardItemDto` with `Content`/`Url` so list endpoints expose copyable content; removed copy icon from FileRow, ImageCard, and from the drawer for file/image types; fixed cleanup (deleted orphaned `mock-data.ts`, deleted unreachable `/auth/register` page)
+- **Collection Create**: Added "New Collection" button in dashboard top bar alongside "New Item"; created `CreateCollectionDialog` modal with Name/Description fields using sonner toasts; implemented full-stack flow: `POST /api/collections` .NET endpoint → `lib/db/collections.ts` createCollection → `actions/collections.ts` server action with Zod validation; added 13 unit tests for CollectionsController; added `.dockerignore` and optimized Dockerfiles with NuGet/npm cache mounts, non-root users, and proper layer ordering; fixed identity `UnauthorizedAccessException` for `/app/keys` directory; added API + Identity healthchecks to docker-compose with `condition: service_healthy` ordering; created `fetchWithRetry` with exponential backoff for all API calls; added graceful error fallback UI in dashboard and items pages

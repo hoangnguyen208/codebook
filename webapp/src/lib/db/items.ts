@@ -1,6 +1,8 @@
 import "server-only";
 
 import type { DashboardItem, DashboardItemType, ItemDetail } from "@/types/items";
+import { fetchWithRetry, getApiBaseUrl, authHeaders } from "@/lib/fetch";
+import type { FetchOptions } from "@/lib/fetch";
 
 export type { DashboardItem, DashboardItemType, ItemDetail };
 
@@ -29,25 +31,6 @@ type DashboardItemTypeApiDto = {
   color: string | null;
   isSystem: boolean;
 };
-
-type FetchOptions = {
-  accessToken?: string;
-};
-
-function getApiBaseUrl() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured.");
-  }
-
-  return baseUrl.replace(/\/$/, "");
-}
-
-function authHeaders(accessToken?: string): Record<string, string> {
-  if (!accessToken) return {};
-  return { Authorization: `Bearer ${accessToken}` };
-}
 
 function toDateLabel(value: string) {
   return value.slice(0, 10);
@@ -133,7 +116,7 @@ function normalizeColorToken(name: string, color: string | null) {
 }
 
 export async function getSystemDashboardItemTypes(options?: FetchOptions): Promise<DashboardItemType[]> {
-  const response = await fetch(`${getApiBaseUrl()}/api/dashboard/item-types/system`, {
+  const response = await fetchWithRetry(`${getApiBaseUrl()}/api/dashboard/item-types/system`, {
     cache: "no-store",
     headers: authHeaders(options?.accessToken),
   });
@@ -160,7 +143,7 @@ export async function getRecentDashboardItems(
   limit = 100,
   options?: FetchOptions,
 ): Promise<DashboardItem[]> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${getApiBaseUrl()}/api/dashboard/items/recent?limit=${limit}`,
     {
       cache: "no-store",
@@ -197,7 +180,7 @@ export async function getItemsByType(
   typeName: string,
   options?: FetchOptions,
 ): Promise<DashboardItem[]> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${getApiBaseUrl()}/api/dashboard/items/by-type/${encodeURIComponent(typeName)}`,
     {
       cache: "no-store",
@@ -234,7 +217,7 @@ export async function getItemById(
   id: string,
   options?: FetchOptions,
 ): Promise<ItemDetail | null> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${getApiBaseUrl()}/api/items/${encodeURIComponent(id)}`,
     {
       cache: "no-store",
@@ -303,7 +286,7 @@ export async function deleteItem(
   id: string,
   options?: FetchOptions,
 ): Promise<void> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${getApiBaseUrl()}/api/items/${encodeURIComponent(id)}`,
     {
       method: "DELETE",
@@ -334,7 +317,7 @@ export async function createItem(
   data: CreateItemPayload,
   options?: FetchOptions,
 ): Promise<ItemDetail> {
-  const response = await fetch(`${getApiBaseUrl()}/api/items`, {
+  const response = await fetchWithRetry(`${getApiBaseUrl()}/api/items`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -410,7 +393,7 @@ export async function updateItem(
   data: UpdateItemPayload,
   options?: FetchOptions,
 ): Promise<ItemDetail> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${getApiBaseUrl()}/api/items/${encodeURIComponent(id)}`,
     {
       method: "PUT",

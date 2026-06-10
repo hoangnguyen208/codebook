@@ -51,16 +51,45 @@ export default async function ItemsByTypePage({
   const session = await auth();
   const accessToken = session?.accessToken;
 
-  const itemTypes = await getSystemDashboardItemTypes({ accessToken });
+  let itemTypes: Awaited<ReturnType<typeof getSystemDashboardItemTypes>> = [];
+  let items: Awaited<ReturnType<typeof getItemsByType>> = [];
+  let fetchError: string | null = null;
+
+  try {
+    itemTypes = await getSystemDashboardItemTypes({ accessToken });
+  } catch (error) {
+    fetchError = error instanceof Error ? error.message : "Failed to fetch item types";
+    console.error("[ItemsByType] itemTypes fetch failed:", fetchError);
+  }
+
   const itemType = itemTypes.find(
     (candidate) => candidate.name === type,
   );
 
   if (!itemType) {
+    if (fetchError) {
+      return (
+        <main className="min-h-screen bg-background">
+          <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-12 sm:px-6 lg:px-8">
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
+              <p className="text-sm font-medium text-red-400">
+                Could not load data. The API may still be starting up.
+              </p>
+              <p className="mt-1 text-xs text-red-400/60">{fetchError}</p>
+            </div>
+          </section>
+        </main>
+      );
+    }
     notFound();
   }
 
-  const items = await getItemsByType(type, { accessToken });
+  try {
+    items = await getItemsByType(type, { accessToken });
+  } catch (error) {
+    fetchError = error instanceof Error ? error.message : "Failed to fetch items";
+    console.error("[ItemsByType] items fetch failed:", fetchError);
+  }
   const Icon = itemTypeIcons[itemType.icon] ?? FileText;
   const typeColorClasses = colorClasses[itemType.color] ?? "border-border bg-muted text-muted-foreground";
   const typeBorderColorClass = borderColorClasses[itemType.color] ?? "border-l-border/70";
@@ -105,6 +134,14 @@ export default async function ItemsByTypePage({
           itemTypeLabel={itemType.label.slice(0, -1)}
           typeName={type}
         />
+        {fetchError ? (
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
+            <p className="text-sm font-medium text-red-400">
+              Some data may be incomplete. The API may still be starting up.
+            </p>
+            <p className="mt-1 text-xs text-red-400/60">{fetchError}</p>
+          </div>
+        ) : null}
       </section>
     </main>
   );
