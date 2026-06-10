@@ -284,6 +284,7 @@ public class ItemsController : ControllerBase
             Description = item.Description,
             TypeId = item.TypeId,
             CollectionId = item.CollectionId,
+            FileUrl = item.FileUrl,
             Tags = item.Tags
                 .Select(itemTag => itemTag.Tag.Name)
                 .Where(tag => !string.IsNullOrWhiteSpace(tag))
@@ -322,6 +323,7 @@ public class ItemsController : ControllerBase
             Description = item.Description,
             TypeId = item.TypeId,
             CollectionId = item.CollectionId,
+            FileUrl = item.FileUrl,
             Tags = item.Tags
                 .Select(itemTag => itemTag.Tag.Name)
                 .Where(tag => !string.IsNullOrWhiteSpace(tag))
@@ -363,6 +365,7 @@ public class RecentDashboardItemDto
     public string? Description { get; set; }
     public string TypeId { get; set; } = string.Empty;
     public string? CollectionId { get; set; }
+    public string? FileUrl { get; set; }
     public List<string> Tags { get; set; } = [];
     public bool IsFavorite { get; set; }
     public bool IsPinned { get; set; }

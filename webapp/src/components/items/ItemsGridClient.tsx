@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 
 import { ItemCard } from "@/components/items/ItemCard";
+import { ImageCard } from "@/components/items/ImageCard";
 import { ItemDrawerProvider, useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
 import { CreateItemDialog } from "@/components/items/CreateItemDialog";
@@ -30,6 +31,9 @@ function ItemsGridInner({
   const { openDrawer } = useItemDrawer();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
+  const isImageType = typeName === "image";
+  const gridCols = isImageType ? "md:grid-cols-3" : "md:grid-cols-2";
+
   return (
     <>
       <div className="flex items-center justify-end">
@@ -53,20 +57,28 @@ function ItemsGridInner({
           </p>
         </section>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {items.map((item) => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              itemType={{
-                label: itemTypeLabel,
-                iconName: itemTypeIconName,
-                colorClasses: itemTypeColorClasses,
-                borderColorClass: itemTypeBorderColorClass,
-              }}
-              onClick={openDrawer}
-            />
-          ))}
+        <div className={`grid gap-4 ${gridCols}`}>
+          {items.map((item) =>
+            isImageType ? (
+              <ImageCard
+                key={item.id}
+                item={item}
+                onClick={openDrawer}
+              />
+            ) : (
+              <ItemCard
+                key={item.id}
+                item={item}
+                itemType={{
+                  label: itemTypeLabel,
+                  iconName: itemTypeIconName,
+                  colorClasses: itemTypeColorClasses,
+                  borderColorClass: itemTypeBorderColorClass,
+                }}
+                onClick={openDrawer}
+              />
+            ),
+          )}
         </div>
       )}
 

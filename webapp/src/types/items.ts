@@ -4,6 +4,7 @@ export type DashboardItem = {
   description: string;
   typeId: string;
   collectionId: string;
+  fileUrl: string | null;
   tags: string[];
   isFavorite: boolean;
   isPinned: boolean;

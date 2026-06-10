@@ -10,6 +10,7 @@ type DashboardItemApiDto = {
   description: string | null;
   typeId: string;
   collectionId: string | null;
+  fileUrl: string | null;
   tags: string[];
   isFavorite: boolean;
   isPinned: boolean;
@@ -174,6 +175,7 @@ export async function getRecentDashboardItems(
     description: item.description ?? "",
     typeId: item.typeId,
     collectionId: item.collectionId ?? "",
+    fileUrl: item.fileUrl ?? null,
     tags: item.tags.filter((tag) => tag.trim().length > 0),
     isFavorite: item.isFavorite,
     isPinned: item.isPinned,
@@ -205,6 +207,7 @@ export async function getItemsByType(
     description: item.description ?? "",
     typeId: item.typeId,
     collectionId: item.collectionId ?? "",
+    fileUrl: item.fileUrl ?? null,
     tags: item.tags.filter((tag) => tag.trim().length > 0),
     isFavorite: item.isFavorite,
     isPinned: item.isPinned,

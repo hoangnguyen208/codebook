@@ -1,6 +1,6 @@
 # Current Feature
 
-File & Image Upload
+Image Gallery View
 
 ## Status
 
@@ -11,24 +11,17 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Create upload API route for R2
-- Stick with backend API in ItemsController and lib/db/items.ts for EF/db functions
-- Create FileUpload component with drag-and-drop
-- Update create item modal to use FileUpload for file/image types
-- Delete files from R2 when items are deleted
-- Create download proxy API route (avoids CORS issues)
-- Add download button in ItemDrawer for file types
-- Show upload progress indicator
-- Display image preview for images, file info for files
-- Finally, make sure the new unit tests for this feature pass.
+- Create an image thumbnail card to replace the current item card
+- Show an image grid/gallery with 3 columns
+- Displays image thumbnail with 16:9 aspect ratio (`aspect-video`)
+- Uses `object-cover` to fill the card (may crop edges)
+- Subtle hover zoom effect (5% scale with 300ms transition)
 
 ## Notes
 
 <!-- Any extra notes -->
 
-All R2 keys and secrets are in .env & .env.production files.
-
-Implement file & image upload per `context/features/file-image-spec.md`.
+Implement image gallery view per `context/features/image-display-spec.md`.
 
 ## History
 
@@ -70,3 +63,4 @@ Implement file & image upload per `context/features/file-image-spec.md`.
 - **Code Editor**: Created `CodeEditor` component with Monaco Editor dark theme, macOS dots, copy button, language label; wired into CreateItemDialog and ItemDrawerSheet for snippet/command types
 - **Markdown Editor**: Created `MarkdownEditor` component with Write/Preview tabs, copy button, macOS dots; used `@tailwindcss/typography` for `prose prose-invert` dark-theme rendering; replaced Textarea with MarkdownEditor for note/prompt types in CreateItemDialog and ItemDrawerSheet
 - **File & Image Upload**: Added R2 upload/download API routes, FileUpload component with drag-and-drop and progress indicator, file/image type support in CreateItemDialog and ItemDrawerSheet with image preview and download button, R2 file deletion on item delete, 3 new unit tests (50 total)
+- **Image Gallery View**: Added `ImageCard` component with 3-column gallery grid, 16:9 thumbnail with `object-cover`, hover zoom effect, fallback icon for images without preview; added `FileUrl` to dashboard item DTOs and API responses
