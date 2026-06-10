@@ -233,7 +233,18 @@ export function ItemDrawerSheet() {
   const handleCopy = () => {
     if (item) {
       const text = item.content ?? item.url ?? item.title;
-      navigator.clipboard.writeText(text).catch(() => {});
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).catch(() => {});
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
     }
   };
 
@@ -555,6 +566,7 @@ export function ItemDrawerSheet() {
                         )}
                       />
                     </button>
+                    {item.typeName !== "file" && item.typeName !== "image" ? (
                     <button
                       type="button"
                       onClick={handleCopy}
@@ -563,6 +575,7 @@ export function ItemDrawerSheet() {
                     >
                       <Copy className="size-5 text-muted-foreground" />
                     </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={enterEditMode}

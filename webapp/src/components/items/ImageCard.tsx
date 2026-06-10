@@ -1,3 +1,5 @@
+"use client";
+
 import { FileImage } from "lucide-react";
 import Image from "next/image";
 

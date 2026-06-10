@@ -8,6 +8,8 @@ type DashboardItemApiDto = {
   id: string;
   title: string;
   description: string | null;
+  content?: string | null;
+  url?: string | null;
   typeId: string;
   collectionId: string | null;
   fileUrl: string | null;
@@ -176,6 +178,8 @@ export async function getRecentDashboardItems(
     id: item.id,
     title: item.title,
     description: item.description ?? "",
+    content: item.content ?? null,
+    url: item.url ?? null,
     typeId: item.typeId,
     collectionId: item.collectionId ?? "",
     fileUrl: item.fileUrl ?? null,
@@ -211,6 +215,8 @@ export async function getItemsByType(
     id: item.id,
     title: item.title,
     description: item.description ?? "",
+    content: item.content ?? null,
+    url: item.url ?? null,
     typeId: item.typeId,
     collectionId: item.collectionId ?? "",
     fileUrl: item.fileUrl ?? null,

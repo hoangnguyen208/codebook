@@ -2,6 +2,8 @@ export type DashboardItem = {
   id: string;
   title: string;
   description: string;
+  content?: string | null;
+  url?: string | null;
   typeId: string;
   collectionId: string;
   fileUrl: string | null;

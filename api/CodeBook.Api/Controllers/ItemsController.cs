@@ -282,6 +282,8 @@ public class ItemsController : ControllerBase
             Id = item.Id,
             Title = item.Title,
             Description = item.Description,
+            Content = item.Content,
+            Url = item.Url,
             TypeId = item.TypeId,
             CollectionId = item.CollectionId,
             FileUrl = item.FileUrl,
@@ -324,6 +326,8 @@ public class ItemsController : ControllerBase
             Id = item.Id,
             Title = item.Title,
             Description = item.Description,
+            Content = item.Content,
+            Url = item.Url,
             TypeId = item.TypeId,
             CollectionId = item.CollectionId,
             FileUrl = item.FileUrl,
@@ -369,6 +373,8 @@ public class RecentDashboardItemDto
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? Content { get; set; }
+    public string? Url { get; set; }
     public string TypeId { get; set; } = string.Empty;
     public string? CollectionId { get; set; }
     public string? FileUrl { get; set; }

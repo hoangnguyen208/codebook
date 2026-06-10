@@ -1,6 +1,6 @@
 # Current Feature
 
-File List View
+Quick Copy Icons on Cards
 
 ## Status
 
@@ -11,18 +11,18 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Single-column list layout with rows
-- Each row shows: file icon (by extension), file name, file size, upload date, download button
-- Row hover highlight
-- Click row opens ItemDrawer
-- Download button triggers direct download (stop propagation)
-- Responsive: stack info vertically on mobile
+- Copy icon on ItemCard only (bottom-right footer) — not on FileRow or ImageCard
+- Copies item content (falls back: content → description → title)
+- Green checkmark feedback for 2 seconds after copy
+- Clipboard API with `document.execCommand("copy")` fallback for non-HTTPS environments
+- Copy icon hidden in ItemDrawerSheet for "file" and "image" types
+- Added `Content` and `Url` to `RecentDashboardItemDto` on the backend so list endpoints expose copyable content
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement file list view per `context/features/file-display-spec.md`.
+Add quick copy icon to text-based item cards (snippet, prompt, command, note, link) and the item detail drawer. File and image types are excluded.
 
 ## History
 
@@ -66,3 +66,4 @@ Implement file list view per `context/features/file-display-spec.md`.
 - **File & Image Upload**: Added R2 upload/download API routes, FileUpload component with drag-and-drop and progress indicator, file/image type support in CreateItemDialog and ItemDrawerSheet with image preview and download button, R2 file deletion on item delete, 3 new unit tests (50 total)
 - **Image Gallery View**: Added `ImageCard` component with 3-column gallery grid, 16:9 thumbnail with `object-cover`, hover zoom effect, fallback icon for images without preview; added `FileUrl` to dashboard item DTOs and API responses
 - **File List View**: Added `FileRow` single-column list component for `/items/files`, extended `RecentDashboardItemDto` with `FileName`/`FileSize`/`CreatedAt` fields, wired `ItemsGridClient` to use `FileRow` for file type with download button and responsive layout
+- **Quick Copy Icons on Cards**: Added copy-to-clipboard button with Check feedback to ItemCard for text-type items; implemented `document.execCommand("copy")` fallback for HTTP environments; extended `RecentDashboardItemDto` with `Content`/`Url` so list endpoints expose copyable content; removed copy icon from FileRow, ImageCard, and from the drawer for file/image types; fixed cleanup (deleted orphaned `mock-data.ts`, renamed `proxy.ts` → `middleware.ts`, deleted unreachable `/auth/register` page)

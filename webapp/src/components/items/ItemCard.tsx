@@ -1,4 +1,7 @@
-import { Code2, File, FileImage, FileText, Link2, Pin, Sparkles, Terminal } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { Check, Code2, Copy, File, FileImage, FileText, Link2, Pin, Sparkles, Terminal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -29,6 +32,26 @@ type ItemCardProps = {
 
 export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
   const TypeIcon = itemTypeIconMap[itemType.iconName] ?? FileText;
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy(e: React.MouseEvent) {
+    e.stopPropagation();
+    const text = item.content ?? item.description ?? item.title;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
     <article
@@ -78,9 +101,23 @@ export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
             </span>
           ))}
         </div>
-        <span className="shrink-0 text-xs text-muted-foreground">
-          {item.updatedAt}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {item.updatedAt}
+          </span>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="rounded-lg p-1 hover:bg-muted transition-colors"
+            aria-label="Copy title"
+          >
+            {copied ? (
+              <Check className="size-4 text-emerald-400" />
+            ) : (
+              <Copy className="size-4 text-muted-foreground" />
+            )}
+          </button>
+        </div>
       </div>
     </article>
   );

@@ -83,17 +83,19 @@ export function FileRow({ item, onClick }: FileRowProps) {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleDownload}
-        className={cn(
-          "flex shrink-0 items-center gap-1 rounded-lg border border-border/70 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
-          "max-sm:w-full max-sm:justify-center",
-        )}
-      >
-        <Download className="size-3.5" />
-        Download
-      </button>
+      <div className={cn("max-sm:w-full max-sm:justify-center")}>
+        <button
+          type="button"
+          onClick={handleDownload}
+          className={cn(
+            "flex shrink-0 items-center gap-1 rounded-lg border border-border/70 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
+            "max-sm:w-full max-sm:justify-center",
+          )}
+        >
+          <Download className="size-3.5" />
+          Download
+        </button>
+      </div>
     </div>
   );
 }

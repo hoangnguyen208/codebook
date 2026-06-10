@@ -211,8 +211,8 @@ model ItemTag {
 | Caching      | Redis (optional)                     
 | File Storage | Cloudflare R2                        
 | CSS/UI       | Tailwind CSS v4 + ShadCN             
-| Auth         | .NET API authentication (email/password now), OAuth providers planned (GitHub/Google)                          
-| AI           | OpenAI GPT 5 nano                    
+| Auth         | .NET API + Duende IdentityServer + NextAuth v5 (email/password + GitHub OAuth)                        
+| AI           | OpenAI (planned)                    
 | Deployment   | Vercel (likely)                      
 | Monitoring   | Sentry (later)                       
 
@@ -270,7 +270,6 @@ flowchart LR
   Login --> .NET API
   .NET API --> Auth{Email/Password now}
   Auth --> AppAccess
-  .NET API -. planned .-> OAuth[GitHub/Google OAuth]
 ```
 
 ---
