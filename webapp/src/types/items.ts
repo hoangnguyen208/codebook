@@ -5,10 +5,13 @@ export type DashboardItem = {
   typeId: string;
   collectionId: string;
   fileUrl: string | null;
+  fileName: string | null;
+  fileSize: number | null;
   tags: string[];
   isFavorite: boolean;
   isPinned: boolean;
   updatedAt: string;
+  createdAt: string;
 };
 
 export type ItemDetail = {

@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 
 import { ItemCard } from "@/components/items/ItemCard";
 import { ImageCard } from "@/components/items/ImageCard";
+import { FileRow } from "@/components/items/FileRow";
 import { ItemDrawerProvider, useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
 import { CreateItemDialog } from "@/components/items/CreateItemDialog";
@@ -32,6 +33,7 @@ function ItemsGridInner({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const isImageType = typeName === "image";
+  const isFileType = typeName === "file";
   const gridCols = isImageType ? "md:grid-cols-3" : "md:grid-cols-2";
 
   return (
@@ -56,6 +58,16 @@ function ItemsGridInner({
             Create your first {itemTypeLabel.toLowerCase()} to get started.
           </p>
         </section>
+      ) : isFileType ? (
+        <div className="flex flex-col gap-2">
+          {items.map((item) => (
+            <FileRow
+              key={item.id}
+              item={item}
+              onClick={openDrawer}
+            />
+          ))}
+        </div>
       ) : (
         <div className={`grid gap-4 ${gridCols}`}>
           {items.map((item) =>

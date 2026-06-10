@@ -285,6 +285,8 @@ public class ItemsController : ControllerBase
             TypeId = item.TypeId,
             CollectionId = item.CollectionId,
             FileUrl = item.FileUrl,
+            FileName = item.FileName,
+            FileSize = item.FileSize,
             Tags = item.Tags
                 .Select(itemTag => itemTag.Tag.Name)
                 .Where(tag => !string.IsNullOrWhiteSpace(tag))
@@ -292,7 +294,8 @@ public class ItemsController : ControllerBase
                 .ToList(),
             IsFavorite = item.IsFavorite,
             IsPinned = item.IsPinned,
-            UpdatedAt = item.UpdatedAt
+            UpdatedAt = item.UpdatedAt,
+            CreatedAt = item.CreatedAt
         });
 
         return Ok(response);
@@ -324,6 +327,8 @@ public class ItemsController : ControllerBase
             TypeId = item.TypeId,
             CollectionId = item.CollectionId,
             FileUrl = item.FileUrl,
+            FileName = item.FileName,
+            FileSize = item.FileSize,
             Tags = item.Tags
                 .Select(itemTag => itemTag.Tag.Name)
                 .Where(tag => !string.IsNullOrWhiteSpace(tag))
@@ -331,7 +336,8 @@ public class ItemsController : ControllerBase
                 .ToList(),
             IsFavorite = item.IsFavorite,
             IsPinned = item.IsPinned,
-            UpdatedAt = item.UpdatedAt
+            UpdatedAt = item.UpdatedAt,
+            CreatedAt = item.CreatedAt
         });
 
         return Ok(response);
@@ -366,10 +372,13 @@ public class RecentDashboardItemDto
     public string TypeId { get; set; } = string.Empty;
     public string? CollectionId { get; set; }
     public string? FileUrl { get; set; }
+    public string? FileName { get; set; }
+    public int? FileSize { get; set; }
     public List<string> Tags { get; set; } = [];
     public bool IsFavorite { get; set; }
     public bool IsPinned { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
 public class DashboardItemTypeDto

@@ -11,10 +11,13 @@ type DashboardItemApiDto = {
   typeId: string;
   collectionId: string | null;
   fileUrl: string | null;
+  fileName: string | null;
+  fileSize: number | null;
   tags: string[];
   isFavorite: boolean;
   isPinned: boolean;
   updatedAt: string;
+  createdAt: string;
 };
 
 type DashboardItemTypeApiDto = {
@@ -176,10 +179,13 @@ export async function getRecentDashboardItems(
     typeId: item.typeId,
     collectionId: item.collectionId ?? "",
     fileUrl: item.fileUrl ?? null,
+    fileName: item.fileName ?? null,
+    fileSize: item.fileSize ?? null,
     tags: item.tags.filter((tag) => tag.trim().length > 0),
     isFavorite: item.isFavorite,
     isPinned: item.isPinned,
     updatedAt: toDateLabel(item.updatedAt),
+    createdAt: toDateLabel(item.createdAt),
   }));
 }
 
@@ -208,10 +214,13 @@ export async function getItemsByType(
     typeId: item.typeId,
     collectionId: item.collectionId ?? "",
     fileUrl: item.fileUrl ?? null,
+    fileName: item.fileName ?? null,
+    fileSize: item.fileSize ?? null,
     tags: item.tags.filter((tag) => tag.trim().length > 0),
     isFavorite: item.isFavorite,
     isPinned: item.isPinned,
     updatedAt: toDateLabel(item.updatedAt),
+    createdAt: toDateLabel(item.createdAt),
   }));
 }
 

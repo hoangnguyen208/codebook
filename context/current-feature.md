@@ -1,6 +1,6 @@
 # Current Feature
 
-Image Gallery View
+File List View
 
 ## Status
 
@@ -11,17 +11,18 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Create an image thumbnail card to replace the current item card
-- Show an image grid/gallery with 3 columns
-- Displays image thumbnail with 16:9 aspect ratio (`aspect-video`)
-- Uses `object-cover` to fill the card (may crop edges)
-- Subtle hover zoom effect (5% scale with 300ms transition)
+- Single-column list layout with rows
+- Each row shows: file icon (by extension), file name, file size, upload date, download button
+- Row hover highlight
+- Click row opens ItemDrawer
+- Download button triggers direct download (stop propagation)
+- Responsive: stack info vertically on mobile
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Implement image gallery view per `context/features/image-display-spec.md`.
+Implement file list view per `context/features/file-display-spec.md`.
 
 ## History
 
@@ -64,3 +65,4 @@ Implement image gallery view per `context/features/image-display-spec.md`.
 - **Markdown Editor**: Created `MarkdownEditor` component with Write/Preview tabs, copy button, macOS dots; used `@tailwindcss/typography` for `prose prose-invert` dark-theme rendering; replaced Textarea with MarkdownEditor for note/prompt types in CreateItemDialog and ItemDrawerSheet
 - **File & Image Upload**: Added R2 upload/download API routes, FileUpload component with drag-and-drop and progress indicator, file/image type support in CreateItemDialog and ItemDrawerSheet with image preview and download button, R2 file deletion on item delete, 3 new unit tests (50 total)
 - **Image Gallery View**: Added `ImageCard` component with 3-column gallery grid, 16:9 thumbnail with `object-cover`, hover zoom effect, fallback icon for images without preview; added `FileUrl` to dashboard item DTOs and API responses
+- **File List View**: Added `FileRow` single-column list component for `/items/files`, extended `RecentDashboardItemDto` with `FileName`/`FileSize`/`CreatedAt` fields, wired `ItemsGridClient` to use `FileRow` for file type with download button and responsive layout
