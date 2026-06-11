@@ -1,6 +1,6 @@
 # Current Feature
 
-Global Search / Command Palette
+Pagination
 
 ## Status
 
@@ -11,19 +11,20 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Cmd+K / Ctrl+K keyboard shortcut to open command palette
-- Fuzzy search across all items and collections (client-side via cmdk)
-- Grouped results: Items section with type icons, Collections section with item counts
-- Keyboard navigation (arrow keys, Enter to select)
-- Navigate to item drawer or collection page on select
-- TopBar search input opens palette on click, shows ⌘K hint
-- Pre-fetch searchable data on dashboard load
+- Add pagination to /items/[type], /collections, and /collections/[id] pages
+- Pagination controls at bottom with page numbers and prev/next links
+- Disable prev/next when not available
+- Page size: 5 items per page
+- Dashboard limits: DASHBOARD_COLLECTIONS_LIMIT = 6, DASHBOARD_RECENT_ITEMS_LIMIT = 10
+- Only fetch the amount a page requires (not all resources)
+- Backend endpoints accept page/pageSize, return PagedResult with totalCount
+- 7 new unit tests (95 total)
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Uses shadcn cmdk component. Client-side only — no server round-trips. Search data pre-fetched via existing `getDashboardCollections` and `getRecentDashboardItems`.
+Pagination component uses usePathname for SSR compatibility. Fixed useSearchParams SSR failure by simplifying to router.push with string interpolation.
 
 ## History
 
@@ -73,3 +74,4 @@ Uses shadcn cmdk component. Client-side only — no server round-trips. Search d
 - **Collections Pages**: Added `/collections` page with 3-column grid of `CollectionCard` components; added `/collections/[id]` page with `ItemsGridClient` reusing ItemCard/ImageCard/FileRow; added `GET /api/dashboard/items/by-collection/{collectionId}` endpoint and `getItemsByCollection` fetch wrapper; made dashboard collection cards and sidebar favorite/recent collection items clickable links; added 4 unit tests (76 total)
 - **Collection Actions**: Added `PUT /api/collections/{id}`, `DELETE /api/collections/{id}`, and `GET /api/collections/{id}` endpoints; created `EditCollectionDialog` modal for editing name/description; added inline delete confirmation on collection detail page with redirect to `/collections`; added 3-dots dropdown (Edit/Delete/Favorite) to `CollectionCard` and `DashboardCollectionCard`; added `CollectionHeaderActions` component for detail page actions; auto-attach collection when creating item from collection page; added 12 unit tests (88 total)
 - **Global Search**: Added Cmd+K/Ctrl+K command palette with fuzzy search across items and collections using cmdk; created `SearchProvider` context pre-fetching existing dashboard data; grouped results with type icons and item counts; keyboard navigation with arrow keys and Enter; search input in top bar opens palette on click with ⌘K hint
+- **Pagination**: Added `PagedResult<T>` wrapper to items by-type, items by-collection, and collections endpoints with page/pageSize params and totalCount; created `Pagination` component with numbered page links, prev/next, and ellipsis; applied to `/items/[type]`, `/collections`, and `/collections/[id]` pages; page size set to 5; dashboard limits changed to 6 collections / 10 items per spec; added 7 unit tests (95 total); fixed SSR compatibility by replacing useSearchParams with usePathname

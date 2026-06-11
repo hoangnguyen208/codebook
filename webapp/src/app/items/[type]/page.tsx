@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { auth } from "@/auth";
 import { ItemsGridClient } from "@/components/items/ItemsGridClient";
+import { Pagination } from "@/components/Pagination";
 import { buttonVariants } from "@/components/ui/button";
 import { getItemsByType, getSystemDashboardItemTypes } from "@/lib/db/items";
 import type { DashboardItemType } from "@/types/items";
@@ -44,27 +45,32 @@ const borderColorClasses: Record<string, string> = {
 
 export default async function ItemsByTypePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ type: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { type } = await params;
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const session = await auth();
   const accessToken = session?.accessToken;
 
   let itemTypes: Awaited<ReturnType<typeof getSystemDashboardItemTypes>> = [];
-  let items: Awaited<ReturnType<typeof getItemsByType>> = [];
+  let result: Awaited<ReturnType<typeof getItemsByType>> = { items: [], totalCount: 0, page: 1, pageSize: 21 };
   let fetchError: string | null = null;
 
   try {
-    itemTypes = await getSystemDashboardItemTypes({ accessToken });
+    [itemTypes, result] = await Promise.all([
+      getSystemDashboardItemTypes({ accessToken }),
+      getItemsByType(type, { accessToken, page, pageSize: 5 }),
+    ]);
   } catch (error) {
     fetchError = error instanceof Error ? error.message : "Failed to fetch item types";
-    console.error("[ItemsByType] itemTypes fetch failed:", fetchError);
+    console.error("[ItemsByType] fetch failed:", fetchError);
   }
 
-  const itemType = itemTypes.find(
-    (candidate) => candidate.name === type,
-  );
+  const itemType = itemTypes.find((candidate) => candidate.name === type);
 
   if (!itemType) {
     if (fetchError) {
@@ -72,9 +78,7 @@ export default async function ItemsByTypePage({
         <main className="min-h-screen bg-background">
           <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-12 sm:px-6 lg:px-8">
             <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
-              <p className="text-sm font-medium text-red-400">
-                Could not load data. The API may still be starting up.
-              </p>
+              <p className="text-sm font-medium text-red-400">Could not load data. The API may still be starting up.</p>
               <p className="mt-1 text-xs text-red-400/60">{fetchError}</p>
             </div>
           </section>
@@ -84,50 +88,33 @@ export default async function ItemsByTypePage({
     notFound();
   }
 
-  try {
-    items = await getItemsByType(type, { accessToken });
-  } catch (error) {
-    fetchError = error instanceof Error ? error.message : "Failed to fetch items";
-    console.error("[ItemsByType] items fetch failed:", fetchError);
-  }
   const Icon = itemTypeIcons[itemType.icon] ?? FileText;
   const typeColorClasses = colorClasses[itemType.color] ?? "border-border bg-muted text-muted-foreground";
   const typeBorderColorClass = borderColorClasses[itemType.color] ?? "border-l-border/70";
+  const totalPages = Math.ceil(result.totalCount / result.pageSize);
 
   return (
     <main className="min-h-screen bg-background">
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-12 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href="/dashboard"
-            className={cn(buttonVariants({ variant: "outline" }))}
-          >
+          <Link href="/dashboard" className={cn(buttonVariants({ variant: "outline" }))}>
             <ArrowLeft className="size-4" />
             Back to dashboard
           </Link>
         </div>
 
         <div className="flex items-center gap-4">
-          <div
-            className={cn(
-              "flex size-12 items-center justify-center rounded-2xl border",
-              typeColorClasses,
-            )}
-          >
+          <div className={cn("flex size-12 items-center justify-center rounded-2xl border", typeColorClasses)}>
             <Icon className="size-5" />
           </div>
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              {itemType.label}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {items.length} {items.length === 1 ? "item" : "items"}
-            </p>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{itemType.label}</h1>
+            <p className="text-sm text-muted-foreground">{result.totalCount} {result.totalCount === 1 ? "item" : "items"}</p>
           </div>
         </div>
 
         <ItemsGridClient
-          items={items}
+          items={result.items}
           itemTypeIconName={itemType.icon}
           itemTypeColorClasses={typeColorClasses}
           itemTypeBorderColorClass={typeBorderColorClass}
@@ -136,12 +123,11 @@ export default async function ItemsByTypePage({
         />
         {fetchError ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
-            <p className="text-sm font-medium text-red-400">
-              Some data may be incomplete. The API may still be starting up.
-            </p>
+            <p className="text-sm font-medium text-red-400">Some data may be incomplete. The API may still be starting up.</p>
             <p className="mt-1 text-xs text-red-400/60">{fetchError}</p>
           </div>
         ) : null}
+        <Pagination currentPage={page} totalPages={totalPages} />
       </section>
     </main>
   );

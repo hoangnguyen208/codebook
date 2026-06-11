@@ -25,13 +25,27 @@ public class DashboardCollectionsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<RecentDashboardCollectionDto>>> GetCollections(
-        [FromQuery] int limit = 100)
+    public async Task<ActionResult<PagedResult<RecentDashboardCollectionDto>>> GetCollections(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
         var userId = GetUserId();
-        var safeLimit = Math.Clamp(limit, 1, 500);
-        var response = await BuildCollectionDtosAsync(userId, safeLimit);
-        return Ok(response);
+        var safePage = Math.Max(1, page);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
+
+        var totalCount = await _dbContext.Collections
+            .Where(c => c.UserId == userId)
+            .CountAsync();
+
+        var response = await BuildCollectionDtosAsync(userId, safePage, safePageSize);
+
+        return Ok(new PagedResult<RecentDashboardCollectionDto>
+        {
+            Items = response,
+            TotalCount = totalCount,
+            Page = safePage,
+            PageSize = safePageSize,
+        });
     }
 
     [HttpGet("recent")]
@@ -40,11 +54,11 @@ public class DashboardCollectionsController : ControllerBase
     {
         var userId = GetUserId();
         var safeLimit = Math.Clamp(limit, 1, 100);
-        var response = await BuildCollectionDtosAsync(userId, safeLimit);
+        var response = await BuildCollectionDtosAsync(userId, 1, safeLimit);
         return Ok(response);
     }
 
-    private async Task<List<RecentDashboardCollectionDto>> BuildCollectionDtosAsync(string? userId, int safeLimit)
+    private async Task<List<RecentDashboardCollectionDto>> BuildCollectionDtosAsync(string? userId, int page, int pageSize)
     {
         var baseCollections = await _dbContext.Collections
             .AsNoTracking()
@@ -61,7 +75,8 @@ public class DashboardCollectionsController : ControllerBase
                 collection.IsFavorite
             })
             .OrderByDescending(collection => collection.LastUpdatedAt)
-            .Take(safeLimit)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         var collectionIds = baseCollections.Select(collection => collection.Id).ToList();

@@ -289,7 +289,7 @@ public class ItemsController : ControllerBase
 
     [HttpGet("api/dashboard/items/recent")]
     public async Task<ActionResult<IEnumerable<RecentDashboardItemDto>>> GetRecentItems(
-        [FromQuery] int limit = 100)
+        [FromQuery] int limit = 10)
     {
         var userId = GetUserId();
         var safeLimit = Math.Clamp(limit, 1, 200);
@@ -304,130 +304,105 @@ public class ItemsController : ControllerBase
             .Take(safeLimit)
             .ToListAsync();
 
-        var response = items.Select(item => new RecentDashboardItemDto
-        {
-            Id = item.Id,
-            Title = item.Title,
-            Description = item.Description,
-            Content = item.Content,
-            Url = item.Url,
-            TypeId = item.TypeId,
-            CollectionIds = item.ItemCollections
-                .Select(ic => ic.CollectionId)
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .ToList()!,
-            FileUrl = item.FileUrl,
-            FileName = item.FileName,
-            FileSize = item.FileSize,
-            Tags = item.Tags
-                .Select(itemTag => itemTag.Tag.Name)
-                .Where(tag => !string.IsNullOrWhiteSpace(tag))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList(),
-            IsFavorite = item.IsFavorite,
-            IsPinned = item.IsPinned,
-            UpdatedAt = item.UpdatedAt,
-            CreatedAt = item.CreatedAt
-        });
-
+        var response = items.Select(item => ToRecentDto(item)).ToList();
         return Ok(response);
     }
 
     [HttpGet("api/dashboard/items/by-type/{typeName}")]
-    public async Task<ActionResult<IEnumerable<RecentDashboardItemDto>>> GetItemsByType(
+    public async Task<ActionResult<PagedResult<RecentDashboardItemDto>>> GetItemsByType(
         [FromRoute] string typeName,
-        [FromQuery] int limit = 200)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
         var userId = GetUserId();
-        var safeLimit = Math.Clamp(limit, 1, 200);
+        var safePage = Math.Max(1, page);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
 
-        var items = await _dbContext.Items
+        var query = _dbContext.Items
             .AsNoTracking()
+            .Where(item => item.UserId == userId && item.Type.IsSystem && item.Type.Name == typeName);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .Include(item => item.Tags)
                 .ThenInclude(itemTag => itemTag.Tag)
             .Include(item => item.Type)
             .Include(item => item.ItemCollections)
-            .Where(item => item.UserId == userId && item.Type.IsSystem && item.Type.Name == typeName)
             .OrderByDescending(item => item.UpdatedAt)
-            .Take(safeLimit)
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .ToListAsync();
 
-        var response = items.Select(item => new RecentDashboardItemDto
+        return Ok(new PagedResult<RecentDashboardItemDto>
         {
-            Id = item.Id,
-            Title = item.Title,
-            Description = item.Description,
-            Content = item.Content,
-            Url = item.Url,
-            TypeId = item.TypeId,
-            CollectionIds = item.ItemCollections
-                .Select(ic => ic.CollectionId)
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .ToList()!,
-            FileUrl = item.FileUrl,
-            FileName = item.FileName,
-            FileSize = item.FileSize,
-            Tags = item.Tags
-                .Select(itemTag => itemTag.Tag.Name)
-                .Where(tag => !string.IsNullOrWhiteSpace(tag))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList(),
-            IsFavorite = item.IsFavorite,
-            IsPinned = item.IsPinned,
-            UpdatedAt = item.UpdatedAt,
-            CreatedAt = item.CreatedAt
+            Items = items.Select(ToRecentDto).ToList(),
+            TotalCount = totalCount,
+            Page = safePage,
+            PageSize = safePageSize,
         });
-
-        return Ok(response);
     }
 
     [HttpGet("api/dashboard/items/by-collection/{collectionId}")]
-    public async Task<ActionResult<IEnumerable<RecentDashboardItemDto>>> GetItemsByCollection(
+    public async Task<ActionResult<PagedResult<RecentDashboardItemDto>>> GetItemsByCollection(
         [FromRoute] string collectionId,
-        [FromQuery] int limit = 200)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5)
     {
         var userId = GetUserId();
-        var safeLimit = Math.Clamp(limit, 1, 200);
+        var safePage = Math.Max(1, page);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
 
-        var items = await _dbContext.Items
+        var query = _dbContext.Items
             .AsNoTracking()
+            .Where(item => item.UserId == userId && item.ItemCollections.Any(ic => ic.CollectionId == collectionId));
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .Include(item => item.Tags)
                 .ThenInclude(itemTag => itemTag.Tag)
             .Include(item => item.Type)
             .Include(item => item.ItemCollections)
-            .Where(item => item.UserId == userId && item.ItemCollections.Any(ic => ic.CollectionId == collectionId))
             .OrderByDescending(item => item.UpdatedAt)
-            .Take(safeLimit)
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .ToListAsync();
 
-        var response = items.Select(item => new RecentDashboardItemDto
+        return Ok(new PagedResult<RecentDashboardItemDto>
         {
-            Id = item.Id,
-            Title = item.Title,
-            Description = item.Description,
-            Content = item.Content,
-            Url = item.Url,
-            TypeId = item.TypeId,
-            CollectionIds = item.ItemCollections
-                .Select(ic => ic.CollectionId)
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .ToList()!,
-            FileUrl = item.FileUrl,
-            FileName = item.FileName,
-            FileSize = item.FileSize,
-            Tags = item.Tags
-                .Select(itemTag => itemTag.Tag.Name)
-                .Where(tag => !string.IsNullOrWhiteSpace(tag))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList(),
-            IsFavorite = item.IsFavorite,
-            IsPinned = item.IsPinned,
-            UpdatedAt = item.UpdatedAt,
-            CreatedAt = item.CreatedAt
+            Items = items.Select(ToRecentDto).ToList(),
+            TotalCount = totalCount,
+            Page = safePage,
+            PageSize = safePageSize,
         });
-
-        return Ok(response);
     }
+
+    private static RecentDashboardItemDto ToRecentDto(Item item) => new()
+    {
+        Id = item.Id,
+        Title = item.Title,
+        Description = item.Description,
+        Content = item.Content,
+        Url = item.Url,
+        TypeId = item.TypeId,
+        CollectionIds = item.ItemCollections
+            .Select(ic => ic.CollectionId)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToList()!,
+        FileUrl = item.FileUrl,
+        FileName = item.FileName,
+        FileSize = item.FileSize,
+        Tags = item.Tags
+            .Select(itemTag => itemTag.Tag.Name)
+            .Where(tag => !string.IsNullOrWhiteSpace(tag))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList(),
+        IsFavorite = item.IsFavorite,
+        IsPinned = item.IsPinned,
+        UpdatedAt = item.UpdatedAt,
+        CreatedAt = item.CreatedAt
+    };
 
     [HttpGet("api/dashboard/item-types/system")]
     public async Task<ActionResult<IEnumerable<DashboardItemTypeDto>>> GetSystemItemTypes()
@@ -532,4 +507,12 @@ public class UpdateItemRequest
     public string? ContentType { get; set; }
     public List<string> Tags { get; set; } = [];
     public List<string> CollectionIds { get; set; } = [];
+}
+
+public class PagedResult<T>
+{
+    public List<T> Items { get; set; } = [];
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
 }

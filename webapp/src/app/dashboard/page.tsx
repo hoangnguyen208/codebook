@@ -10,14 +10,14 @@ export default async function DashboardPage() {
   const session = await auth();
   const accessToken = session?.accessToken;
 
-  let collections: Awaited<ReturnType<typeof getDashboardCollections>> = [];
+  let collections: Awaited<ReturnType<typeof getDashboardCollections>> = { items: [], totalCount: 0, page: 1, pageSize: 21 };
   let items: Awaited<ReturnType<typeof getRecentDashboardItems>> = [];
   let itemTypes: Awaited<ReturnType<typeof getSystemDashboardItemTypes>> = [];
   let fetchError: string | null = null;
 
   try {
     [collections, items, itemTypes] = await Promise.all([
-      getDashboardCollections(100, { accessToken }),
+      getDashboardCollections({ accessToken, pageSize: 6 }),
       getRecentDashboardItems(100, { accessToken }),
       getSystemDashboardItemTypes({ accessToken }),
     ]);
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   const userName = session?.user?.name ?? null;
   const userEmail = session?.user?.email ?? null;
   const displayName = getDisplayName(userName, userEmail);
-  const recentCollections = [...collections]
+  const recentCollections = [...collections.items]
     .sort((left, right) =>
       (right.lastUpdatedAt ?? "").localeCompare(left.lastUpdatedAt ?? ""),
     )
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
           plan: "free",
         },
         itemTypes,
-        collections: collections.map((collection) => ({
+        collections: collections.items.map((collection) => ({
           id: collection.id,
           name: collection.name,
           description: collection.description,
@@ -57,7 +57,7 @@ export default async function DashboardPage() {
       }}
       recentCollectionsOverride={recentCollections}
       fetchError={fetchError}
-      searchData={{ items, collections }}
+      searchData={{ items, collections: collections.items }}
     />
   );
 }

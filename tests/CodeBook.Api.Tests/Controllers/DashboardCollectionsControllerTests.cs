@@ -113,10 +113,11 @@ public class DashboardCollectionsControllerTests
     {
         var controller = CreateController();
 
-        var result = await controller.GetCollections(100);
+        var result = await controller.GetCollections(pageSize: 100);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var collections = Assert.IsAssignableFrom<IEnumerable<RecentDashboardCollectionDto>>(okResult.Value).ToList();
+        var paged = Assert.IsType<PagedResult<RecentDashboardCollectionDto>>(okResult.Value);
+        var collections = paged.Items;
         Assert.Equal(3, collections.Count);
         Assert.Equal("Backend", collections[0].Name);
     }
@@ -126,11 +127,12 @@ public class DashboardCollectionsControllerTests
     {
         var controller = CreateController();
 
-        var result = await controller.GetCollections(2);
+        var result = await controller.GetCollections(pageSize: 2);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var collections = Assert.IsAssignableFrom<IEnumerable<RecentDashboardCollectionDto>>(okResult.Value);
-        Assert.Equal(2, collections.Count());
+        var paged = Assert.IsType<PagedResult<RecentDashboardCollectionDto>>(okResult.Value);
+        var collections = paged.Items;
+        Assert.Equal(2, collections.Count);
     }
 
     [Fact]
@@ -138,10 +140,11 @@ public class DashboardCollectionsControllerTests
     {
         var controller = CreateController();
 
-        var result = await controller.GetCollections(100);
+        var result = await controller.GetCollections(pageSize: 100);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var collections = Assert.IsAssignableFrom<IEnumerable<RecentDashboardCollectionDto>>(okResult.Value).ToList();
+        var paged = Assert.IsType<PagedResult<RecentDashboardCollectionDto>>(okResult.Value);
+        var collections = paged.Items;
         var col1 = collections.First(c => c.Id == "col-1");
         Assert.Equal(2, col1.ItemCount);
     }
@@ -151,10 +154,11 @@ public class DashboardCollectionsControllerTests
     {
         var controller = CreateController();
 
-        var result = await controller.GetCollections(100);
+        var result = await controller.GetCollections(pageSize: 100);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var collections = Assert.IsAssignableFrom<IEnumerable<RecentDashboardCollectionDto>>(okResult.Value).ToList();
+        var paged = Assert.IsType<PagedResult<RecentDashboardCollectionDto>>(okResult.Value);
+        var collections = paged.Items;
         var col3 = collections.First(c => c.Id == "col-3");
         Assert.Equal(0, col3.ItemCount);
     }
@@ -164,10 +168,11 @@ public class DashboardCollectionsControllerTests
     {
         var controller = CreateController();
 
-        var result = await controller.GetCollections(100);
+        var result = await controller.GetCollections(pageSize: 100);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var collections = Assert.IsAssignableFrom<IEnumerable<RecentDashboardCollectionDto>>(okResult.Value).ToList();
+        var paged = Assert.IsType<PagedResult<RecentDashboardCollectionDto>>(okResult.Value);
+        var collections = paged.Items;
         var col1 = collections.First(c => c.Id == "col-1");
         Assert.Equal("purple", col1.DominantColor);
     }
@@ -177,10 +182,11 @@ public class DashboardCollectionsControllerTests
     {
         var controller = CreateController();
 
-        var result = await controller.GetCollections(100);
+        var result = await controller.GetCollections(pageSize: 100);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var collections = Assert.IsAssignableFrom<IEnumerable<RecentDashboardCollectionDto>>(okResult.Value).ToList();
+        var paged = Assert.IsType<PagedResult<RecentDashboardCollectionDto>>(okResult.Value);
+        var collections = paged.Items;
         var col1 = collections.First(c => c.Id == "col-1");
         Assert.Equal(2, col1.TypeIcons.Count);
         Assert.Contains("Code", col1.TypeIcons);
@@ -192,10 +198,11 @@ public class DashboardCollectionsControllerTests
     {
         var controller = CreateController();
 
-        var result = await controller.GetCollections(100);
+        var result = await controller.GetCollections(pageSize: 100);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var collections = Assert.IsAssignableFrom<IEnumerable<RecentDashboardCollectionDto>>(okResult.Value).ToList();
+        var paged = Assert.IsType<PagedResult<RecentDashboardCollectionDto>>(okResult.Value);
+        var collections = paged.Items;
         var col1 = collections.First(c => c.Id == "col-1");
         Assert.True(col1.IsFavorite);
     }
@@ -234,5 +241,34 @@ public class DashboardCollectionsControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var collections = Assert.IsAssignableFrom<IEnumerable<RecentDashboardCollectionDto>>(okResult.Value);
         Assert.Equal(6, collections.Count());
+    }
+
+    // ── Pagination metadata tests ──
+
+    [Fact]
+    public async Task GetCollections_PagedReturnsTotalCount()
+    {
+        var controller = CreateController();
+
+        var result = await controller.GetCollections(pageSize: 100);
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var paged = Assert.IsType<PagedResult<RecentDashboardCollectionDto>>(okResult.Value);
+        Assert.Equal(3, paged.TotalCount);
+        Assert.Equal(1, paged.Page);
+        Assert.Equal(100, paged.PageSize);
+    }
+
+    [Fact]
+    public async Task GetCollections_Page2ReturnsSecondPage()
+    {
+        var controller = CreateController();
+
+        var result = await controller.GetCollections(page: 2, pageSize: 2);
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var paged = Assert.IsType<PagedResult<RecentDashboardCollectionDto>>(okResult.Value);
+        Assert.Equal(2, paged.Page);
+        Assert.Single(paged.Items);
     }
 }

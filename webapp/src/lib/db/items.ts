@@ -6,6 +6,13 @@ import type { FetchOptions } from "@/lib/fetch";
 
 export type { DashboardItem, DashboardItemType, ItemDetail };
 
+export type PagedResult<T> = {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};
+
 type DashboardItemApiDto = {
   id: string;
   title: string;
@@ -178,23 +185,26 @@ export async function getRecentDashboardItems(
 
 export async function getItemsByType(
   typeName: string,
-  options?: FetchOptions,
-): Promise<DashboardItem[]> {
-  const response = await fetchWithRetry(
-    `${getApiBaseUrl()}/api/dashboard/items/by-type/${encodeURIComponent(typeName)}`,
-    {
-      cache: "no-store",
-      headers: authHeaders(options?.accessToken),
-    },
+  options?: FetchOptions & { page?: number; pageSize?: number },
+): Promise<PagedResult<DashboardItem>> {
+  const page = options?.page ?? 1;
+  const pageSize = options?.pageSize ?? 5;
+  const res = await fetchWithRetry(
+    `${getApiBaseUrl()}/api/dashboard/items/by-type/${encodeURIComponent(typeName)}?page=${page}&pageSize=${pageSize}`,
+    { cache: "no-store", headers: authHeaders(options?.accessToken) },
   );
+  if (!res.ok) throw new Error(`Failed to fetch items by type "${typeName}": ${res.status}`);
+  const payload = (await res.json()) as { items: DashboardItemApiDto[]; totalCount: number; page: number; pageSize: number };
+  return {
+    items: payload.items.map(mapDashboardItem),
+    totalCount: payload.totalCount,
+    page: payload.page,
+    pageSize: payload.pageSize,
+  };
+}
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch items by type "${typeName}": ${response.status}`);
-  }
-
-  const payload = (await response.json()) as DashboardItemApiDto[];
-
-  return payload.map((item) => ({
+function mapDashboardItem(item: DashboardItemApiDto): DashboardItem {
+  return {
     id: item.id,
     title: item.title,
     description: item.description ?? "",
@@ -210,44 +220,27 @@ export async function getItemsByType(
     isPinned: item.isPinned,
     updatedAt: toDateLabel(item.updatedAt),
     createdAt: toDateLabel(item.createdAt),
-  }));
+  };
 }
 
 export async function getItemsByCollection(
   collectionId: string,
-  options?: FetchOptions,
-): Promise<DashboardItem[]> {
-  const response = await fetchWithRetry(
-    `${getApiBaseUrl()}/api/dashboard/items/by-collection/${encodeURIComponent(collectionId)}`,
-    {
-      cache: "no-store",
-      headers: authHeaders(options?.accessToken),
-    },
+  options?: FetchOptions & { page?: number; pageSize?: number },
+): Promise<PagedResult<DashboardItem>> {
+  const page = options?.page ?? 1;
+  const pageSize = options?.pageSize ?? 5;
+  const res = await fetchWithRetry(
+    `${getApiBaseUrl()}/api/dashboard/items/by-collection/${encodeURIComponent(collectionId)}?page=${page}&pageSize=${pageSize}`,
+    { cache: "no-store", headers: authHeaders(options?.accessToken) },
   );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch items for collection "${collectionId}": ${response.status}`);
-  }
-
-  const payload = (await response.json()) as DashboardItemApiDto[];
-
-  return payload.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description ?? "",
-    content: item.content ?? null,
-    url: item.url ?? null,
-    typeId: item.typeId,
-    collectionIds: item.collectionIds ?? [],
-    fileUrl: item.fileUrl ?? null,
-    fileName: item.fileName ?? null,
-    fileSize: item.fileSize ?? null,
-    tags: item.tags.filter((tag) => tag.trim().length > 0),
-    isFavorite: item.isFavorite,
-    isPinned: item.isPinned,
-    updatedAt: toDateLabel(item.updatedAt),
-    createdAt: toDateLabel(item.createdAt),
-  }));
+  if (!res.ok) throw new Error(`Failed to fetch items for collection "${collectionId}": ${res.status}`);
+  const payload = (await res.json()) as { items: DashboardItemApiDto[]; totalCount: number; page: number; pageSize: number };
+  return {
+    items: payload.items.map(mapDashboardItem),
+    totalCount: payload.totalCount,
+    page: payload.page,
+    pageSize: payload.pageSize,
+  };
 }
 
 export async function getItemById(

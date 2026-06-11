@@ -2,6 +2,7 @@ import "server-only";
 
 import { fetchWithRetry, getApiBaseUrl, authHeaders } from "@/lib/fetch";
 import type { FetchOptions } from "@/lib/fetch";
+import type { PagedResult } from "@/lib/db/items";
 import type { CollectionForSelect } from "@/types/items";
 
 export type CreateCollectionPayload = {
@@ -73,21 +74,21 @@ function toDateLabel(value: string) {
 }
 
 export async function getDashboardCollections(
-  limit = 100,
-  options?: FetchOptions,
-): Promise<DashboardRecentCollection[]> {
+  options?: FetchOptions & { page?: number; pageSize?: number },
+): Promise<PagedResult<DashboardRecentCollection>> {
+  const page = options?.page ?? 1;
+  const pageSize = options?.pageSize ?? 5;
   const response = await fetchDashboardCollections(
-    `/api/dashboard/collections?limit=${limit}`,
+    `/api/dashboard/collections?page=${page}&pageSize=${pageSize}`,
     options,
   );
-
   return response;
 }
 
 async function fetchDashboardCollections(
   path: string,
   options?: FetchOptions,
-): Promise<DashboardRecentCollection[]> {
+): Promise<PagedResult<DashboardRecentCollection>> {
   const response = await fetchWithRetry(
     `${getApiBaseUrl()}${path}`,
     {
@@ -102,18 +103,28 @@ async function fetchDashboardCollections(
     );
   }
 
-  const payload = (await response.json()) as DashboardRecentCollectionApiDto[];
+  const payload = (await response.json()) as {
+    items: DashboardRecentCollectionApiDto[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  };
 
-  return payload.map((collection) => ({
-    id: collection.id,
-    name: collection.name,
-    description: collection.description ?? "",
-    itemCount: collection.itemCount,
-    lastUpdatedAt: toDateLabel(collection.lastUpdatedAt),
-    dominantColor: collection.dominantColor,
-    isFavorite: collection.isFavorite,
-    typeIcons: [...new Set(collection.typeIcons.map(normalizeIconName))],
-  }));
+  return {
+    items: payload.items.map((collection) => ({
+      id: collection.id,
+      name: collection.name,
+      description: collection.description ?? "",
+      itemCount: collection.itemCount,
+      lastUpdatedAt: toDateLabel(collection.lastUpdatedAt),
+      dominantColor: collection.dominantColor,
+      isFavorite: collection.isFavorite,
+      typeIcons: [...new Set(collection.typeIcons.map(normalizeIconName))],
+    })),
+    totalCount: payload.totalCount,
+    page: payload.page,
+    pageSize: payload.pageSize,
+  };
 }
 
 type CollectionApiDto = {
@@ -162,23 +173,12 @@ export async function getCollectionsForSelect(
   options?: FetchOptions,
 ): Promise<CollectionForSelect[]> {
   const response = await fetchWithRetry(
-    `${getApiBaseUrl()}/api/dashboard/collections?limit=500`,
-    {
-      cache: "no-store",
-      headers: authHeaders(options?.accessToken),
-    },
+    `${getApiBaseUrl()}/api/dashboard/collections?page=1&pageSize=500`,
+    { cache: "no-store", headers: authHeaders(options?.accessToken) },
   );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch collections for select: ${response.status}`);
-  }
-
-  const payload = (await response.json()) as {
-    id: string;
-    name: string;
-  }[];
-
-  return payload.map((c) => ({ id: c.id, name: c.name }));
+  if (!response.ok) throw new Error(`Failed to fetch collections: ${response.status}`);
+  const payload = (await response.json()) as { items: { id: string; name: string }[] };
+  return payload.items.map((c) => ({ id: c.id, name: c.name }));
 }
 
 export async function updateCollection(
