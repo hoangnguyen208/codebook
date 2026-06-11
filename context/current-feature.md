@@ -1,6 +1,6 @@
 # Current Feature
 
-Collection Actions (Edit / Delete / Favorite)
+Global Search / Command Palette
 
 ## Status
 
@@ -11,22 +11,19 @@ Completed
 
 <!-- Goals & requirements -->
 
-- Edit collection metadata (name, description) via modal dialog
-- Delete collection with confirmation — removes items from collection, items are NOT deleted
-- Favorite toggle button (UI only, no backend logic yet)
-- 3-dots dropdown menu on collection cards at /collections and dashboard with Edit / Delete / Favorite
-- Clicking card body navigates to collection page; clicking 3-dots opens dropdown
-- Backend: `PUT /api/collections/{id}`, `DELETE /api/collections/{id}`, `GET /api/collections/{id}` endpoints
-- Full-stack: .NET endpoints → lib/db → server actions → UI components
-- 12 new unit tests (88 total)
-- Delete from detail page redirects to /collections
-- New Item on collection page auto-attaches that collection
+- Cmd+K / Ctrl+K keyboard shortcut to open command palette
+- Fuzzy search across all items and collections (client-side via cmdk)
+- Grouped results: Items section with type icons, Collections section with item counts
+- Keyboard navigation (arrow keys, Enter to select)
+- Navigate to item drawer or collection page on select
+- TopBar search input opens palette on click, shows ⌘K hint
+- Pre-fetch searchable data on dashboard load
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Delete only unlinks items from the collection (removes ItemCollection join records). Items themselves are preserved. Favorite is UI placeholder only.
+Uses shadcn cmdk component. Client-side only — no server round-trips. Search data pre-fetched via existing `getDashboardCollections` and `getRecentDashboardItems`.
 
 ## History
 
@@ -75,3 +72,4 @@ Delete only unlinks items from the collection (removes ItemCollection join recor
 - **Add Items to Collections**: Added many-to-many Item↔Collection relationship via `ItemCollection` join table with data migration from old `Item.CollectionId` FK; added `CollectionIds` to Create/Update DTOs and request schemas; added collection multi-select pill UI to CreateItemDialog and ItemDrawerSheet edit mode via server action; added 9 unit tests (72 total); fixed `server-only` import leak by wrapping client-facing calls in server action; added OIDC token refresh in NextAuth JWT callback to prevent 401 on expired access tokens
 - **Collections Pages**: Added `/collections` page with 3-column grid of `CollectionCard` components; added `/collections/[id]` page with `ItemsGridClient` reusing ItemCard/ImageCard/FileRow; added `GET /api/dashboard/items/by-collection/{collectionId}` endpoint and `getItemsByCollection` fetch wrapper; made dashboard collection cards and sidebar favorite/recent collection items clickable links; added 4 unit tests (76 total)
 - **Collection Actions**: Added `PUT /api/collections/{id}`, `DELETE /api/collections/{id}`, and `GET /api/collections/{id}` endpoints; created `EditCollectionDialog` modal for editing name/description; added inline delete confirmation on collection detail page with redirect to `/collections`; added 3-dots dropdown (Edit/Delete/Favorite) to `CollectionCard` and `DashboardCollectionCard`; added `CollectionHeaderActions` component for detail page actions; auto-attach collection when creating item from collection page; added 12 unit tests (88 total)
+- **Global Search**: Added Cmd+K/Ctrl+K command palette with fuzzy search across items and collections using cmdk; created `SearchProvider` context pre-fetching existing dashboard data; grouped results with type icons and item counts; keyboard navigation with arrow keys and Enter; search input in top bar opens palette on click with ⌘K hint

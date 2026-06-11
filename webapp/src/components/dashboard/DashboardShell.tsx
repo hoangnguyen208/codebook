@@ -33,6 +33,8 @@ import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
 import { CreateItemDialog } from "@/components/items/CreateItemDialog";
 import { CreateCollectionDialog } from "@/components/collections/CreateCollectionDialog";
 import { DashboardCollectionCard } from "@/components/collections/DashboardCollectionCard";
+import { SearchProvider } from "@/components/search/SearchProvider";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -63,6 +65,10 @@ type DashboardShellProps = {
   };
   recentCollectionsOverride?: DashboardRecentCollection[];
   fetchError?: string | null;
+  searchData?: {
+    items: DashboardItem[];
+    collections: DashboardRecentCollection[];
+  };
 };
 
 type CollectionSummary = DashboardCollection & {
@@ -349,6 +355,7 @@ export function DashboardShell({
   data,
   recentCollectionsOverride,
   fetchError,
+  searchData,
 }: DashboardShellProps) {
   const pathname = usePathname();
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
@@ -357,6 +364,7 @@ export function DashboardShell({
   const [drawerItemId, setDrawerItemId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createCollectionDialogOpen, setCreateCollectionDialogOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -513,6 +521,7 @@ export function DashboardShell({
 
   return (
     <main className="min-h-screen bg-background">
+      <SearchProvider items={searchData?.items ?? []} collections={searchData?.collections ?? []}>
       <ItemDrawerProvider
         selectedItemId={drawerItemId}
         onOpenChange={setDrawerItemId}
@@ -564,7 +573,10 @@ export function DashboardShell({
                 <Input
                   aria-label="Search items"
                   placeholder="Search items..."
-                  className="h-11 rounded-2xl border-border/70 bg-card pl-10 pr-16 shadow-none"
+                  className="h-11 rounded-2xl border-border/70 bg-card pl-10 pr-16 shadow-none cursor-pointer"
+                  readOnly
+                  onFocus={(e) => e.target.blur()}
+                  onClick={() => setSearchOpen(true)}
                 />
                 <span className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-md border border-border/70 px-2 py-1 text-xs font-medium text-muted-foreground sm:inline-flex">
                   Ctrl K
@@ -864,6 +876,7 @@ export function DashboardShell({
         </div>
       </div>
       <ItemDrawerSheet />
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
       </ItemDrawerProvider>
 
       {isMobileSidebarOpen ? (
@@ -903,6 +916,7 @@ export function DashboardShell({
 
       <CreateItemDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
       <CreateCollectionDialog open={createCollectionDialogOpen} onOpenChange={setCreateCollectionDialogOpen} />
+      </SearchProvider>
     </main>
   );
 }

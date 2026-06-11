@@ -57,6 +57,7 @@ export default async function DashboardPage() {
       }}
       recentCollectionsOverride={recentCollections}
       fetchError={fetchError}
+      searchData={{ items, collections }}
     />
   );
 }
