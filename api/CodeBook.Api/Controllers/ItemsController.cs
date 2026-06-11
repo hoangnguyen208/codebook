@@ -381,6 +381,54 @@ public class ItemsController : ControllerBase
         return Ok(response);
     }
 
+    [HttpGet("api/dashboard/items/by-collection/{collectionId}")]
+    public async Task<ActionResult<IEnumerable<RecentDashboardItemDto>>> GetItemsByCollection(
+        [FromRoute] string collectionId,
+        [FromQuery] int limit = 200)
+    {
+        var userId = GetUserId();
+        var safeLimit = Math.Clamp(limit, 1, 200);
+
+        var items = await _dbContext.Items
+            .AsNoTracking()
+            .Include(item => item.Tags)
+                .ThenInclude(itemTag => itemTag.Tag)
+            .Include(item => item.Type)
+            .Include(item => item.ItemCollections)
+            .Where(item => item.UserId == userId && item.ItemCollections.Any(ic => ic.CollectionId == collectionId))
+            .OrderByDescending(item => item.UpdatedAt)
+            .Take(safeLimit)
+            .ToListAsync();
+
+        var response = items.Select(item => new RecentDashboardItemDto
+        {
+            Id = item.Id,
+            Title = item.Title,
+            Description = item.Description,
+            Content = item.Content,
+            Url = item.Url,
+            TypeId = item.TypeId,
+            CollectionIds = item.ItemCollections
+                .Select(ic => ic.CollectionId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .ToList()!,
+            FileUrl = item.FileUrl,
+            FileName = item.FileName,
+            FileSize = item.FileSize,
+            Tags = item.Tags
+                .Select(itemTag => itemTag.Tag.Name)
+                .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            IsFavorite = item.IsFavorite,
+            IsPinned = item.IsPinned,
+            UpdatedAt = item.UpdatedAt,
+            CreatedAt = item.CreatedAt
+        });
+
+        return Ok(response);
+    }
+
     [HttpGet("api/dashboard/item-types/system")]
     public async Task<ActionResult<IEnumerable<DashboardItemTypeDto>>> GetSystemItemTypes()
     {

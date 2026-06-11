@@ -934,4 +934,72 @@ public class ItemsControllerTests
         Assert.IsType<NoContentResult>(result);
         Assert.DoesNotContain(_itemCollections, ic => ic.ItemId == "item-3");
     }
+
+    // ── Get by collection tests ──
+
+    [Fact]
+    public async Task GetItemsByCollection_ReturnsItemsInCollection()
+    {
+        _itemCollections.Add(new ItemCollection { ItemId = "item-1", CollectionId = "col-1", Item = _items[0], Collection = _collections[0] });
+        _itemCollections.Add(new ItemCollection { ItemId = "item-2", CollectionId = "col-1", Item = _items[1], Collection = _collections[0] });
+        _items[0].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-1").ToList();
+        _items[1].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-2").ToList();
+
+        var controller = CreateController();
+
+        var result = await controller.GetItemsByCollection("col-1");
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var items = Assert.IsAssignableFrom<IEnumerable<RecentDashboardItemDto>>(okResult.Value).ToList();
+        Assert.Equal(2, items.Count);
+        Assert.Contains(items, i => i.Id == "item-1");
+        Assert.Contains(items, i => i.Id == "item-2");
+    }
+
+    [Fact]
+    public async Task GetItemsByCollection_ReturnsEmptyForCollectionWithNoItems()
+    {
+        var controller = CreateController();
+
+        var result = await controller.GetItemsByCollection("col-1");
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var items = Assert.IsAssignableFrom<IEnumerable<RecentDashboardItemDto>>(okResult.Value);
+        Assert.Empty(items);
+    }
+
+    [Fact]
+    public async Task GetItemsByCollection_RespectsLimit()
+    {
+        _itemCollections.Add(new ItemCollection { ItemId = "item-1", CollectionId = "col-1", Item = _items[0], Collection = _collections[0] });
+        _itemCollections.Add(new ItemCollection { ItemId = "item-2", CollectionId = "col-1", Item = _items[1], Collection = _collections[0] });
+        _items[0].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-1").ToList();
+        _items[1].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-2").ToList();
+
+        var controller = CreateController();
+
+        var result = await controller.GetItemsByCollection("col-1", 1);
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var items = Assert.IsAssignableFrom<IEnumerable<RecentDashboardItemDto>>(okResult.Value);
+        Assert.Single(items);
+    }
+
+    [Fact]
+    public async Task GetItemsByCollection_OrdersByUpdatedAtDesc()
+    {
+        _itemCollections.Add(new ItemCollection { ItemId = "item-1", CollectionId = "col-1", Item = _items[0], Collection = _collections[0] });
+        _itemCollections.Add(new ItemCollection { ItemId = "item-2", CollectionId = "col-1", Item = _items[1], Collection = _collections[0] });
+        _items[0].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-1").ToList();
+        _items[1].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-2").ToList();
+
+        var controller = CreateController();
+
+        var result = await controller.GetItemsByCollection("col-1");
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var items = Assert.IsAssignableFrom<IEnumerable<RecentDashboardItemDto>>(okResult.Value).ToList();
+        Assert.Equal(2, items.Count);
+        Assert.True(items[0].UpdatedAt >= items[1].UpdatedAt);
+    }
 }

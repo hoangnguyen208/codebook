@@ -213,6 +213,43 @@ export async function getItemsByType(
   }));
 }
 
+export async function getItemsByCollection(
+  collectionId: string,
+  options?: FetchOptions,
+): Promise<DashboardItem[]> {
+  const response = await fetchWithRetry(
+    `${getApiBaseUrl()}/api/dashboard/items/by-collection/${encodeURIComponent(collectionId)}`,
+    {
+      cache: "no-store",
+      headers: authHeaders(options?.accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch items for collection "${collectionId}": ${response.status}`);
+  }
+
+  const payload = (await response.json()) as DashboardItemApiDto[];
+
+  return payload.map((item) => ({
+    id: item.id,
+    title: item.title,
+    description: item.description ?? "",
+    content: item.content ?? null,
+    url: item.url ?? null,
+    typeId: item.typeId,
+    collectionIds: item.collectionIds ?? [],
+    fileUrl: item.fileUrl ?? null,
+    fileName: item.fileName ?? null,
+    fileSize: item.fileSize ?? null,
+    tags: item.tags.filter((tag) => tag.trim().length > 0),
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    updatedAt: toDateLabel(item.updatedAt),
+    createdAt: toDateLabel(item.createdAt),
+  }));
+}
+
 export async function getItemById(
   id: string,
   options?: FetchOptions,

@@ -282,8 +282,10 @@ function DashboardSidebar({
               </SidebarSectionLabel>
               <div className="space-y-1">
                 {favoriteCollections.map((collection) => (
-                  <div
+                  <Link
                     key={collection.id}
+                    href={`/collections/${encodeURIComponent(collection.id)}`}
+                    onClick={onNavigate}
                     className="flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
                   >
                     <span
@@ -303,7 +305,7 @@ function DashboardSidebar({
                       </p>
                     </div>
                     <Star className="size-4 fill-current text-yellow-400" />
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -314,8 +316,10 @@ function DashboardSidebar({
               </SidebarSectionLabel>
               <div className="space-y-1">
                 {recentCollections.map((collection) => (
-                  <div
+                  <Link
                     key={collection.id}
+                    href={`/collections/${encodeURIComponent(collection.id)}`}
+                    onClick={onNavigate}
                     className="flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
                   >
                     <span
@@ -335,7 +339,7 @@ function DashboardSidebar({
                     <span className="text-xs text-sidebar-foreground/60">
                       {collection.itemCount}
                     </span>
-                  </div>
+                  </Link>
                 ))}
               </div>
               <Link
@@ -709,11 +713,13 @@ export function DashboardShell({
 
                 <div className="mt-6 grid gap-4 lg:grid-cols-2">
                   {mainRecentCollections.map((collection) => (
-                    <article
+                    <Link
                       key={collection.id}
+                      href={`/collections/${encodeURIComponent(collection.id)}`}
                       className={cn(
-                        "rounded-3xl border bg-background/70 p-5",
+                        "group rounded-3xl border bg-background/70 p-5",
                         getBorderColorClasses(collection.dominantColor ?? collection.color),
+                        "hover:bg-background/90 transition-colors",
                       )}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -764,7 +770,7 @@ export function DashboardShell({
                           <ArrowUpRight className="size-4" />
                         </span>
                       </div>
-                    </article>
+                    </Link>
                   ))}
                 </div>
               </section>
