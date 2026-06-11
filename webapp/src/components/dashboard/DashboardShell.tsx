@@ -8,7 +8,6 @@ import {
   ArrowUpRight,
   Bookmark,
   ChevronUp,
-  Clock3,
   Code2,
   File,
   FileImage,
@@ -33,6 +32,7 @@ import { ItemDrawerProvider } from "@/components/items/ItemDrawerProvider";
 import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
 import { CreateItemDialog } from "@/components/items/CreateItemDialog";
 import { CreateCollectionDialog } from "@/components/collections/CreateCollectionDialog";
+import { DashboardCollectionCard } from "@/components/collections/DashboardCollectionCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -112,20 +112,6 @@ const colorClasses: Record<string, string> = {
 
 function getColorClasses(color: string) {
   return colorClasses[color] ?? "border-border bg-muted text-muted-foreground";
-}
-
-function getBorderColorClasses(color: string) {
-  const borderClasses: Record<string, string> = {
-    blue: "border-blue-500/40",
-    purple: "border-purple-500/40",
-    orange: "border-orange-500/40",
-    yellow: "border-yellow-500/40",
-    slate: "border-slate-500/40",
-    pink: "border-pink-500/40",
-    emerald: "border-emerald-500/40",
-  };
-
-  return borderClasses[color] ?? "border-border/70";
 }
 
 function getItemTypeIcon(iconName: string) {
@@ -713,64 +699,28 @@ export function DashboardShell({
 
                 <div className="mt-6 grid gap-4 lg:grid-cols-2">
                   {mainRecentCollections.map((collection) => (
-                    <Link
+                    <DashboardCollectionCard
                       key={collection.id}
-                      href={`/collections/${encodeURIComponent(collection.id)}`}
-                      className={cn(
-                        "group rounded-3xl border bg-background/70 p-5",
-                        getBorderColorClasses(collection.dominantColor ?? collection.color),
-                        "hover:bg-background/90 transition-colors",
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div
-                          className={cn(
-                            "flex size-11 items-center justify-center rounded-2xl border",
-                            getColorClasses(collection.dominantColor ?? collection.color),
-                          )}
-                        >
-                          <FolderOpen className="size-5" />
-                        </div>
-                        <div className="inline-flex items-center gap-1 rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                          <Clock3 className="size-3.5" />
-                          {formatRelativeDateLabel(collection.lastUpdatedAt)}
-                        </div>
-                      </div>
-
-                      <div className="mt-4">
-                        <h3 className="text-lg font-semibold">{collection.name}</h3>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                          {collection.description}
-                        </p>
-                      </div>
-
-                      <div className="mt-5 flex items-center justify-between gap-3 text-sm">
-                        <div className="flex items-center gap-3">
-                          <span className="text-muted-foreground">
-                            {collection.itemCount} items
-                          </span>
-                          {collection.typeIcons && collection.typeIcons.length > 0 ? (
-                            <div className="inline-flex items-center gap-1">
-                              {collection.typeIcons.map((iconName) => {
-                                const Icon = getItemTypeIcon(iconName);
-                                return (
-                                  <span
-                                    key={`${collection.id}-${iconName}`}
-                                    className="inline-flex size-6 items-center justify-center rounded-full border border-border/70 text-muted-foreground"
-                                  >
-                                    <Icon className="size-3.5" />
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          ) : null}
-                        </div>
-                        <span className="inline-flex items-center gap-1 font-medium text-foreground">
-                          Open collection
-                          <ArrowUpRight className="size-4" />
-                        </span>
-                      </div>
-                    </Link>
+                      collection={collection}
+                      lastUpdatedLabel={formatRelativeDateLabel(collection.lastUpdatedAt)}
+                      typeIconComponents={
+                        collection.typeIcons && collection.typeIcons.length > 0 ? (
+                          <div className="inline-flex items-center gap-1">
+                            {collection.typeIcons.map((iconName) => {
+                              const Icon = getItemTypeIcon(iconName);
+                              return (
+                                <span
+                                  key={`${collection.id}-${iconName}`}
+                                  className="inline-flex size-6 items-center justify-center rounded-full border border-border/70 text-muted-foreground"
+                                >
+                                  <Icon className="size-3.5" />
+                                </span>
+                              );
+                            })}
+                          </div>
+                        ) : null
+                      }
+                    />
                   ))}
                 </div>
               </section>

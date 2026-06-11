@@ -3,6 +3,7 @@ using CodeBook.Api.Data;
 using CodeBook.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CodeBook.Api.Controllers;
 
@@ -51,7 +52,7 @@ public class CollectionsController : ControllerBase
         _dbContext.Collections.Add(collection);
         await _dbContext.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(Create), new { id = collection.Id }, new CollectionDto
+        return CreatedAtAction(nameof(Get), new { id = collection.Id }, new CollectionDto
         {
             Id = collection.Id,
             Name = collection.Name,
@@ -60,6 +61,77 @@ public class CollectionsController : ControllerBase
             CreatedAt = collection.CreatedAt,
         });
     }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<CollectionDto>> Get(string id)
+    {
+        var userId = GetUserId();
+        var collection = await _dbContext.Collections
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+        if (collection == null)
+            return NotFound();
+
+        return Ok(new CollectionDto
+        {
+            Id = collection.Id,
+            Name = collection.Name,
+            Description = collection.Description,
+            IsFavorite = collection.IsFavorite,
+            CreatedAt = collection.CreatedAt,
+        });
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<CollectionDto>> Update(string id, [FromBody] UpdateCollectionRequest request)
+    {
+        var userId = GetUserId();
+        var collection = await _dbContext.Collections
+            .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+        if (collection == null)
+            return NotFound();
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Name is required" });
+
+        if (request.Name.Trim().Length > 200)
+            return BadRequest(new { error = "Name must be 200 characters or fewer" });
+
+        collection.Name = request.Name.Trim();
+        collection.Description = request.Description?.Trim();
+        collection.UpdatedAt = DateTime.UtcNow;
+
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new CollectionDto
+        {
+            Id = collection.Id,
+            Name = collection.Name,
+            Description = collection.Description,
+            IsFavorite = collection.IsFavorite,
+            CreatedAt = collection.CreatedAt,
+        });
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var userId = GetUserId();
+        var collection = await _dbContext.Collections
+            .Include(c => c.ItemCollections)
+            .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+        if (collection == null)
+            return NotFound();
+
+        _dbContext.ItemCollections.RemoveRange(collection.ItemCollections);
+        _dbContext.Collections.Remove(collection);
+        await _dbContext.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
 
 public class CreateCollectionRequest
@@ -67,6 +139,12 @@ public class CreateCollectionRequest
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool IsFavorite { get; set; }
+}
+
+public class UpdateCollectionRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
 }
 
 public class CollectionDto

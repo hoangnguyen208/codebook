@@ -180,3 +180,58 @@ export async function getCollectionsForSelect(
 
   return payload.map((c) => ({ id: c.id, name: c.name }));
 }
+
+export async function updateCollection(
+  id: string,
+  data: { name: string; description?: string | null },
+  options?: FetchOptions,
+): Promise<CreatedCollection> {
+  const response = await fetchWithRetry(
+    `${getApiBaseUrl()}/api/collections/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(options?.accessToken),
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    let message = `Failed to update collection: ${response.status}`;
+    try {
+      const parsed = JSON.parse(body);
+      if (typeof parsed?.error === "string") message = parsed.error;
+    } catch { /* keep default */ }
+    throw new Error(message);
+  }
+
+  const payload = (await response.json()) as CollectionApiDto;
+
+  return {
+    id: payload.id,
+    name: payload.name,
+    description: payload.description,
+    isFavorite: payload.isFavorite,
+    createdAt: payload.createdAt,
+  };
+}
+
+export async function deleteCollection(
+  id: string,
+  options?: FetchOptions,
+): Promise<void> {
+  const response = await fetchWithRetry(
+    `${getApiBaseUrl()}/api/collections/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+      headers: authHeaders(options?.accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete collection: ${response.status}`);
+  }
+}

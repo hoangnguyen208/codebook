@@ -41,11 +41,15 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialType?: string;
+  initialCollectionId?: string;
 };
 
-export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
+export function CreateItemDialog({ open, onOpenChange, initialType, initialCollectionId }: Props) {
   const router = useRouter();
   const hasPresetType = typeof initialType === "string" && initialType.trim().length > 0;
+  const initialCols = typeof initialCollectionId === "string" && initialCollectionId.trim().length > 0
+    ? [initialCollectionId]
+    : [];
 
   const [typeName, setTypeName] = useState(hasPresetType ? initialType! : "snippet");
   const [title, setTitle] = useState("");
@@ -63,7 +67,7 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableCollections, setAvailableCollections] = useState<CollectionForSelect[]>([]);
-  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>(initialCols);
 
   useEffect(() => {
     if (open) {
@@ -81,7 +85,7 @@ export function CreateItemDialog({ open, onOpenChange, initialType }: Props) {
     setFileUpload(null);
     setTagsInput("");
     setError(null);
-    setSelectedCollectionIds([]);
+    setSelectedCollectionIds(initialCols);
   };
 
   const handleOpenChange = (next: boolean) => {

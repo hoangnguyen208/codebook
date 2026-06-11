@@ -19,6 +19,7 @@ type ItemsGridClientProps = {
   itemTypeBorderColorClass: string;
   itemTypeLabel: string;
   typeName: string;
+  initialCollectionId?: string;
 };
 
 function ItemsGridInner({
@@ -28,6 +29,7 @@ function ItemsGridInner({
   itemTypeBorderColorClass,
   itemTypeLabel,
   typeName,
+  initialCollectionId,
 }: ItemsGridClientProps) {
   const { openDrawer } = useItemDrawer();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -99,6 +101,7 @@ function ItemsGridInner({
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         initialType={typeName}
+        initialCollectionId={initialCollectionId}
       />
     </>
   );

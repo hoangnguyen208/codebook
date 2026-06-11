@@ -1,6 +1,6 @@
 # Current Feature
 
-Collections Pages
+Collection Actions (Edit / Delete / Favorite)
 
 ## Status
 
@@ -11,20 +11,22 @@ Completed
 
 <!-- Goals & requirements -->
 
-- `/collections` page listing all user collections with item counts, dominant colors, and type icons
-- `/collections/[id]` page showing items in a specific collection using existing ItemCard/ImageCard/FileRow components
-- Link "View all collections" sidebar link to `/collections`
-- Link sidebar favorite + recent collection items to `/collections/[id]`
-- Link dashboard collection cards to `/collections/[id]`
-- Backend: `GET /api/dashboard/items/by-collection/{collectionId}` endpoint
-- Full-stack: .NET endpoint → `lib/db/items.ts` → server page
-- 4 new unit tests (76 total)
+- Edit collection metadata (name, description) via modal dialog
+- Delete collection with confirmation — removes items from collection, items are NOT deleted
+- Favorite toggle button (UI only, no backend logic yet)
+- 3-dots dropdown menu on collection cards at /collections and dashboard with Edit / Delete / Favorite
+- Clicking card body navigates to collection page; clicking 3-dots opens dropdown
+- Backend: `PUT /api/collections/{id}`, `DELETE /api/collections/{id}`, `GET /api/collections/{id}` endpoints
+- Full-stack: .NET endpoints → lib/db → server actions → UI components
+- 12 new unit tests (88 total)
+- Delete from detail page redirects to /collections
+- New Item on collection page auto-attaches that collection
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Reuses existing UI patterns from `/items/[type]` page. Collections are user-scoped. Items shown using the same card grid with responsive layout.
+Delete only unlinks items from the collection (removes ItemCollection join records). Items themselves are preserved. Favorite is UI placeholder only.
 
 ## History
 
@@ -72,3 +74,4 @@ Reuses existing UI patterns from `/items/[type]` page. Collections are user-scop
 - **Collection Create**: Added "New Collection" button in dashboard top bar alongside "New Item"; created `CreateCollectionDialog` modal with Name/Description fields using sonner toasts; implemented full-stack flow: `POST /api/collections` .NET endpoint → `lib/db/collections.ts` createCollection → `actions/collections.ts` server action with Zod validation; added 13 unit tests for CollectionsController; added `.dockerignore` and optimized Dockerfiles with NuGet/npm cache mounts, non-root users, and proper layer ordering; fixed identity `UnauthorizedAccessException` for `/app/keys` directory; added API + Identity healthchecks to docker-compose with `condition: service_healthy` ordering; created `fetchWithRetry` with exponential backoff for all API calls; added graceful error fallback UI in dashboard and items pages
 - **Add Items to Collections**: Added many-to-many Item↔Collection relationship via `ItemCollection` join table with data migration from old `Item.CollectionId` FK; added `CollectionIds` to Create/Update DTOs and request schemas; added collection multi-select pill UI to CreateItemDialog and ItemDrawerSheet edit mode via server action; added 9 unit tests (72 total); fixed `server-only` import leak by wrapping client-facing calls in server action; added OIDC token refresh in NextAuth JWT callback to prevent 401 on expired access tokens
 - **Collections Pages**: Added `/collections` page with 3-column grid of `CollectionCard` components; added `/collections/[id]` page with `ItemsGridClient` reusing ItemCard/ImageCard/FileRow; added `GET /api/dashboard/items/by-collection/{collectionId}` endpoint and `getItemsByCollection` fetch wrapper; made dashboard collection cards and sidebar favorite/recent collection items clickable links; added 4 unit tests (76 total)
+- **Collection Actions**: Added `PUT /api/collections/{id}`, `DELETE /api/collections/{id}`, and `GET /api/collections/{id}` endpoints; created `EditCollectionDialog` modal for editing name/description; added inline delete confirmation on collection detail page with redirect to `/collections`; added 3-dots dropdown (Edit/Delete/Favorite) to `CollectionCard` and `DashboardCollectionCard`; added `CollectionHeaderActions` component for detail page actions; auto-attach collection when creating item from collection page; added 12 unit tests (88 total)

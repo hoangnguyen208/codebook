@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { getDashboardCollections } from "@/lib/db/collections";
 import { getItemsByCollection } from "@/lib/db/items";
 import { ItemsGridClient } from "@/components/items/ItemsGridClient";
+import { CollectionHeaderActions } from "@/components/collections/CollectionHeaderActions";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -89,7 +90,7 @@ export default async function CollectionItemsPage({
           >
             <FolderOpen className="size-5" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               {collection.name}
             </h1>
@@ -100,6 +101,7 @@ export default async function CollectionItemsPage({
               {items.length} {items.length === 1 ? "item" : "items"}
             </p>
           </div>
+          <CollectionHeaderActions collection={{ id: collection.id, name: collection.name, description: collection.description }} />
         </div>
 
         <ItemsGridClient
@@ -109,6 +111,7 @@ export default async function CollectionItemsPage({
           itemTypeBorderColorClass="border-l-border/70"
           itemTypeLabel="Item"
           typeName=""
+          initialCollectionId={collection.id}
         />
         {fetchError ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
