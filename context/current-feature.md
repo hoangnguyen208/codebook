@@ -1,6 +1,6 @@
 # Current Feature
 
-Pagination
+Settings Page
 
 ## Status
 
@@ -9,22 +9,16 @@ Completed
 
 ## Goals
 
-<!-- Goals & requirements -->
-
-- Add pagination to /items/[type], /collections, and /collections/[id] pages
-- Pagination controls at bottom with page numbers and prev/next links
-- Disable prev/next when not available
-- Page size: 5 items per page
-- Dashboard limits: DASHBOARD_COLLECTIONS_LIMIT = 6, DASHBOARD_RECENT_ITEMS_LIMIT = 10
-- Only fetch the amount a page requires (not all resources)
-- Backend endpoints accept page/pageSize, return PagedResult with totalCount
-- 7 new unit tests (95 total)
+- Create `/settings` page (protected route)
+- Add "Settings" link in the sidebar user dropdown
+- Move account actions (delete account, change password) from `/profile` to `/settings`
+- Profile page stripped to user info + usage stats
+- Global font changed to Mona Sans with JetBrains Mono for code
+- All buttons and links globally styled with `cursor-pointer`
 
 ## Notes
 
-<!-- Any extra notes -->
-
-Pagination component uses usePathname for SSR compatibility. Fixed useSearchParams SSR failure by simplifying to router.push with string interpolation.
+Account actions now live on `/settings` (Back to dashboard, Sign out all sessions, Change password for Duende users, Delete account). Profile page is user info + usage stats only.
 
 ## History
 
@@ -75,3 +69,4 @@ Pagination component uses usePathname for SSR compatibility. Fixed useSearchPara
 - **Collection Actions**: Added `PUT /api/collections/{id}`, `DELETE /api/collections/{id}`, and `GET /api/collections/{id}` endpoints; created `EditCollectionDialog` modal for editing name/description; added inline delete confirmation on collection detail page with redirect to `/collections`; added 3-dots dropdown (Edit/Delete/Favorite) to `CollectionCard` and `DashboardCollectionCard`; added `CollectionHeaderActions` component for detail page actions; auto-attach collection when creating item from collection page; added 12 unit tests (88 total)
 - **Global Search**: Added Cmd+K/Ctrl+K command palette with fuzzy search across items and collections using cmdk; created `SearchProvider` context pre-fetching existing dashboard data; grouped results with type icons and item counts; keyboard navigation with arrow keys and Enter; search input in top bar opens palette on click with ⌘K hint
 - **Pagination**: Added `PagedResult<T>` wrapper to items by-type, items by-collection, and collections endpoints with page/pageSize params and totalCount; created `Pagination` component with numbered page links, prev/next, and ellipsis; applied to `/items/[type]`, `/collections`, and `/collections/[id]` pages; page size set to 5; dashboard limits changed to 6 collections / 10 items per spec; added 7 unit tests (95 total); fixed SSR compatibility by replacing useSearchParams with usePathname
+- **Settings Page**: Added `/settings` page with account actions (sign out all sessions, change password, delete account); moved from `/profile` which now shows only user info + usage stats; added "Settings" link to sidebar user dropdown; protected route via proxy matcher; changed global font to Mona Sans + JetBrains Mono; added `cursor-pointer` globally for all buttons and links

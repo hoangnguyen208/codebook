@@ -625,6 +625,13 @@ export function DashboardShell({
                       Profile
                     </Link>
                     <Link
+                      href="/settings"
+                      className="block rounded-lg px-3 py-2 text-sm hover:bg-accent"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Settings
+                    </Link>
+                    <Link
                       href="/api/auth/signout-all"
                       className="block rounded-lg px-3 py-2 text-sm text-destructive hover:bg-accent"
                       onClick={() => setIsProfileMenuOpen(false)}
