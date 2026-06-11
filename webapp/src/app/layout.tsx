@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Mona_Sans, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { EditorPreferencesProvider } from "@/components/settings/EditorPreferencesProvider";
 import "./globals.css";
 
 const monaSans = Mona_Sans({
@@ -33,7 +34,9 @@ export default function RootLayout({
       className={`${monaSans.variable} ${jetbrainsMono.variable} dark h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
+        <EditorPreferencesProvider>
         {children}
+        </EditorPreferencesProvider>
         <Toaster theme="dark" />
       </body>
     </html>

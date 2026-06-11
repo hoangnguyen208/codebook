@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Copy, Check } from "lucide-react";
 import Editor from "@monaco-editor/react";
+import { useEditorPreferences } from "@/components/settings/EditorPreferencesProvider";
 
 type Props = {
   value: string;
@@ -18,6 +19,7 @@ export function CodeEditor({
   readOnly = false,
 }: Props) {
   const [copied, setCopied] = useState(false);
+  const { prefs } = useEditorPreferences();
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(value).then(() => {
@@ -64,14 +66,15 @@ export function CodeEditor({
         value={value}
         onChange={(v) => onChange?.(v ?? "")}
         language={displayLang}
-        theme="vs-dark"
+        theme={prefs.theme ?? "vs-dark"}
         options={{
           readOnly,
-          minimap: { enabled: false },
+          minimap: { enabled: prefs.minimap ?? false },
           lineNumbers: "on",
           scrollBeyondLastLine: false,
-          wordWrap: "on",
-          fontSize: 13,
+          wordWrap: prefs.wordWrap ?? true ? "on" : "off",
+          fontSize: prefs.fontSize ?? 14,
+          tabSize: prefs.tabSize ?? 2,
           fontFamily:
             "'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace",
           lineHeight: 1.6,

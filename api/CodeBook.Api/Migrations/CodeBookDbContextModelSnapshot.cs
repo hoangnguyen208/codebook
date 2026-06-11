@@ -182,6 +182,20 @@ namespace CodeBook.Api.Migrations
                     b.ToTable("Tags");
                 });
 
+            modelBuilder.Entity("CodeBook.Api.Models.UserPreference", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EditorPreferences")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserPreferences");
+                });
+
             modelBuilder.Entity("CodeBook.Api.Models.Item", b =>
                 {
                     b.HasOne("CodeBook.Api.Models.ItemType", "Type")

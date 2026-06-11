@@ -1,48 +1,24 @@
-import Link from "next/link";
-import { KeyRound } from "lucide-react";
-
 import { auth } from "@/auth";
-import { DeleteAccountDialog } from "@/components/profile/DeleteAccountDialog";
+import { SettingsClient } from "@/components/settings/SettingsClient";
+import { getDisplayName } from "@/lib/auth/user";
+import { getProfileStats } from "@/lib/db/profile";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const session = await auth();
+  const stats = await getProfileStats({ accessToken: session?.accessToken });
+  const name = getDisplayName(session?.user?.name, session?.user?.email);
   const provider = session?.user?.provider;
-  const isDuendeUser = provider === "duende-identity-server6";
-  const identityBaseUrl = process.env.AUTH_DUENDE_ISSUER?.replace(/\/$/, "") ?? "";
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-8">
-      <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-
-      <section className="rounded-3xl border border-border/70 bg-card p-8 shadow-sm">
-        <h2 className="mb-4 text-base font-semibold">Account</h2>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/dashboard"
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-border px-4 text-sm font-medium hover:bg-accent transition-colors"
-          >
-            Back to dashboard
-          </Link>
-          <Link
-            href="/api/auth/signout-all"
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-border px-4 text-sm font-medium hover:bg-accent transition-colors"
-          >
-            Sign out all sessions
-          </Link>
-          {isDuendeUser ? (
-            <Link
-              href={`${identityBaseUrl}/Account/Manage/ChangePassword`}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-medium hover:bg-accent transition-colors"
-            >
-              <KeyRound className="size-4" />
-              Change password
-            </Link>
-          ) : null}
-          <DeleteAccountDialog />
-        </div>
-      </section>
-    </main>
+    <SettingsClient
+      sessionName={name}
+      sessionEmail={session?.user?.email ?? "No email available"}
+      sessionImage={session?.user?.image ?? null}
+      isDuendeUser={provider === "duende-identity-server6"}
+      identityBaseUrl={process.env.AUTH_DUENDE_ISSUER?.replace(/\/$/, "") ?? ""}
+      stats={stats}
+    />
   );
 }

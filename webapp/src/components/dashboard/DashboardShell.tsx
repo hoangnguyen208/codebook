@@ -618,13 +618,6 @@ export function DashboardShell({
                 {isProfileMenuOpen ? (
                   <div className="absolute top-full right-0 z-10 mt-2 min-w-40 rounded-xl border border-border/70 bg-popover p-1 shadow-lg">
                     <Link
-                      href="/profile"
-                      className="block rounded-lg px-3 py-2 text-sm hover:bg-accent"
-                      onClick={() => setIsProfileMenuOpen(false)}
-                    >
-                      Profile
-                    </Link>
-                    <Link
                       href="/settings"
                       className="block rounded-lg px-3 py-2 text-sm hover:bg-accent"
                       onClick={() => setIsProfileMenuOpen(false)}

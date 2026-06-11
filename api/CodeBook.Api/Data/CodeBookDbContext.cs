@@ -19,6 +19,7 @@ public class CodeBookDbContext : DbContext
     public virtual DbSet<Tag> Tags { get; set; } = null!;
     public virtual DbSet<ItemTag> ItemTags { get; set; } = null!;
     public virtual DbSet<ItemCollection> ItemCollections { get; set; } = null!;
+    public virtual DbSet<UserPreference> UserPreferences { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,5 +69,9 @@ public class CodeBookDbContext : DbContext
             .WithMany(t => t.Items)
             .HasForeignKey(it => it.TagId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        // UserPreference (keyed by UserId)
+        modelBuilder.Entity<UserPreference>()
+            .HasKey(p => p.UserId);
     }
 }

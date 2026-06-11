@@ -11,7 +11,7 @@ Add editor preferences section to settings page with auto-save to database.
 - Word wrap toggle (default: on)
 - Minimap toggle (default: off)
 - Theme dropdown: vs-dark, monokai, github-dark (default: vs-dark)
-- Store in JSON column `editorPreferences` on User model
+- Store in JSON column `editorPreferences` on Identity User model
 - Create and run a migration for the database
 - Create API and server action to update preferences
 - Apply settings to Monaco editor component

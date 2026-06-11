@@ -1,6 +1,6 @@
 # Current Feature
 
-Settings Page
+Editor Preferences
 
 ## Status
 
@@ -9,16 +9,22 @@ Completed
 
 ## Goals
 
-- Create `/settings` page (protected route)
-- Add "Settings" link in the sidebar user dropdown
-- Move account actions (delete account, change password) from `/profile` to `/settings`
-- Profile page stripped to user info + usage stats
-- Global font changed to Mona Sans with JetBrains Mono for code
-- All buttons and links globally styled with `cursor-pointer`
+- Font size dropdown (10-24, default 14)
+- Tab size dropdown (2, 4, 8; default 2)
+- Word wrap toggle (default: on)
+- Minimap toggle (default: off)
+- Theme dropdown: vs-dark, monokai, github-dark (default: vs-dark)
+- Auto-save on change with success toast
+- Store in API database (UserPreferences table)
+- API endpoint and server action for read/update
+- EditorPreferencesContext in root layout for global access
+- GitHub-style settings page with sidebar tab navigation
+- 6 new unit tests (101 total)
+- Profile content moved to Settings → Account
 
 ## Notes
 
-Account actions now live on `/settings` (Back to dashboard, Sign out all sessions, Change password for Duende users, Delete account). Profile page is user info + usage stats only.
+EditorPreferencesProvider wraps root layout for global access. Settings page uses tab-based sidebar navigation (Editor / Account). Profile content merged into Account section.
 
 ## History
 
@@ -70,3 +76,4 @@ Account actions now live on `/settings` (Back to dashboard, Sign out all session
 - **Global Search**: Added Cmd+K/Ctrl+K command palette with fuzzy search across items and collections using cmdk; created `SearchProvider` context pre-fetching existing dashboard data; grouped results with type icons and item counts; keyboard navigation with arrow keys and Enter; search input in top bar opens palette on click with ⌘K hint
 - **Pagination**: Added `PagedResult<T>` wrapper to items by-type, items by-collection, and collections endpoints with page/pageSize params and totalCount; created `Pagination` component with numbered page links, prev/next, and ellipsis; applied to `/items/[type]`, `/collections`, and `/collections/[id]` pages; page size set to 5; dashboard limits changed to 6 collections / 10 items per spec; added 7 unit tests (95 total); fixed SSR compatibility by replacing useSearchParams with usePathname
 - **Settings Page**: Added `/settings` page with account actions (sign out all sessions, change password, delete account); moved from `/profile` which now shows only user info + usage stats; added "Settings" link to sidebar user dropdown; protected route via proxy matcher; changed global font to Mona Sans + JetBrains Mono; added `cursor-pointer` globally for all buttons and links
+- **Editor Preferences**: Added `UserPreference` table and `PreferenceController` GET/PUT endpoints; created `EditorPreferencesProvider` context wrapping root layout with auto-save + toast; added editor settings section with font size, tab size, theme dropdowns and word wrap/minimap toggles; applied preferences to Monaco `CodeEditor` component; redesigned settings page with GitHub-style sidebar tab navigation; merged profile content into Account section; added 6 unit tests (101 total)
