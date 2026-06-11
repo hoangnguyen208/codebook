@@ -7,6 +7,7 @@ import {
   getCollectionsForSelect as getCollectionsForSelectFromDb,
   updateCollection as updateCollectionInDb,
   deleteCollection as deleteCollectionInDb,
+  toggleCollectionFavorite as toggleCollectionFavoriteInDb,
 } from "@/lib/db/collections";
 import type { CollectionForSelect } from "@/types/items";
 
@@ -112,6 +113,25 @@ export async function deleteCollection(id: string): Promise<ActionResult<null>> 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to delete collection",
+    };
+  }
+}
+
+export async function toggleFavoriteCollection(
+  collectionId: string,
+): Promise<ActionResult<boolean>> {
+  const session = await auth();
+  if (!session?.accessToken) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  try {
+    const result = await toggleCollectionFavoriteInDb(collectionId, { accessToken: session.accessToken });
+    return { success: true, data: result.isFavorite };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to toggle favorite",
     };
   }
 }

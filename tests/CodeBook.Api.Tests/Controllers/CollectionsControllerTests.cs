@@ -464,4 +464,63 @@ public class CollectionsControllerTests
         Assert.IsType<NotFoundResult>(result);
         Assert.Equal(2, _collections.Count);
     }
+
+    // ── ToggleFavorite tests ──
+
+    [Fact]
+    public async Task ToggleFavorite_TogglesIsFavoriteOnCollection()
+    {
+        var controller = CreateController();
+
+        var result = await controller.ToggleFavorite("col-1");
+
+        Assert.IsType<OkObjectResult>(result);
+
+        var updated = _collections.First(c => c.Id == "col-1");
+        Assert.False(updated.IsFavorite);
+    }
+
+    [Fact]
+    public async Task ToggleFavorite_TogglesBackToTrue()
+    {
+        var controller = CreateController();
+
+        await controller.ToggleFavorite("col-1");
+        var result = await controller.ToggleFavorite("col-1");
+
+        Assert.IsType<OkObjectResult>(result);
+        Assert.True(_collections.First(c => c.Id == "col-1").IsFavorite);
+    }
+
+    [Fact]
+    public async Task ToggleFavorite_ReturnsNotFoundForMissingCollection()
+    {
+        var controller = CreateController();
+
+        var result = await controller.ToggleFavorite("nonexistent");
+
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task ToggleFavorite_ReturnsNotFoundForOtherUsersCollection()
+    {
+        var otherController = CreateController("different-user");
+
+        var result = await otherController.ToggleFavorite("col-1");
+
+        Assert.IsType<NotFoundResult>(result);
+        Assert.True(_collections.First(c => c.Id == "col-1").IsFavorite);
+    }
+
+    [Fact]
+    public async Task ToggleFavorite_FlipsFromFalseToTrue()
+    {
+        var controller = CreateController();
+
+        var result = await controller.ToggleFavorite("col-2");
+
+        Assert.IsType<OkObjectResult>(result);
+        Assert.True(_collections.First(c => c.Id == "col-2").IsFavorite);
+    }
 }

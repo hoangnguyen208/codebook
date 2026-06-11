@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/sheet";
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
-import { updateItem, deleteItem } from "@/actions/items";
+import { updateItem, deleteItem, toggleFavoriteItem } from "@/actions/items";
 import { getCollectionsForSelectAction } from "@/actions/collections";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
@@ -122,8 +122,9 @@ export function ItemDrawerSheet() {
   const router = useRouter();
   const [item, setItem] = useState<ItemDetail | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+                  const [isFavorite, setIsFavorite] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -584,9 +585,17 @@ export function ItemDrawerSheet() {
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      onClick={() => setIsFavorite(!isFavorite)}
+                      onClick={async () => {
+                        setFavoriteLoading(true);
+                        const result = await toggleFavoriteItem(item.id);
+                        if (result.success === true) {
+                          setIsFavorite(result.data);
+                        }
+                        setFavoriteLoading(false);
+                      }}
                       className="rounded-lg p-2 hover:bg-muted transition-colors"
                       aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                      disabled={favoriteLoading}
                     >
                       <Star
                         className={cn(

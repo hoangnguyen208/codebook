@@ -219,6 +219,25 @@ export async function updateCollection(
   };
 }
 
+export async function toggleCollectionFavorite(
+  id: string,
+  options?: FetchOptions,
+): Promise<{ id: string; isFavorite: boolean }> {
+  const response = await fetchWithRetry(
+    `${getApiBaseUrl()}/api/collections/${encodeURIComponent(id)}/favorite`,
+    {
+      method: "PUT",
+      headers: authHeaders(options?.accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to toggle collection favorite "${id}": ${response.status}`);
+  }
+
+  return (await response.json()) as { id: string; isFavorite: boolean };
+}
+
 export async function deleteCollection(
   id: string,
   options?: FetchOptions,

@@ -6,6 +6,7 @@ import {
   createItem as createItemInDb,
   updateItem as updateItemInDb,
   deleteItem as deleteItemInDb,
+  toggleItemFavorite as toggleItemFavoriteInDb,
 } from "@/lib/db/items";
 
 const createItemSchema = z.object({
@@ -140,6 +141,25 @@ export async function deleteItem(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to delete item",
+    };
+  }
+}
+
+export async function toggleFavoriteItem(
+  itemId: string,
+): Promise<ActionResult<boolean>> {
+  const session = await auth();
+  if (!session?.accessToken) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  try {
+    const result = await toggleItemFavoriteInDb(itemId, { accessToken: session.accessToken });
+    return { success: true, data: result.isFavorite };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to toggle favorite",
     };
   }
 }

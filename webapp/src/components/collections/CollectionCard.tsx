@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { ArrowUpRight, Ellipsis, FolderOpen, Pencil, Star, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { deleteCollection } from "@/actions/collections";
+import { deleteCollection, toggleFavoriteCollection } from "@/actions/collections";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
 import type { DashboardRecentCollection } from "@/lib/db/collections";
 
@@ -31,6 +31,8 @@ export function CollectionCard({ collection }: CollectionCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(collection.isFavorite);
 
   const dominantColor = collection.dominantColor || "slate";
   const colorClass = colorClasses[dominantColor] ?? colorClasses.slate;
@@ -68,6 +70,16 @@ export function CollectionCard({ collection }: CollectionCardProps) {
     setMenuOpen((prev) => !prev);
   };
 
+  const handleFavorite = async () => {
+    setFavoriteLoading(true);
+    const result = await toggleFavoriteCollection(collection.id);
+    if (result.success === true) {
+      setIsFavorite(result.data);
+    }
+    setFavoriteLoading(false);
+    closeMenu();
+  };
+
   return (
     <>
       <div className="relative group rounded-3xl border border-border/70 bg-card p-6 shadow-sm hover:border-border transition-colors">
@@ -97,11 +109,13 @@ export function CollectionCard({ collection }: CollectionCardProps) {
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    handleFavorite();
                   }}
+                  disabled={favoriteLoading}
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
                 >
-                  <Star className="size-4" />
-                  Favorite
+                  <Star className={cn("size-4", isFavorite ? "fill-yellow-400 text-yellow-400" : "")} />
+                  {isFavorite ? "Unfavorite" : "Favorite"}
                 </button>
                 {showDeleteConfirm ? (
                   <div className="p-2">

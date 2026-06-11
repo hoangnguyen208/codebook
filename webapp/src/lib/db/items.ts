@@ -312,6 +312,25 @@ export async function getItemById(
   };
 }
 
+export async function toggleItemFavorite(
+  id: string,
+  options?: FetchOptions,
+): Promise<{ id: string; isFavorite: boolean }> {
+  const response = await fetchWithRetry(
+    `${getApiBaseUrl()}/api/items/${encodeURIComponent(id)}/favorite`,
+    {
+      method: "PUT",
+      headers: authHeaders(options?.accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to toggle item favorite "${id}": ${response.status}`);
+  }
+
+  return (await response.json()) as { id: string; isFavorite: boolean };
+}
+
 export async function deleteItem(
   id: string,
   options?: FetchOptions,

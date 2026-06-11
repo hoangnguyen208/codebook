@@ -1,6 +1,6 @@
 # Current Feature
 
-Editor Preferences
+Favorites Page
 
 ## Status
 
@@ -9,22 +9,19 @@ Completed
 
 ## Goals
 
-- Font size dropdown (10-24, default 14)
-- Tab size dropdown (2, 4, 8; default 2)
-- Word wrap toggle (default: on)
-- Minimap toggle (default: off)
-- Theme dropdown: vs-dark, monokai, github-dark (default: vs-dark)
-- Auto-save on change with success toast
-- Store in API database (UserPreferences table)
-- API endpoint and server action for read/update
-- EditorPreferencesContext in root layout for global access
-- GitHub-style settings page with sidebar tab navigation
-- 6 new unit tests (101 total)
-- Profile content moved to Settings → Account
+- Add star icon button to TopBar linking to /favorites
+- Create /favorites route with protection
+- Fetch all user favorited items and collections
+- Compact list view (VS Code/terminal style, not cards)
+- Each row: type icon, title, type badge, date added
+- Separate sections for items and collections with counts
+- Click item opens ItemDrawer, click collection navigates to /collections/[id]
+- Empty state when no favorites
+- Sort by most recently favorited (updatedAt)
 
 ## Notes
 
-EditorPreferencesProvider wraps root layout for global access. Settings page uses tab-based sidebar navigation (Editor / Account). Profile content merged into Account section.
+Compact monospace list with minimal padding. Separate sections for Items and Collections. Wire up the no-op favorite toggle buttons in existing components.
 
 ## History
 
@@ -77,3 +74,4 @@ EditorPreferencesProvider wraps root layout for global access. Settings page use
 - **Pagination**: Added `PagedResult<T>` wrapper to items by-type, items by-collection, and collections endpoints with page/pageSize params and totalCount; created `Pagination` component with numbered page links, prev/next, and ellipsis; applied to `/items/[type]`, `/collections`, and `/collections/[id]` pages; page size set to 5; dashboard limits changed to 6 collections / 10 items per spec; added 7 unit tests (95 total); fixed SSR compatibility by replacing useSearchParams with usePathname
 - **Settings Page**: Added `/settings` page with account actions (sign out all sessions, change password, delete account); moved from `/profile` which now shows only user info + usage stats; added "Settings" link to sidebar user dropdown; protected route via proxy matcher; changed global font to Mona Sans + JetBrains Mono; added `cursor-pointer` globally for all buttons and links
 - **Editor Preferences**: Added `UserPreference` table and `PreferenceController` GET/PUT endpoints; created `EditorPreferencesProvider` context wrapping root layout with auto-save + toast; added editor settings section with font size, tab size, theme dropdowns and word wrap/minimap toggles; applied preferences to Monaco `CodeEditor` component; redesigned settings page with GitHub-style sidebar tab navigation; merged profile content into Account section; added 6 unit tests (101 total)
+- **Favorites Page**: Created feature branch, implemented backend favorite toggle endpoints, GET /api/dashboard/favorites endpoint, frontend fetch wrappers and server actions, /favorites route with compact list view, and wired up favorite buttons; added 12 unit tests (113 total)

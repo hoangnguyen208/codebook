@@ -115,6 +115,23 @@ public class CollectionsController : ControllerBase
         });
     }
 
+    [HttpPut("{id}/favorite")]
+    public async Task<IActionResult> ToggleFavorite(string id)
+    {
+        var userId = GetUserId();
+        var collection = await _dbContext.Collections
+            .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+        if (collection == null)
+            return NotFound();
+
+        collection.IsFavorite = !collection.IsFavorite;
+        collection.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { id = collection.Id, isFavorite = collection.IsFavorite });
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {

@@ -33,7 +33,7 @@ public class ItemsControllerTests
 
         _collections =
         [
-            new() { Id = "col-1", Name = "React Snippets", UserId = TestUserId }
+            new() { Id = "col-1", Name = "React Snippets", UserId = TestUserId, IsFavorite = true }
         ];
 
         _tags =
@@ -1086,5 +1086,126 @@ public class ItemsControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var items = Assert.IsAssignableFrom<IEnumerable<RecentDashboardItemDto>>(okResult.Value);
         Assert.Equal(3, items.Count());
+    }
+
+    // ── ToggleFavorite tests ──
+
+    [Fact]
+    public async Task ToggleFavorite_TogglesIsFavoriteOnItem()
+    {
+        var controller = CreateController();
+
+        var result = await controller.ToggleFavorite("item-1");
+
+        Assert.IsType<OkObjectResult>(result);
+
+        var updated = _items.First(i => i.Id == "item-1");
+        Assert.False(updated.IsFavorite);
+    }
+
+    [Fact]
+    public async Task ToggleFavorite_ReturnsNotFoundForMissingItem()
+    {
+        var controller = CreateController();
+
+        var result = await controller.ToggleFavorite("nonexistent");
+
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task ToggleFavorite_ReturnsNotFoundForOtherUsersItem()
+    {
+        var controller = new ItemsController(_dbContext)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [
+                        new Claim("sub", "other-user")
+                    ]))
+                }
+            }
+        };
+
+        var result = await controller.ToggleFavorite("item-1");
+
+        Assert.IsType<NotFoundResult>(result);
+        Assert.True(_items.First(i => i.Id == "item-1").IsFavorite);
+    }
+
+    [Fact]
+    public async Task ToggleFavorite_TogglesBackToTrue()
+    {
+        var controller = CreateController();
+
+        await controller.ToggleFavorite("item-1");
+        var result = await controller.ToggleFavorite("item-1");
+
+        Assert.IsType<OkObjectResult>(result);
+        Assert.True(_items.First(i => i.Id == "item-1").IsFavorite);
+    }
+
+    // ── GetFavorites tests ──
+
+    [Fact]
+    public async Task GetFavorites_ReturnsFavoritedItemsAndCollections()
+    {
+        _itemCollections.Add(new ItemCollection { ItemId = "item-1", CollectionId = "col-1", Item = _items[0], Collection = _collections[0] });
+        _items[0].ItemCollections = _itemCollections.Where(ic => ic.ItemId == "item-1").ToList();
+
+        var controller = CreateController();
+
+        var result = await controller.GetFavorites();
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var dto = Assert.IsType<FavoritesResponseDto>(okResult.Value);
+        Assert.Single(dto.Items);
+        Assert.Single(dto.Collections);
+        Assert.Equal("item-1", dto.Items[0].Id);
+        Assert.Contains(dto.Items[0].Tags, t => t == "typescript");
+        Assert.Equal("col-1", dto.Collections[0].Id);
+    }
+
+    [Fact]
+    public async Task GetFavorites_ReturnsOnlyUserFavorites()
+    {
+        _items.Add(new Item
+        {
+            Id = "item-other", Title = "Other user item",
+            ContentType = "text", UserId = "other-user",
+            TypeId = "type-snippet", Type = _itemTypes[0],
+            IsFavorite = true, IsPinned = false,
+            UpdatedAt = new DateTime(2026, 6, 10)
+        });
+
+        var controller = CreateController();
+
+        var result = await controller.GetFavorites();
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var dto = Assert.IsType<FavoritesResponseDto>(okResult.Value);
+        Assert.Single(dto.Items);
+        Assert.Equal("item-1", dto.Items[0].Id);
+    }
+
+    [Fact]
+    public async Task GetFavorites_ReturnsEmptyWhenNothingFavorited()
+    {
+        var item1 = _items.First(i => i.Id == "item-1");
+        item1.IsFavorite = false;
+        var col1 = _collections.First(c => c.Id == "col-1");
+        col1.IsFavorite = false;
+
+        var controller = CreateController();
+
+        var result = await controller.GetFavorites();
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var dto = Assert.IsType<FavoritesResponseDto>(okResult.Value);
+        Assert.Empty(dto.Items);
+        Assert.Empty(dto.Collections);
     }
 }

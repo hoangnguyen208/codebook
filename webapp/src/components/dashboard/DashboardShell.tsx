@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowUpRight,
-  Bookmark,
   ChevronUp,
   Code2,
   File,
@@ -83,6 +82,7 @@ type DashboardStat = {
   value: number;
   description: string;
   icon: LucideIcon;
+  iconClassName?: string;
 };
 
 type DashboardRecentCollection = {
@@ -507,13 +507,15 @@ export function DashboardShell({
         label: "Favorite items",
         value: favoriteItemCount,
         description: "Starred resources you revisit often",
-        icon: Bookmark,
+        icon: Star,
+        iconClassName: "fill-yellow-400 text-yellow-400",
       },
       {
         label: "Favorite collections",
         value: favoriteCollections.length,
         description: "Pinned collection shortcuts in the sidebar",
         icon: Star,
+        iconClassName: "fill-yellow-400 text-yellow-400",
       },
     ],
     [data.collections.length, data.items.length, favoriteCollections.length, favoriteItemCount],
@@ -582,6 +584,20 @@ export function DashboardShell({
                   Ctrl K
                 </span>
               </div>
+
+              <Link
+                href="/favorites"
+                className="h-11 rounded-2xl border border-border/70 bg-card px-3 inline-flex items-center gap-2 text-sm hover:bg-accent transition-colors"
+              >
+                <Star className={cn(
+                  "size-4",
+                  data.items.some((i) => i.isFavorite) ||
+                  data.collections.some((c) => c.isFavorite)
+                    ? "fill-yellow-400 text-yellow-400"
+                    : ""
+                )} />
+                <span className="hidden sm:inline">Favorites</span>
+              </Link>
 
               <Button size="lg" className="h-11 rounded-2xl px-4" onClick={() => setCreateCollectionDialogOpen(true)}>
                 <FolderOpen className="size-4" />
@@ -681,8 +697,8 @@ export function DashboardShell({
                           {stat.value}
                         </p>
                       </div>
-                      <div className="flex size-11 items-center justify-center rounded-2xl border border-border/70 bg-background/70 text-muted-foreground">
-                        <Icon className="size-5" />
+                      <div className="flex size-11 items-center justify-center rounded-2xl border border-border/70 bg-background/70">
+                        <Icon className={cn("size-5", stat.iconClassName ?? "text-muted-foreground")} />
                       </div>
                     </div>
                     <p className="mt-4 text-sm leading-6 text-muted-foreground">

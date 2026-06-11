@@ -287,6 +287,119 @@ public class ItemsController : ControllerBase
         };
     }
 
+    [HttpPut("api/items/{id}/favorite")]
+    public async Task<IActionResult> ToggleFavorite(string id)
+    {
+        var userId = GetUserId();
+        var item = await _dbContext.Items
+            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
+
+        if (item == null)
+        {
+            return NotFound();
+        }
+
+        item.IsFavorite = !item.IsFavorite;
+        item.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { id = item.Id, isFavorite = item.IsFavorite });
+    }
+
+    [HttpGet("api/dashboard/favorites")]
+    public async Task<ActionResult<FavoritesResponseDto>> GetFavorites()
+    {
+        var userId = GetUserId();
+
+        var favoriteItems = await _dbContext.Items
+            .AsNoTracking()
+            .Where(item => item.UserId == userId && item.IsFavorite)
+            .Include(item => item.Tags)
+                .ThenInclude(itemTag => itemTag.Tag)
+            .Include(item => item.Type)
+            .Include(item => item.ItemCollections)
+            .OrderByDescending(item => item.UpdatedAt)
+            .Take(200)
+            .ToListAsync();
+
+        var favoriteCollections = await _dbContext.Collections
+            .AsNoTracking()
+            .Where(c => c.UserId == userId && c.IsFavorite)
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.Description,
+                ItemCount = c.ItemCollections.Count,
+                LastUpdatedAt = c.ItemCollections
+                    .Select(ic => (DateTime?)ic.Item.UpdatedAt)
+                    .Max() ?? c.UpdatedAt,
+                DominantColor = c.ItemCollections
+                    .Select(ic => ic.Item.Type.Name)
+                    .FirstOrDefault() ?? "",
+                c.IsFavorite,
+                TypeIcons = c.ItemCollections
+                    .Select(ic => ic.Item.Type.Icon)
+                    .Where(icon => !string.IsNullOrWhiteSpace(icon))
+                    .Distinct()
+                    .ToList()
+            })
+            .OrderByDescending(c => c.LastUpdatedAt)
+            .Take(200)
+            .ToListAsync();
+
+        var favoriteCollectionDtos = favoriteCollections.Select(c => new RecentDashboardCollectionDto
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Description = c.Description,
+            ItemCount = c.ItemCount,
+            LastUpdatedAt = c.LastUpdatedAt,
+            DominantColor = MapTypeColorToken(c.DominantColor, null),
+            IsFavorite = c.IsFavorite,
+            TypeIcons = c.TypeIcons.Cast<string>().ToList()
+        }).ToList();
+
+        return Ok(new FavoritesResponseDto
+        {
+            Items = favoriteItems.Select(ToRecentDto).ToList(),
+            Collections = favoriteCollectionDtos
+        });
+    }
+
+    private static string MapTypeColorToken(string? typeName, string? typeColor)
+    {
+        var byName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["snippet"] = "blue",
+            ["prompt"] = "purple",
+            ["command"] = "orange",
+            ["note"] = "yellow",
+            ["file"] = "slate",
+            ["image"] = "pink",
+            ["link"] = "emerald"
+        };
+
+        if (typeName != null && byName.TryGetValue(typeName, out var namedColor))
+            return namedColor;
+
+        var byHex = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["#3b82f6"] = "blue",
+            ["#8b5cf6"] = "purple",
+            ["#f97316"] = "orange",
+            ["#fde047"] = "yellow",
+            ["#6b7280"] = "slate",
+            ["#ec4899"] = "pink",
+            ["#10b981"] = "emerald"
+        };
+
+        if (typeColor != null && byHex.TryGetValue(typeColor, out var hexColor))
+            return hexColor;
+
+        return "slate";
+    }
+
     [HttpGet("api/dashboard/items/recent")]
     public async Task<ActionResult<IEnumerable<RecentDashboardItemDto>>> GetRecentItems(
         [FromQuery] int limit = 10)
@@ -507,6 +620,12 @@ public class UpdateItemRequest
     public string? ContentType { get; set; }
     public List<string> Tags { get; set; } = [];
     public List<string> CollectionIds { get; set; } = [];
+}
+
+public class FavoritesResponseDto
+{
+    public List<RecentDashboardItemDto> Items { get; set; } = [];
+    public List<RecentDashboardCollectionDto> Collections { get; set; } = [];
 }
 
 public class PagedResult<T>
