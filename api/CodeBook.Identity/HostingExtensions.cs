@@ -107,6 +107,22 @@ internal static class HostingExtensions
             };
         });
 
+        var githubClientId = builder.Configuration["GitHub:ClientId"];
+        var githubClientSecret = builder.Configuration["GitHub:ClientSecret"];
+        if (!string.IsNullOrWhiteSpace(githubClientId) && !string.IsNullOrWhiteSpace(githubClientSecret))
+        {
+            builder.Services.AddAuthentication()
+                .AddGitHub(options =>
+                {
+                    options.ClientId = githubClientId;
+                    options.ClientSecret = githubClientSecret;
+                    options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
+                    options.SaveTokens = true;
+                    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+                    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.None;
+                });
+        }
+
         builder.Services
             .AddIdentityServer(options =>
             {

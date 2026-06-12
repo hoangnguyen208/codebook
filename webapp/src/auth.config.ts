@@ -1,6 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
 import DuendeIdentityServer6 from "next-auth/providers/duende-identity-server6";
-import GitHub from "next-auth/providers/github";
 
 function getStringClaim(profile: Record<string, unknown>, key: string) {
   const value = profile[key];
@@ -119,10 +118,6 @@ async function fetchDuendeUserInfo(accessToken?: string) {
   }
 }
 
-const hasGitHubProviderConfig = Boolean(
-  process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET,
-);
-
 const authConfig: NextAuthConfig = {
   providers: [
     DuendeIdentityServer6({
@@ -150,7 +145,6 @@ const authConfig: NextAuthConfig = {
         };
       },
     }),
-    ...(hasGitHubProviderConfig ? [GitHub] : []),
   ],
   callbacks: {
     async jwt({ token, account, profile }) {
