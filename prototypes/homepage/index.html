@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeBook — Your Developer Knowledge Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#3b82f6"/>
+          <text x="14" y="20" text-anchor="middle" fill="white" font-family="monospace" font-weight="bold" font-size="16">&lt;/&gt;</text>
+        </svg>
+        <span class="logo-text">CodeBook</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/auth/login" class="btn btn-ghost">Sign In</a>
+        <a href="/auth/register" class="btn btn-primary">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Stop Losing Your <span class="gradient-text">Developer Knowledge</span></h1>
+      <p class="hero-sub">Snippets in VS Code, prompts in Notion, commands in terminal, files everywhere. <strong>CodeBook</strong> brings it all together in one place.</p>
+      <div class="hero-cta">
+        <a href="/auth/register" class="btn btn-primary btn-lg">Get Started Free</a>
+        <a href="#features" class="btn btn-ghost btn-lg">See Features</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <!-- Chaos Container -->
+      <div class="hero-box">
+        <div class="hero-box-label">Your knowledge today...</div>
+        <div class="chaos-container" id="chaosContainer">
+          <div class="chaos-icon" data-icon="notion">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.46 4.46C4.94 3.85 5.5 3.8 6.2 4.36L17.13 12.3C17.83 12.8 17.67 13.34 16.53 13.91L6.39 18.58C5.28 19.1 4.57 18.83 4.23 18.08L2.2 13.7C1.86 12.95 2.35 12.4 3.66 12.03L14.8 8.27C16.1 7.84 16.1 7.33 14.8 6.83L9.14 4.93C7.99 4.55 6.67 4.93 6.2 5.4L4.46 4.46Z"/></svg>
+          </div>
+          <div class="chaos-icon" data-icon="github">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          </div>
+          <div class="chaos-icon" data-icon="slack">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5.04 15.16a2.52 2.52 0 0 1-2.52 2.52 2.52 2.52 0 0 1-2.52-2.52 2.52 2.52 0 0 1 2.52-2.52h2.52v2.52zm1.27 0a2.52 2.52 0 0 1 2.52-2.52 2.52 2.52 0 0 1 2.52 2.52v6.32a2.52 2.52 0 0 1-2.52 2.52 2.52 2.52 0 0 1-2.52-2.52v-6.32zm2.52-10.12a2.52 2.52 0 0 1-2.52-2.52 2.52 2.52 0 0 1 2.52-2.52 2.52 2.52 0 0 1 2.52 2.52v2.52H8.83zm0 1.27a2.52 2.52 0 0 1 2.52 2.52 2.52 2.52 0 0 1-2.52 2.52H2.52A2.52 2.52 0 0 1 0 8.83a2.52 2.52 0 0 1 2.52-2.52h6.31zm10.13 2.52a2.52 2.52 0 0 1 2.52-2.52 2.52 2.52 0 0 1 2.52 2.52 2.52 2.52 0 0 1-2.52 2.52h-2.52V8.83zm-1.27 0a2.52 2.52 0 0 1-2.52 2.52 2.52 2.52 0 0 1-2.52-2.52V2.52A2.52 2.52 0 0 1 15.17 0a2.52 2.52 0 0 1 2.52 2.52v6.31zm-2.52 10.13a2.52 2.52 0 0 1 2.52 2.52 2.52 2.52 0 0 1-2.52 2.52 2.52 2.52 0 0 1-2.52-2.52v-2.52h2.52zm0-1.27a2.52 2.52 0 0 1-2.52-2.52 2.52 2.52 0 0 1 2.52-2.52h6.32a2.52 2.52 0 0 1 2.52 2.52 2.52 2.52 0 0 1-2.52 2.52h-6.32z"/></svg>
+          </div>
+          <div class="chaos-icon" data-icon="vscode">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 1.3l-9.1 6.97L2.64 4.1 0 6.03v11.93l2.64 1.93 5.76-4.17 9.1 6.98L24 21V3l-6.5-1.7zm-3.52 10.7L16.4 12l-2.42 1.7V12zm-5.52 0L10.88 12l2.42 1.7V12z"/></svg>
+          </div>
+          <div class="chaos-icon" data-icon="browser">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <div class="chaos-icon" data-icon="terminal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          </div>
+          <div class="chaos-icon" data-icon="file">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="chaos-icon" data-icon="bookmark">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transform Arrow -->
+      <div class="transform-arrow">
+        <div class="arrow-pulse">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <line x1="4" y1="24" x2="36" y2="24" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+            <polyline points="26,14 38,24 26,34" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="arrow-label">Organize</span>
+      </div>
+
+      <!-- Dashboard Preview -->
+      <div class="hero-box">
+        <div class="hero-box-label">...with CodeBook</div>
+        <div class="dashboard-preview">
+          <div class="dp-sidebar">
+            <div class="dp-sidebar-item active"></div>
+            <div class="dp-sidebar-item"></div>
+            <div class="dp-sidebar-item"></div>
+            <div class="dp-sidebar-item"></div>
+            <div class="dp-sidebar-item"></div>
+          </div>
+          <div class="dp-main">
+            <div class="dp-search"></div>
+            <div class="dp-stats">
+              <div class="dp-stat"><span class="dp-stat-val">12</span> Snippets</div>
+              <div class="dp-stat"><span class="dp-stat-val">5</span> Collections</div>
+              <div class="dp-stat accent-amber"><span class="dp-stat-val">8</span> Prompts</div>
+              <div class="dp-stat accent-green"><span class="dp-stat-val">3</span> Notes</div>
+              <div class="dp-stat accent-cyan"><span class="dp-stat-val">2</span> Commands</div>
+            </div>
+            <div class="dp-grid">
+              <div class="dp-card" style="--accent: #3b82f6"><div class="dp-card-bar"></div><div class="dp-card-line w-70"></div><div class="dp-card-line w-40"></div></div>
+              <div class="dp-card" style="--accent: #f59e0b"><div class="dp-card-bar"></div><div class="dp-card-line w-60"></div><div class="dp-card-line w-50"></div></div>
+              <div class="dp-card" style="--accent: #22c55e"><div class="dp-card-bar"></div><div class="dp-card-line w-80"></div><div class="dp-card-line w-30"></div></div>
+              <div class="dp-card" style="--accent: #06b6d4"><div class="dp-card-bar"></div><div class="dp-card-line w-50"></div><div class="dp-card-line w-60"></div></div>
+              <div class="dp-card" style="--accent: #ec4899"><div class="dp-card-bar"></div><div class="dp-card-line w-55"></div><div class="dp-card-line w-45"></div></div>
+              <div class="dp-card" style="--accent: #6366f1"><div class="dp-card-bar"></div><div class="dp-card-line w-65"></div><div class="dp-card-line w-35"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <h2>Everything You Need, <span class="gradient-text">All in One Place</span></h2>
+      <p>CodeBook organizes every type of knowledge a developer creates.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card" style="--accent: #3b82f6">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <h3>Code Snippets</h3>
+        <p>Save and organize code snippets with syntax highlighting and language detection.</p>
+      </div>
+      <div class="feature-card" style="--accent: #f59e0b">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3>AI Prompts</h3>
+        <p>Keep your best AI prompts handy. Tag, search, and reuse when you need them.</p>
+      </div>
+      <div class="feature-card" style="--accent: #6366f1">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h3>Instant Search</h3>
+        <p>Cmd+K to find anything in your library. Fuzzy search across all types and content.</p>
+      </div>
+      <div class="feature-card" style="--accent: #06b6d4">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </div>
+        <h3>Commands</h3>
+        <p>Never lose that magical one-liner again. Store commands with copy-to-clipboard.</p>
+      </div>
+      <div class="feature-card" style="--accent: #64748b">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <h3>Files & Docs</h3>
+        <p>Upload reference files, configs, and documents. Download when you need them.</p>
+      </div>
+      <div class="feature-card" style="--accent: #22c55e">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"/></svg>
+        </div>
+        <h3>Collections</h3>
+        <p>Group related items into collections. Share with your team or keep private.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Section -->
+  <section class="ai-section">
+    <div class="ai-grid">
+      <div class="ai-content">
+        <span class="badge badge-pro">Pro Feature</span>
+        <h2>Supercharge with <span class="gradient-text">AI</span></h2>
+        <p class="ai-desc">Let AI handle the tedious parts of knowledge management so you can focus on building.</p>
+        <ul class="ai-checklist">
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#22c55e"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Auto-generate tags from content
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#22c55e"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Summarize long notes instantly
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#22c55e"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Suggest related items as you browse
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#22c55e"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Semantic search across your library
+          </li>
+        </ul>
+      </div>
+      <div class="ai-demo">
+        <div class="editor-mockup">
+          <div class="editor-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="editor-body">
+            <div class="editor-line">
+              <span class="editor-json-key">"tags"</span>: [<span class="editor-string">"react"</span>, <span class="editor-string">"hooks"</span>, <span class="editor-string">"state-management"</span>]
+            </div>
+            <div class="editor-glow"></div>
+            <div class="editor-ai-badge">AI Generated Tags</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing" id="pricing">
+    <div class="section-header">
+      <h2>Simple <span class="gradient-text">Pricing</span></h2>
+      <p>Start free. Upgrade when you need more power.</p>
+    </div>
+    <div class="pricing-toggle">
+      <span class="toggle-label" id="monthlyLabel">Monthly</span>
+      <button class="toggle-switch" id="pricingToggle" aria-label="Toggle billing period">
+        <span class="toggle-knob"></span>
+      </button>
+      <span class="toggle-label" id="yearlyLabel">Yearly <span class="toggle-save">Save 25%</span></span>
+    </div>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <h3>Free</h3>
+        <div class="pricing-price">
+          <span class="price">$0</span>
+          <span class="price-period">/forever</span>
+        </div>
+        <ul class="pricing-features">
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> Up to 50 items</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> 3 collections</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> Basic search</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> All item types supported</li>
+        </ul>
+        <a href="/auth/register" class="btn btn-outline btn-block">Get Started</a>
+      </div>
+      <div class="pricing-card pricing-card-featured">
+        <span class="pricing-badge">Most Popular</span>
+        <h3>Pro</h3>
+        <div class="pricing-price">
+          <span class="price" id="proPrice">$8</span>
+          <span class="price-period" id="proPeriod">/month</span>
+        </div>
+        <ul class="pricing-features">
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> Unlimited items</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> Unlimited collections</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> AI auto-tagging</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> AI summaries</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> Semantic search</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="#22c55e"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/></svg> File uploads up to 50MB</li>
+        </ul>
+        <a href="/auth/register?plan=pro" class="btn btn-primary btn-block">Get Started</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <h2>Ready to Organize Your Knowledge?</h2>
+    <p>Join developers who stopped losing their best ideas and snippets.</p>
+    <a href="/auth/register" class="btn btn-primary btn-lg">Get Started Free</a>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <a href="#" class="nav-logo">
+          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="6" fill="#3b82f6"/>
+            <text x="14" y="20" text-anchor="middle" fill="white" font-family="monospace" font-weight="bold" font-size="16">&lt;/&gt;</text>
+          </svg>
+          <span class="logo-text">CodeBook</span>
+        </a>
+        <p class="footer-tagline">Your developer knowledge, organized.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#">Changelog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="#">Documentation</a>
+        <a href="#">API</a>
+        <a href="#">Blog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; <span id="copyrightYear">2025</span> CodeBook. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

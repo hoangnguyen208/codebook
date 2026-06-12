@@ -1,6 +1,6 @@
 # Current Feature
 
-Pinned Items
+Homepage Mockup
 
 ## Status
 
@@ -9,20 +9,20 @@ Completed
 
 ## Goals
 
-- Create toggleItemPin server action
-- Make Pin button in ItemDrawer clickable (exists but no onClick)
-- Make Pin icon on ItemCard clickable toggle
-- Make Pin icon on dashboard pinned cards clickable toggle
-- Optimistic UI updates for instant feedback
-- Toast notification on success/error
-- Pinned items sort to top of listings
-- Follow Favorite Button pattern
-- Items only (not collections)
-- Move Star/Pin/Copy buttons to top-right on ItemCard
+- Create `prototypes/homepage/` with `index.html`, `styles.css`, `script.js`
+- Hero section with chaos-to-order visual: floating icons, transform arrow, dashboard preview
+- Navigation with fixed top nav, Features/Pricing links, Sign In/Get Started buttons
+- Features grid with 6 cards using item type accent colors
+- AI section with Pro Feature badge, checklist, and code editor mockup
+- Pricing section with Free vs Pro ($8/mo), yearly toggle ($72), Most Popular badge
+- CTA section and Footer with copyright
+- JavaScript chaos icon animation (requestAnimationFrame, wall bouncing, mouse repel)
+- CSS pulse arrow animation, scroll fade-in, navbar scroll opacity
+- Responsive: mobile stacks chaos/arrow/dashboard vertically, arrow rotates 90°
 
 ## Notes
 
-ItemDrawer already renders a Pin button with no handler; needs `toggleItemPin` server action wiring and `isPinned` prop. Follow the existing Favorite Button pattern in `actions/favorites.ts`. Pin icon on dashboard pinned items cards was static and non-highlighted; made it clickable with filled blue styling.
+Dark theme marketing homepage for CodeBook. Color palette uses item type colors (Blue/Amber/Cyan/Green/Slate/Pink/Indigo). Chaos icons include Notion, GitHub, Slack, VS Code logos. Pure HTML/CSS/JS prototype — no framework dependencies.
 
 ## History
 
@@ -77,4 +77,4 @@ ItemDrawer already renders a Pin button with no handler; needs `toggleItemPin` s
 - **Editor Preferences**: Added `UserPreference` table and `PreferenceController` GET/PUT endpoints; created `EditorPreferencesProvider` context wrapping root layout with auto-save + toast; added editor settings section with font size, tab size, theme dropdowns and word wrap/minimap toggles; applied preferences to Monaco `CodeEditor` component; redesigned settings page with GitHub-style sidebar tab navigation; merged profile content into Account section; added 6 unit tests (101 total)
 - **Favorites Page**: Created feature branch, implemented backend favorite toggle endpoints, GET /api/dashboard/favorites endpoint, frontend fetch wrappers and server actions, /favorites route with compact list view, and wired up favorite buttons; added 12 unit tests (113 total)
 - **Favorite Button Wiring**: Wired up CollectionHeaderActions no-op star, added favorite toggle to ItemCard/ImageCard/FileRow, added `router.refresh()` for cross-page propagation, fixed `useState` prop sync via `useEffect`, removed `UpdatedAt` mutation from backend favorite endpoints to preserve list ordering, added per-section client-side sorting (Name/Date/Type) to /favorites page
-- **Pinned Items**: Implemented `PUT /api/items/{id}/pin` endpoint + `toggleItemPin` DB fetch + `togglePinItem` server action; wired Pin button in ItemDrawerSheet with optimistic UI, toast, and router.refresh; applied pinned-first sorting to recent, by-type, and by-collection endpoints; added 4 unit tests (117 total)
+- **Homepage Mockup**: Created feature branch, built `prototypes/homepage/` with dark-theme marketing page (index.html, styles.css, script.js) featuring hero chaos-to-order animation, 6-card features grid, AI section with editor mockup, pricing with yearly toggle, CTA, and footer
