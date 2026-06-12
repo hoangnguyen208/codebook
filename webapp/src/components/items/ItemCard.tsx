@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Check, Code2, Copy, File, FileImage, FileText, Link2, Pin, Sparkles, Star, Terminal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { DashboardItem, DashboardItemType } from "@/types/items";
-import { toggleFavoriteItem } from "@/actions/items";
+import { toggleFavoriteItem, togglePinItem } from "@/actions/items";
 
 const itemTypeIconMap: Record<DashboardItemType["icon"], LucideIcon> = {
   code: Code2,
@@ -38,12 +39,15 @@ export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
   const [copied, setCopied] = useState(false);
   const [isFavorite, setIsFavorite] = useState(item.isFavorite);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isPinned, setIsPinned] = useState(item.isPinned);
+  const [pinLoading, setPinLoading] = useState(false);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sync when router.refresh updates props */
     setIsFavorite(item.isFavorite);
+    setIsPinned(item.isPinned);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [item.isFavorite]);
+  }, [item.isFavorite, item.isPinned]);
 
   function handleCopy(e: React.MouseEvent) {
     e.stopPropagation();
@@ -84,38 +88,7 @@ export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
         >
           <TypeIcon className="size-5" />
         </div>
-        {item.isPinned ? (
-          <Pin className="size-4 text-muted-foreground" />
-        ) : null}
-      </div>
-
-      <div className="mt-4">
-        <p className="text-sm font-medium text-muted-foreground">
-          {itemType.label}
-        </p>
-        <h3 className="mt-1 text-lg font-semibold">{item.title}</h3>
-        {item.description ? (
-          <p className="mt-2 text-sm leading-6 text-muted-foreground line-clamp-3">
-            {item.description}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-2">
-          {item.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium text-muted-foreground"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {item.updatedAt}
-          </span>
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={(e) => {
@@ -142,6 +115,33 @@ export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
           </button>
           <button
             type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPinLoading(true);
+              togglePinItem(item.id).then((result) => {
+                if (result.success === true) {
+                  setIsPinned(result.data);
+                  router.refresh();
+                  toast.success(result.data ? "Item pinned" : "Item unpinned");
+                } else {
+                  toast.error(result.error ?? "Failed to toggle pin");
+                }
+                setPinLoading(false);
+              });
+            }}
+            disabled={pinLoading}
+            className="rounded-lg p-1 hover:bg-muted transition-colors"
+            aria-label={isPinned ? "Unpin" : "Pin"}
+          >
+            <Pin
+              className={cn(
+                "size-4",
+                isPinned ? "fill-sky-400 text-sky-400" : "text-muted-foreground",
+              )}
+            />
+          </button>
+          <button
+            type="button"
             onClick={handleCopy}
             className="rounded-lg p-1 hover:bg-muted transition-colors"
             aria-label="Copy title"
@@ -153,6 +153,34 @@ export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
             )}
           </button>
         </div>
+      </div>
+
+      <div className="mt-4">
+        <p className="text-sm font-medium text-muted-foreground">
+          {itemType.label}
+        </p>
+        <h3 className="mt-1 text-lg font-semibold">{item.title}</h3>
+        {item.description ? (
+          <p className="mt-2 text-sm leading-6 text-muted-foreground line-clamp-3">
+            {item.description}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
+          {item.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium text-muted-foreground"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {item.updatedAt}
+        </span>
       </div>
     </article>
   );

@@ -167,7 +167,7 @@ public class ItemsControllerTests
     // ── Dashboard / GET tests ──
 
     [Fact]
-    public async Task GetRecentItems_ReturnsOrderedByUpdatedAtDesc()
+    public async Task GetRecentItems_ReturnsPinnedFirstThenByUpdatedAtDesc()
     {
         var controller = CreateController();
 
@@ -176,7 +176,7 @@ public class ItemsControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var items = Assert.IsAssignableFrom<IEnumerable<RecentDashboardItemDto>>(okResult.Value);
         Assert.Equal(3, items.Count());
-        Assert.Equal("Git log", items.First().Title);
+        Assert.Equal("Map function", items.First().Title);
     }
 
     [Fact]
@@ -992,7 +992,7 @@ public class ItemsControllerTests
     }
 
     [Fact]
-    public async Task GetItemsByCollection_OrdersByUpdatedAtDesc()
+    public async Task GetItemsByCollection_OrdersPinnedFirst()
     {
         _itemCollections.Add(new ItemCollection { ItemId = "item-1", CollectionId = "col-1", Item = _items[0], Collection = _collections[0] });
         _itemCollections.Add(new ItemCollection { ItemId = "item-2", CollectionId = "col-1", Item = _items[1], Collection = _collections[0] });
@@ -1007,7 +1007,7 @@ public class ItemsControllerTests
         var paged = Assert.IsType<PagedResult<RecentDashboardItemDto>>(okResult.Value);
         var items = paged.Items;
         Assert.Equal(2, items.Count);
-        Assert.True(items[0].UpdatedAt >= items[1].UpdatedAt);
+        Assert.Equal("Map function", items[0].Title);
     }
 
     // ── Pagination metadata tests ──
@@ -1146,6 +1146,66 @@ public class ItemsControllerTests
 
         Assert.IsType<OkObjectResult>(result);
         Assert.True(_items.First(i => i.Id == "item-1").IsFavorite);
+    }
+
+    // ── TogglePin tests ──
+
+    [Fact]
+    public async Task TogglePin_TogglesIsPinnedOnItem()
+    {
+        var controller = CreateController();
+
+        var result = await controller.TogglePin("item-1");
+
+        Assert.IsType<OkObjectResult>(result);
+
+        var updated = _items.First(i => i.Id == "item-1");
+        Assert.False(updated.IsPinned);
+    }
+
+    [Fact]
+    public async Task TogglePin_ReturnsNotFoundForMissingItem()
+    {
+        var controller = CreateController();
+
+        var result = await controller.TogglePin("nonexistent");
+
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task TogglePin_ReturnsNotFoundForOtherUsersItem()
+    {
+        var controller = new ItemsController(_dbContext)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [
+                        new Claim("sub", "other-user")
+                    ]))
+                }
+            }
+        };
+
+        var result = await controller.TogglePin("item-1");
+
+        Assert.IsType<NotFoundResult>(result);
+        Assert.True(_items.First(i => i.Id == "item-1").IsPinned);
+    }
+
+    [Fact]
+    public async Task TogglePin_TogglesBackToTrue()
+    {
+        var controller = CreateController();
+
+        await controller.TogglePin("item-1");
+        var result = await controller.TogglePin("item-1");
+
+        Assert.IsType<OkObjectResult>(result);
+        Assert.True(_items.First(i => i.Id == "item-1").IsPinned);
     }
 
     // ── GetFavorites tests ──

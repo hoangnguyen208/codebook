@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   AlertTriangle,
   Check,
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/sheet";
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
-import { updateItem, deleteItem, toggleFavoriteItem } from "@/actions/items";
+import { updateItem, deleteItem, toggleFavoriteItem, togglePinItem } from "@/actions/items";
 import { getCollectionsForSelectAction } from "@/actions/collections";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
@@ -125,6 +126,7 @@ export function ItemDrawerSheet() {
                   const [isFavorite, setIsFavorite] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [pinLoading, setPinLoading] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -609,14 +611,30 @@ export function ItemDrawerSheet() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setIsPinned(!isPinned)}
+                      onClick={async () => {
+                        setIsPinned(!isPinned);
+                        setPinLoading(true);
+                        const result = await togglePinItem(item.id);
+                        if (result.success === true) {
+                          setIsPinned(result.data);
+                          router.refresh();
+                          toast.success(result.data ? "Item pinned" : "Item unpinned");
+                        } else {
+                          setIsPinned(isPinned);
+                          toast.error(result.error ?? "Failed to toggle pin");
+                        }
+                        setPinLoading(false);
+                      }}
                       className="rounded-lg p-2 hover:bg-muted transition-colors"
                       aria-label={isPinned ? "Unpin" : "Pin"}
+                      disabled={pinLoading}
                     >
                       <Pin
                         className={cn(
                           "size-5",
-                          isPinned ? "text-foreground" : "text-muted-foreground",
+                          isPinned
+                            ? "fill-sky-400 text-sky-400"
+                            : "text-muted-foreground",
                         )}
                       />
                     </button>

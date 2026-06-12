@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowUpRight,
@@ -37,6 +38,7 @@ import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { togglePinItem } from "@/actions/items";
 import type { DashboardItem, DashboardItemType } from "@/types/items";
 
 type DashboardUser = {
@@ -358,6 +360,7 @@ export function DashboardShell({
   searchData,
 }: DashboardShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -365,6 +368,7 @@ export function DashboardShell({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createCollectionDialogOpen, setCreateCollectionDialogOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [pinningItemId, setPinningItemId] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -789,7 +793,31 @@ export function DashboardShell({
                             >
                               <ItemTypeIcon className="size-5" />
                             </div>
-                            <Pin className="size-4 text-muted-foreground" />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPinningItemId(item.id);
+                                togglePinItem(item.id).then((result) => {
+                                  if (result.success === true) {
+                                    router.refresh();
+                                    if (result.data) {
+                                      toast.success("Item pinned");
+                                    } else {
+                                      toast.success("Item unpinned");
+                                    }
+                                  } else {
+                                    toast.error(result.error ?? "Failed to toggle pin");
+                                  }
+                                  setPinningItemId(null);
+                                });
+                              }}
+                              disabled={pinningItemId === item.id}
+                              className="rounded-lg p-1 hover:bg-muted transition-colors"
+                              aria-label="Unpin"
+                            >
+                              <Pin className="size-4 fill-sky-400 text-sky-400" />
+                            </button>
                           </div>
 
                           <div className="mt-4">

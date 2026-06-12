@@ -305,6 +305,24 @@ public class ItemsController : ControllerBase
         return Ok(new { id = item.Id, isFavorite = item.IsFavorite });
     }
 
+    [HttpPut("api/items/{id}/pin")]
+    public async Task<IActionResult> TogglePin(string id)
+    {
+        var userId = GetUserId();
+        var item = await _dbContext.Items
+            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
+
+        if (item == null)
+        {
+            return NotFound();
+        }
+
+        item.IsPinned = !item.IsPinned;
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { id = item.Id, isPinned = item.IsPinned });
+    }
+
     [HttpGet("api/dashboard/favorites")]
     public async Task<ActionResult<FavoritesResponseDto>> GetFavorites()
     {
@@ -412,7 +430,8 @@ public class ItemsController : ControllerBase
                 .ThenInclude(itemTag => itemTag.Tag)
             .Include(item => item.ItemCollections)
             .Where(item => item.UserId == userId)
-            .OrderByDescending(item => item.UpdatedAt)
+            .OrderByDescending(item => item.IsPinned)
+            .ThenByDescending(item => item.UpdatedAt)
             .Take(safeLimit)
             .ToListAsync();
 
@@ -441,7 +460,8 @@ public class ItemsController : ControllerBase
                 .ThenInclude(itemTag => itemTag.Tag)
             .Include(item => item.Type)
             .Include(item => item.ItemCollections)
-            .OrderByDescending(item => item.UpdatedAt)
+            .OrderByDescending(item => item.IsPinned)
+            .ThenByDescending(item => item.UpdatedAt)
             .Skip((safePage - 1) * safePageSize)
             .Take(safePageSize)
             .ToListAsync();
@@ -476,7 +496,8 @@ public class ItemsController : ControllerBase
                 .ThenInclude(itemTag => itemTag.Tag)
             .Include(item => item.Type)
             .Include(item => item.ItemCollections)
-            .OrderByDescending(item => item.UpdatedAt)
+            .OrderByDescending(item => item.IsPinned)
+            .ThenByDescending(item => item.UpdatedAt)
             .Skip((safePage - 1) * safePageSize)
             .Take(safePageSize)
             .ToListAsync();

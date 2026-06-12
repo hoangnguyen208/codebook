@@ -1,6 +1,6 @@
 # Current Feature
 
-Favorite Button Wiring
+Pinned Items
 
 ## Status
 
@@ -9,16 +9,20 @@ Completed
 
 ## Goals
 
-- Wire up no-op star button in CollectionHeaderActions on /collections/[id]
-- Add star favorite button to ItemCard on dashboard and items pages
-- Add star favorite button to ImageCard and FileRow for all item types
-- Ensure favorite toggle propagates across dashboard, collection, and item pages
-- Add client-side sorting (Name/Date/Type) to /favorites page with separate sort per section
-- Fix backend toggle endpoints to not mutate UpdatedAt on favorite change
+- Create toggleItemPin server action
+- Make Pin button in ItemDrawer clickable (exists but no onClick)
+- Make Pin icon on ItemCard clickable toggle
+- Make Pin icon on dashboard pinned cards clickable toggle
+- Optimistic UI updates for instant feedback
+- Toast notification on success/error
+- Pinned items sort to top of listings
+- Follow Favorite Button pattern
+- Items only (not collections)
+- Move Star/Pin/Copy buttons to top-right on ItemCard
 
 ## Notes
 
-CollectionHeaderActions already renders a Star button with no handler; needs `toggleFavoriteCollection` wiring and `isFavorite` prop. ItemCard has no favorite button at all; add one next to the copy button using `toggleFavoriteItem`.
+ItemDrawer already renders a Pin button with no handler; needs `toggleItemPin` server action wiring and `isPinned` prop. Follow the existing Favorite Button pattern in `actions/favorites.ts`. Pin icon on dashboard pinned items cards was static and non-highlighted; made it clickable with filled blue styling.
 
 ## History
 
@@ -73,3 +77,4 @@ CollectionHeaderActions already renders a Star button with no handler; needs `to
 - **Editor Preferences**: Added `UserPreference` table and `PreferenceController` GET/PUT endpoints; created `EditorPreferencesProvider` context wrapping root layout with auto-save + toast; added editor settings section with font size, tab size, theme dropdowns and word wrap/minimap toggles; applied preferences to Monaco `CodeEditor` component; redesigned settings page with GitHub-style sidebar tab navigation; merged profile content into Account section; added 6 unit tests (101 total)
 - **Favorites Page**: Created feature branch, implemented backend favorite toggle endpoints, GET /api/dashboard/favorites endpoint, frontend fetch wrappers and server actions, /favorites route with compact list view, and wired up favorite buttons; added 12 unit tests (113 total)
 - **Favorite Button Wiring**: Wired up CollectionHeaderActions no-op star, added favorite toggle to ItemCard/ImageCard/FileRow, added `router.refresh()` for cross-page propagation, fixed `useState` prop sync via `useEffect`, removed `UpdatedAt` mutation from backend favorite endpoints to preserve list ordering, added per-section client-side sorting (Name/Date/Type) to /favorites page
+- **Pinned Items**: Implemented `PUT /api/items/{id}/pin` endpoint + `toggleItemPin` DB fetch + `togglePinItem` server action; wired Pin button in ItemDrawerSheet with optimistic UI, toast, and router.refresh; applied pinned-first sorting to recent, by-type, and by-collection endpoints; added 4 unit tests (117 total)
