@@ -575,15 +575,24 @@ export function DashboardShell({
               </Button>
 
               <div className="relative flex-1">
-                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground hidden sm:block" />
                 <Input
                   aria-label="Search items"
                   placeholder="Search items..."
-                  className="h-11 rounded-2xl border-border/70 bg-card pl-10 pr-16 shadow-none cursor-pointer"
+                  className="hidden sm:block h-11 rounded-2xl border-border/70 bg-card pl-10 pr-16 shadow-none cursor-pointer"
                   readOnly
                   onFocus={(e) => e.target.blur()}
                   onClick={() => setSearchOpen(true)}
                 />
+                <Button
+                  variant="outline"
+                  size="icon-lg"
+                  className="h-11 w-11 rounded-2xl sm:hidden"
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Search items"
+                >
+                  <Search className="size-5" />
+                </Button>
                 <span className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-md border border-border/70 px-2 py-1 text-xs font-medium text-muted-foreground sm:inline-flex">
                   Ctrl K
                 </span>
@@ -591,7 +600,7 @@ export function DashboardShell({
 
               <Link
                 href="/favorites"
-                className="h-11 rounded-2xl border border-border/70 bg-card px-3 inline-flex items-center gap-2 text-sm hover:bg-accent transition-colors"
+                className="h-11 rounded-2xl border border-border/70 bg-card px-2 sm:px-3 inline-flex items-center gap-1.5 sm:gap-2 text-sm hover:bg-accent transition-colors shrink-0"
               >
                 <Star className={cn(
                   "size-4",
@@ -603,14 +612,14 @@ export function DashboardShell({
                 <span className="hidden sm:inline">Favorites</span>
               </Link>
 
-              <Button size="lg" className="h-11 rounded-2xl px-4" onClick={() => setCreateCollectionDialogOpen(true)}>
+              <Button size="lg" className="h-11 rounded-2xl px-2 sm:px-4" onClick={() => setCreateCollectionDialogOpen(true)}>
                 <FolderOpen className="size-4" />
-                New Collection
+                <span className="hidden sm:inline">New Collection</span>
               </Button>
 
-              <Button size="lg" className="h-11 rounded-2xl px-4" onClick={() => setCreateDialogOpen(true)}>
+              <Button size="lg" className="h-11 rounded-2xl px-2 sm:px-4" onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="size-4" />
-                New Item
+                <span className="hidden sm:inline">New Item</span>
               </Button>
 
               <div className="relative" ref={profileMenuRef}>
