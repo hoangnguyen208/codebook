@@ -1,7 +1,7 @@
 ---
 name: auth-auditor
 description: Use this agent to audit all authentication-related code for security vulnerabilities. Focuses on areas NextAuth does NOT handle automatically such as password hashing, rate limiting, token security, email verification flows, and password reset flows. In addition, also verify the Duende Identity Server handles authentication process with proper security measures.
-/m
+
 tools:
   glob: true
   grep: true

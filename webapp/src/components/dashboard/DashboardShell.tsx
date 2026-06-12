@@ -17,7 +17,6 @@ import {
   Layers3,
   Link2,
   Menu,
-  PanelsTopLeft,
   Pin,
   Plus,
   Search,
@@ -209,8 +208,12 @@ function DashboardSidebar({
           isExpanded ? "gap-3" : "justify-center",
         )}
       >
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/20">
-          <PanelsTopLeft className="size-5" />
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20">
+          <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+            <text x="14" y="19" textAnchor="middle" className="fill-white font-mono text-[11px] font-bold select-none">
+              &lt;/&gt;
+            </text>
+          </svg>
         </div>
 
         {isExpanded ? (
@@ -581,8 +584,14 @@ export function DashboardShell({
                   placeholder="Search items..."
                   className="hidden sm:block h-11 rounded-2xl border-border/70 bg-card pl-10 pr-16 shadow-none cursor-pointer"
                   readOnly
-                  onFocus={(e) => e.target.blur()}
                   onClick={() => setSearchOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSearchOpen(true);
+                    }
+                  }}
+                  tabIndex={0}
                 />
                 <Button
                   variant="outline"

@@ -47,6 +47,7 @@ export default async function Home() {
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
               href={registerUrl}
+              prefetch={false}
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "bg-blue-500 text-white hover:bg-blue-600"
@@ -64,6 +65,7 @@ export default async function Home() {
             </a>
             <Link
               href={githubUrl}
+              prefetch={false}
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" })
               )}
@@ -131,6 +133,7 @@ export default async function Home() {
           </p>
           <Link
             href={registerUrl}
+            prefetch={false}
             className={cn(
               buttonVariants({ size: "lg" }),
               "mt-6 bg-blue-500 text-white hover:bg-blue-600"

@@ -28,19 +28,19 @@ function CodeBookLogo() {
 const productLinks = [
   { label: "Features", href: "#features" },
   { label: "Pricing", href: "#pricing" },
-  { label: "Changelog", href: "#" },
+  { label: "Changelog", href: null },
 ];
 
 const resourceLinks = [
-  { label: "Docs", href: "#" },
-  { label: "API", href: "#" },
-  { label: "Blog", href: "#" },
+  { label: "Docs", href: null },
+  { label: "API", href: null },
+  { label: "Blog", href: null },
 ];
 
 const companyLinks = [
-  { label: "About", href: "#" },
-  { label: "Privacy", href: "#" },
-  { label: "Terms", href: "#" },
+  { label: "About", href: null },
+  { label: "Privacy", href: null },
+  { label: "Terms", href: null },
 ];
 
 export function Footer() {
@@ -67,12 +67,18 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               {productLinks.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {link.label}
-                  </a>
+                  {link.href ? (
+                    <a
+                      href={link.href}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground/50 cursor-not-allowed">
+                      {link.label}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -85,12 +91,18 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               {resourceLinks.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {link.label}
-                  </a>
+                  {link.href ? (
+                    <a
+                      href={link.href}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground/50 cursor-not-allowed">
+                      {link.label}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -103,12 +115,18 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               {companyLinks.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {link.label}
-                  </a>
+                  {link.href ? (
+                    <a
+                      href={link.href}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground/50 cursor-not-allowed">
+                      {link.label}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

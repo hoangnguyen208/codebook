@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { Menu, X } from "lucide-react";
 function GitHubIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -66,6 +67,35 @@ function ScrollNavWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function Navbar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node)
+      ) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [mobileMenuOpen]);
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
   return (
     <ScrollNavWrapper>
       <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -94,6 +124,7 @@ export function Navbar() {
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/api/auth/signin-github?callbackUrl=%2Fdashboard"
+            prefetch={false}
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
               "gap-1.5"
@@ -104,6 +135,7 @@ export function Navbar() {
           </Link>
           <Link
             href="/api/auth/signin-duende?callbackUrl=%2Fdashboard"
+            prefetch={false}
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" })
             )}
@@ -112,6 +144,7 @@ export function Navbar() {
           </Link>
           <Link
             href="/api/auth/register?callbackUrl=%2Fdashboard"
+            prefetch={false}
             className={cn(
               buttonVariants({ size: "sm" }),
               "bg-blue-500 text-white hover:bg-blue-600"
@@ -119,8 +152,49 @@ export function Navbar() {
           >
             Get Started
           </Link>
+
+          <button
+            type="button"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon" }),
+              "sm:hidden"
+            )}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? (
+              <X className="size-5" />
+            ) : (
+              <Menu className="size-5" />
+            )}
+          </button>
         </div>
       </nav>
+
+      {mobileMenuOpen ? (
+        <div
+          ref={mobileMenuRef}
+          className="border-t border-border/40 bg-background/95 backdrop-blur-xl sm:hidden"
+        >
+          <div className="mx-auto max-w-6xl px-4 py-4 space-y-2">
+            <a
+              href="#features"
+              onClick={closeMobileMenu}
+              className="block rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#pricing"
+              onClick={closeMobileMenu}
+              className="block rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            >
+              Pricing
+            </a>
+          </div>
+        </div>
+      ) : null}
     </ScrollNavWrapper>
   );
 }
