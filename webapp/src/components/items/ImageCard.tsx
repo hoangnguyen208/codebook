@@ -1,10 +1,13 @@
 "use client";
 
-import { FileImage } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FileImage, Star } from "lucide-react";
 import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 import type { DashboardItem } from "@/types/items";
+import { toggleFavoriteItem } from "@/actions/items";
 
 type ImageCardProps = {
   item: DashboardItem;
@@ -12,7 +15,16 @@ type ImageCardProps = {
 };
 
 export function ImageCard({ item, onClick }: ImageCardProps) {
+  const router = useRouter();
   const hasImage = item.fileUrl != null && item.fileUrl.length > 0;
+  const [isFavorite, setIsFavorite] = useState(item.isFavorite);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sync when router.refresh updates props */
+    setIsFavorite(item.isFavorite);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [item.isFavorite]);
 
   return (
     <article
@@ -36,6 +48,30 @@ export function ImageCard({ item, onClick }: ImageCardProps) {
             <FileImage className="size-8 text-muted-foreground" />
           </div>
         )}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setFavoriteLoading(true);
+            toggleFavoriteItem(item.id).then((result) => {
+              if (result.success === true) {
+                setIsFavorite(result.data);
+                router.refresh();
+              }
+              setFavoriteLoading(false);
+            });
+          }}
+          disabled={favoriteLoading}
+          className="absolute top-2 right-2 rounded-lg p-1.5 bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Star
+            className={cn(
+              "size-4",
+              isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
+            )}
+          />
+        </button>
       </div>
       <div className="p-4">
         <h3 className="text-sm font-semibold truncate">{item.title}</h3>

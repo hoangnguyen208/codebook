@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Pencil, Star, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-import { deleteCollection } from "@/actions/collections";
+import { deleteCollection, toggleFavoriteCollection } from "@/actions/collections";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
 
 type Props = {
-  collection: { id: string; name: string; description: string };
+  collection: { id: string; name: string; description: string; isFavorite: boolean };
 };
 
 export function CollectionHeaderActions({ collection }: Props) {
@@ -17,6 +18,14 @@ export function CollectionHeaderActions({ collection }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(collection.isFavorite);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sync when router.refresh updates props */
+    setIsFavorite(collection.isFavorite);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [collection.isFavorite]);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -42,10 +51,25 @@ export function CollectionHeaderActions({ collection }: Props) {
       </button>
       <button
         type="button"
+        onClick={async () => {
+          setFavoriteLoading(true);
+          const result = await toggleFavoriteCollection(collection.id);
+          if (result.success === true) {
+            setIsFavorite(result.data);
+            router.refresh();
+          }
+          setFavoriteLoading(false);
+        }}
+        disabled={favoriteLoading}
         className="rounded-lg p-2 hover:bg-muted transition-colors"
-        aria-label="Favorite"
+        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
       >
-        <Star className="size-5 text-muted-foreground" />
+        <Star
+          className={cn(
+            "size-5",
+            isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
+          )}
+        />
       </button>
       {showDeleteConfirm ? (
         <div className="flex items-center gap-1">

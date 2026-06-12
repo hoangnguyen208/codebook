@@ -590,6 +590,7 @@ export function ItemDrawerSheet() {
                         const result = await toggleFavoriteItem(item.id);
                         if (result.success === true) {
                           setIsFavorite(result.data);
+                          router.refresh();
                         }
                         setFavoriteLoading(false);
                       }}

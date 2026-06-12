@@ -126,7 +126,6 @@ public class CollectionsController : ControllerBase
             return NotFound();
 
         collection.IsFavorite = !collection.IsFavorite;
-        collection.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
         return Ok(new { id = collection.Id, isFavorite = collection.IsFavorite });

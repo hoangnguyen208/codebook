@@ -300,7 +300,6 @@ public class ItemsController : ControllerBase
         }
 
         item.IsFavorite = !item.IsFavorite;
-        item.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
         return Ok(new { id = item.Id, isFavorite = item.IsFavorite });

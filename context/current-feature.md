@@ -1,6 +1,6 @@
 # Current Feature
 
-Favorites Page
+Favorite Button Wiring
 
 ## Status
 
@@ -9,19 +9,16 @@ Completed
 
 ## Goals
 
-- Add star icon button to TopBar linking to /favorites
-- Create /favorites route with protection
-- Fetch all user favorited items and collections
-- Compact list view (VS Code/terminal style, not cards)
-- Each row: type icon, title, type badge, date added
-- Separate sections for items and collections with counts
-- Click item opens ItemDrawer, click collection navigates to /collections/[id]
-- Empty state when no favorites
-- Sort by most recently favorited (updatedAt)
+- Wire up no-op star button in CollectionHeaderActions on /collections/[id]
+- Add star favorite button to ItemCard on dashboard and items pages
+- Add star favorite button to ImageCard and FileRow for all item types
+- Ensure favorite toggle propagates across dashboard, collection, and item pages
+- Add client-side sorting (Name/Date/Type) to /favorites page with separate sort per section
+- Fix backend toggle endpoints to not mutate UpdatedAt on favorite change
 
 ## Notes
 
-Compact monospace list with minimal padding. Separate sections for Items and Collections. Wire up the no-op favorite toggle buttons in existing components.
+CollectionHeaderActions already renders a Star button with no handler; needs `toggleFavoriteCollection` wiring and `isFavorite` prop. ItemCard has no favorite button at all; add one next to the copy button using `toggleFavoriteItem`.
 
 ## History
 
@@ -75,3 +72,4 @@ Compact monospace list with minimal padding. Separate sections for Items and Col
 - **Settings Page**: Added `/settings` page with account actions (sign out all sessions, change password, delete account); moved from `/profile` which now shows only user info + usage stats; added "Settings" link to sidebar user dropdown; protected route via proxy matcher; changed global font to Mona Sans + JetBrains Mono; added `cursor-pointer` globally for all buttons and links
 - **Editor Preferences**: Added `UserPreference` table and `PreferenceController` GET/PUT endpoints; created `EditorPreferencesProvider` context wrapping root layout with auto-save + toast; added editor settings section with font size, tab size, theme dropdowns and word wrap/minimap toggles; applied preferences to Monaco `CodeEditor` component; redesigned settings page with GitHub-style sidebar tab navigation; merged profile content into Account section; added 6 unit tests (101 total)
 - **Favorites Page**: Created feature branch, implemented backend favorite toggle endpoints, GET /api/dashboard/favorites endpoint, frontend fetch wrappers and server actions, /favorites route with compact list view, and wired up favorite buttons; added 12 unit tests (113 total)
+- **Favorite Button Wiring**: Wired up CollectionHeaderActions no-op star, added favorite toggle to ItemCard/ImageCard/FileRow, added `router.refresh()` for cross-page propagation, fixed `useState` prop sync via `useEffect`, removed `UpdatedAt` mutation from backend favorite endpoints to preserve list ordering, added per-section client-side sorting (Name/Date/Type) to /favorites page

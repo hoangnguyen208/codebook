@@ -1,9 +1,12 @@
 "use client";
 
-import { File, FileCode, FileImage, FileText, Download } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { File, FileCode, FileImage, FileText, Download, Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { DashboardItem } from "@/types/items";
+import { toggleFavoriteItem } from "@/actions/items";
 
 type FileRowProps = {
   item: DashboardItem;
@@ -38,9 +41,18 @@ function fileNameWithoutExt(fileName: string): string {
 }
 
 export function FileRow({ item, onClick }: FileRowProps) {
+  const router = useRouter();
   const ext = getFileExtension(item.fileName);
   const iconType = getFileIconType(ext);
   const displayName = item.fileName ? fileNameWithoutExt(item.fileName) : item.title;
+  const [isFavorite, setIsFavorite] = useState(item.isFavorite);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sync when router.refresh updates props */
+    setIsFavorite(item.isFavorite);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [item.isFavorite]);
 
   function handleDownload(e: React.MouseEvent) {
     e.stopPropagation();
@@ -83,7 +95,31 @@ export function FileRow({ item, onClick }: FileRowProps) {
         </div>
       </div>
 
-      <div className={cn("max-sm:w-full max-sm:justify-center")}>
+      <div className="flex items-center gap-2 max-sm:w-full max-sm:justify-center">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setFavoriteLoading(true);
+            toggleFavoriteItem(item.id).then((result) => {
+              if (result.success === true) {
+                setIsFavorite(result.data);
+                router.refresh();
+              }
+              setFavoriteLoading(false);
+            });
+          }}
+          disabled={favoriteLoading}
+          className="rounded-lg p-1.5 hover:bg-muted transition-colors"
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Star
+            className={cn(
+              "size-4",
+              isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
+            )}
+          />
+        </button>
         <button
           type="button"
           onClick={handleDownload}

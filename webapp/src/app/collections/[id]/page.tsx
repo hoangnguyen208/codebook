@@ -93,7 +93,7 @@ export default async function CollectionItemsPage({
               {result.totalCount} {result.totalCount === 1 ? "item" : "items"}
             </p>
           </div>
-          <CollectionHeaderActions collection={{ id: collection.id, name: collection.name, description: collection.description }} />
+          <CollectionHeaderActions collection={{ id: collection.id, name: collection.name, description: collection.description, isFavorite: collection.isFavorite }} />
         </div>
 
         <ItemsGridClient

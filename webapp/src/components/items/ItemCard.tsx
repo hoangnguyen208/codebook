@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Code2, Copy, File, FileImage, FileText, Link2, Pin, Sparkles, Terminal } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Check, Code2, Copy, File, FileImage, FileText, Link2, Pin, Sparkles, Star, Terminal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { DashboardItem, DashboardItemType } from "@/types/items";
+import { toggleFavoriteItem } from "@/actions/items";
 
 const itemTypeIconMap: Record<DashboardItemType["icon"], LucideIcon> = {
   code: Code2,
@@ -32,7 +34,16 @@ type ItemCardProps = {
 
 export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
   const TypeIcon = itemTypeIconMap[itemType.iconName] ?? FileText;
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(item.isFavorite);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sync when router.refresh updates props */
+    setIsFavorite(item.isFavorite);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [item.isFavorite]);
 
   function handleCopy(e: React.MouseEvent) {
     e.stopPropagation();
@@ -105,6 +116,30 @@ export function ItemCard({ item, itemType, onClick }: ItemCardProps) {
           <span className="shrink-0 text-xs text-muted-foreground">
             {item.updatedAt}
           </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setFavoriteLoading(true);
+              toggleFavoriteItem(item.id).then((result) => {
+                if (result.success === true) {
+                  setIsFavorite(result.data);
+                  router.refresh();
+                }
+                setFavoriteLoading(false);
+              });
+            }}
+            disabled={favoriteLoading}
+            className="rounded-lg p-1 hover:bg-muted transition-colors"
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Star
+              className={cn(
+                "size-4",
+                isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
+              )}
+            />
+          </button>
           <button
             type="button"
             onClick={handleCopy}
