@@ -1,28 +1,62 @@
 # Current Feature
 
-Homepage Mockup
+Homepage Implementation
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
-Completed
+In Progress
 
 ## Goals
 
-- Create `prototypes/homepage/` with `index.html`, `styles.css`, `script.js`
-- Hero section with chaos-to-order visual: floating icons, transform arrow, dashboard preview
-- Navigation with fixed top nav, Features/Pricing links, Sign In/Get Started buttons
-- Features grid with 6 cards using item type accent colors
-- AI section with Pro Feature badge, checklist, and code editor mockup
-- Pricing section with Free vs Pro ($8/mo), yearly toggle ($72), Most Popular badge
-- CTA section and Footer with copyright
-- JavaScript chaos icon animation (requestAnimationFrame, wall bouncing, mouse repel)
-- CSS pulse arrow animation, scroll fade-in, navbar scroll opacity
-- Responsive: mobile stacks chaos/arrow/dashboard vertically, arrow rotates 90°
+- Replace `webapp/src/app/page.tsx` with the marketing homepage
+- Authenticated users still redirect to `/dashboard` (keep existing `auth()` check at top of page)
+- Unauthenticated users see the full marketing homepage
+
+## Sections
+
+### 1. Navigation (server component)
+- Fixed top nav with `backdrop-blur`, gets border on scroll via a client wrapper
+- CodeBook logo (blue `<rect>` with `</>` text) + brand text
+- Links: Features (`href="#features"`), Pricing (`href="#pricing"`)
+- Sign In button: links to `/auth/login`
+- Get Started button: links to `/auth/register`, styled with shadcn button using `bg-blue-500`
+- Extracted to `src/components/marketing/Navbar.tsx`
+
+### 2. Hero (server + client components)
+- Headline: "Stop Losing Your **Developer Knowledge**" with gradient text
+- Subheadline about scattered knowledge with CTA buttons
+- Chaos-to-order visual: 3-column grid (chaos / arrow / dashboard)
+- ChaosContainer — client component with `requestAnimationFrame` for floating icons
+- TransformArrow — CSS pulse animation
+- DashboardPreview — static server component
+
+### 3. Features (server component)
+- 6 cards in a responsive grid
+- Extracted to `src/components/marketing/Features.tsx`
+
+### 4. AI Section (server component)
+- Two-column layout with Pro Feature badge, checklist, code editor mockup
+
+### 5. Pricing (client component)
+- Monthly/Yearly toggle with "Save 25%" badge
+- Two cards: Free and Pro
+- Extracted to `src/components/marketing/Pricing.tsx`
+
+### 6. CTA (server component)
+- "Ready to Organize Your Knowledge?" headline with CTA button
+
+### 7. Footer (server component)
+- Logo, tagline, link columns, copyright with dynamic year
+- Extracted to `src/components/marketing/Footer.tsx`
 
 ## Notes
 
-Dark theme marketing homepage for CodeBook. Color palette uses item type colors (Blue/Amber/Cyan/Green/Slate/Pink/Indigo). Chaos icons include Notion, GitHub, Slack, VS Code logos. Pure HTML/CSS/JS prototype — no framework dependencies.
+- Use Tailwind classes only — no custom CSS files
+- Use buttonVariants for all CTAs styled as links
+- Navbar scroll border effect via client wrapper with scrollY event listener
+- Chaos animation via `requestAnimationFrame` loop
+- Keep the existing `auth()` session check at top of `page.tsx`
 
 ## History
 
@@ -78,3 +112,4 @@ Dark theme marketing homepage for CodeBook. Color palette uses item type colors 
 - **Favorites Page**: Created feature branch, implemented backend favorite toggle endpoints, GET /api/dashboard/favorites endpoint, frontend fetch wrappers and server actions, /favorites route with compact list view, and wired up favorite buttons; added 12 unit tests (113 total)
 - **Favorite Button Wiring**: Wired up CollectionHeaderActions no-op star, added favorite toggle to ItemCard/ImageCard/FileRow, added `router.refresh()` for cross-page propagation, fixed `useState` prop sync via `useEffect`, removed `UpdatedAt` mutation from backend favorite endpoints to preserve list ordering, added per-section client-side sorting (Name/Date/Type) to /favorites page
 - **Homepage Mockup**: Created feature branch, built `prototypes/homepage/` with dark-theme marketing page (index.html, styles.css, script.js) featuring hero chaos-to-order animation, 6-card features grid, AI section with editor mockup, pricing with yearly toggle, CTA, and footer
+- **Homepage Implementation**: Created feature branch `feature/homepage-implementation`, replaced `page.tsx` with full marketing homepage keeping auth check, created marketing components (Navbar, ChaosContainer, TransformArrow, DashboardPreview, Features, AISection, Pricing, Footer, SectionHeader)

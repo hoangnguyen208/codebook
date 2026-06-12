@@ -10,6 +10,34 @@ export default async function DashboardPage() {
   const session = await auth();
   const accessToken = session?.accessToken;
 
+  if (!accessToken) {
+    const provider = (session?.user as { provider?: string } | undefined)?.provider;
+    const isGitHub = provider === "github";
+
+    return (
+      <DashboardShell
+        data={{
+          user: {
+            id: session?.user?.id ?? "user-session",
+            name: getDisplayName(session?.user?.name ?? null, session?.user?.email ?? null),
+            email: session?.user?.email ?? "",
+            image: session?.user?.image ?? null,
+            plan: "free" as const,
+          },
+          itemTypes: [],
+          collections: [],
+          items: [],
+        }}
+        recentCollectionsOverride={[]}
+        fetchError={
+          isGitHub
+            ? "GitHub sign-in does not provide an API access token. Please sign out and sign in with Duende to access your dashboard data."
+            : "Your session is missing an API access token. Please sign out and sign in again to obtain a fresh token."
+        }
+      />
+    );
+  }
+
   let collections: Awaited<ReturnType<typeof getDashboardCollections>> = { items: [], totalCount: 0, page: 1, pageSize: 21 };
   let items: Awaited<ReturnType<typeof getRecentDashboardItems>> = [];
   let itemTypes: Awaited<ReturnType<typeof getSystemDashboardItemTypes>> = [];
@@ -43,7 +71,7 @@ export default async function DashboardPage() {
           name: displayName,
           email: userEmail ?? displayName,
           image: session?.user?.image ?? null,
-          plan: "free",
+          plan: "free" as const,
         },
         itemTypes,
         collections: collections.items.map((collection) => ({

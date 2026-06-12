@@ -4,5 +4,9 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const callbackUrl = requestUrl.searchParams.get("callbackUrl") ?? "/dashboard";
 
-  return signIn("github", { redirectTo: callbackUrl });
+  return signIn(
+    "duende-identity-server6",
+    { redirectTo: callbackUrl },
+    { acr_values: "idp:GitHub" },
+  );
 }

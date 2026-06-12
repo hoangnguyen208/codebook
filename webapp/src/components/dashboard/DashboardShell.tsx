@@ -680,6 +680,12 @@ export function DashboardShell({
                 <p className="mt-1 text-xs text-red-400/60">
                   {fetchError}
                 </p>
+                <Link
+                  href="/api/auth/signout-all"
+                  className="mt-2 inline-block text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Sign out and try signing in again &rarr;
+                </Link>
               </div>
             ) : null}
 

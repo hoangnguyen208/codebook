@@ -2,6 +2,8 @@ import "server-only";
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
+const MAX_AUTH_RETRIES = 2;
+const AUTH_RETRY_DELAY_MS = 2000;
 
 function isConnectionError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
@@ -22,14 +24,31 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isAuthError(response: Response): boolean {
+  return response.status === 401 || response.status === 403;
+}
+
 export async function fetchWithRetry(
   url: string,
   init: RequestInit,
   retries = MAX_RETRIES,
 ): Promise<Response> {
+  let authRetriesRemaining = MAX_AUTH_RETRIES;
+
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await fetch(url, init);
+
+      if (isAuthError(response) && authRetriesRemaining > 0) {
+        authRetriesRemaining--;
+        const waitMs = AUTH_RETRY_DELAY_MS * Math.pow(2, attempt);
+        console.warn(
+          `[fetchWithRetry] auth error ${response.status}, retrying in ${waitMs}ms (${authRetriesRemaining} auth retries left): ${url}`,
+        );
+        await delay(waitMs);
+        continue;
+      }
+
       return response;
     } catch (error) {
       if (attempt >= retries || !isConnectionError(error)) {

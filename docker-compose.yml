@@ -41,8 +41,11 @@ services:
       Cors__AllowedOrigins__0: "http://app.codebook.local:3000"
       Cors__AllowedOrigins__1: "http://localhost:3000"
       Cors__AllowedOrigins__2: "http://webapp:3000"
+      IDENTITY_AUTHORITY: "http://id.codebook.local:5001"
     depends_on:
       sqlserver:
+        condition: service_healthy
+      identity:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
