@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileImage, Star } from "lucide-react";
+import { toast } from "sonner";
+import { FileImage, Pin, Star } from "lucide-react";
 import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 import type { DashboardItem } from "@/types/items";
-import { toggleFavoriteItem } from "@/actions/items";
+import { toggleFavoriteItem, togglePinItem } from "@/actions/items";
 
 type ImageCardProps = {
   item: DashboardItem;
@@ -19,12 +20,15 @@ export function ImageCard({ item, onClick }: ImageCardProps) {
   const hasImage = item.fileUrl != null && item.fileUrl.length > 0;
   const [isFavorite, setIsFavorite] = useState(item.isFavorite);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isPinned, setIsPinned] = useState(item.isPinned);
+  const [pinLoading, setPinLoading] = useState(false);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sync when router.refresh updates props */
     setIsFavorite(item.isFavorite);
+    setIsPinned(item.isPinned);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [item.isFavorite]);
+  }, [item.isFavorite, item.isPinned]);
 
   return (
     <article
@@ -48,30 +52,59 @@ export function ImageCard({ item, onClick }: ImageCardProps) {
             <FileImage className="size-8 text-muted-foreground" />
           </div>
         )}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setFavoriteLoading(true);
-            toggleFavoriteItem(item.id).then((result) => {
-              if (result.success === true) {
-                setIsFavorite(result.data);
-                router.refresh();
-              }
-              setFavoriteLoading(false);
-            });
-          }}
-          disabled={favoriteLoading}
-          className="absolute top-2 right-2 rounded-lg p-1.5 bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-        >
-          <Star
-            className={cn(
-              "size-4",
-              isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
-            )}
-          />
-        </button>
+        <div className="absolute top-2 right-2 flex items-center gap-1">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setFavoriteLoading(true);
+              toggleFavoriteItem(item.id).then((result) => {
+                if (result.success === true) {
+                  setIsFavorite(result.data);
+                  router.refresh();
+                }
+                setFavoriteLoading(false);
+              });
+            }}
+            disabled={favoriteLoading}
+            className="rounded-lg p-1.5 bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Star
+              className={cn(
+                "size-4",
+                isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
+              )}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPinLoading(true);
+              togglePinItem(item.id).then((result) => {
+                if (result.success === true) {
+                  setIsPinned(result.data);
+                  router.refresh();
+                  toast.success(result.data ? "Item pinned" : "Item unpinned");
+                } else {
+                  toast.error(result.error ?? "Failed to toggle pin");
+                }
+                setPinLoading(false);
+              });
+            }}
+            disabled={pinLoading}
+            className="rounded-lg p-1.5 bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
+            aria-label={isPinned ? "Unpin" : "Pin"}
+          >
+            <Pin
+              className={cn(
+                "size-4",
+                isPinned ? "fill-sky-400 text-sky-400" : "text-muted-foreground",
+              )}
+            />
+          </button>
+        </div>
       </div>
       <div className="p-4">
         <h3 className="text-sm font-semibold truncate">{item.title}</h3>

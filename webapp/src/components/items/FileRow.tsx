@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { File, FileCode, FileImage, FileText, Download, Star } from "lucide-react";
+import { toast } from "sonner";
+import { File, FileCode, FileImage, FileText, Download, Pin, Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { DashboardItem } from "@/types/items";
-import { toggleFavoriteItem } from "@/actions/items";
+import { toggleFavoriteItem, togglePinItem } from "@/actions/items";
 
 type FileRowProps = {
   item: DashboardItem;
@@ -47,12 +48,15 @@ export function FileRow({ item, onClick }: FileRowProps) {
   const displayName = item.fileName ? fileNameWithoutExt(item.fileName) : item.title;
   const [isFavorite, setIsFavorite] = useState(item.isFavorite);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isPinned, setIsPinned] = useState(item.isPinned);
+  const [pinLoading, setPinLoading] = useState(false);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sync when router.refresh updates props */
     setIsFavorite(item.isFavorite);
+    setIsPinned(item.isPinned);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [item.isFavorite]);
+  }, [item.isFavorite, item.isPinned]);
 
   function handleDownload(e: React.MouseEvent) {
     e.stopPropagation();
@@ -117,6 +121,33 @@ export function FileRow({ item, onClick }: FileRowProps) {
             className={cn(
               "size-4",
               isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground",
+            )}
+          />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPinLoading(true);
+            togglePinItem(item.id).then((result) => {
+              if (result.success === true) {
+                setIsPinned(result.data);
+                router.refresh();
+                toast.success(result.data ? "Item pinned" : "Item unpinned");
+              } else {
+                toast.error(result.error ?? "Failed to toggle pin");
+              }
+              setPinLoading(false);
+            });
+          }}
+          disabled={pinLoading}
+          className="rounded-lg p-1.5 hover:bg-muted transition-colors"
+          aria-label={isPinned ? "Unpin" : "Pin"}
+        >
+          <Pin
+            className={cn(
+              "size-4",
+              isPinned ? "fill-sky-400 text-sky-400" : "text-muted-foreground",
             )}
           />
         </button>
