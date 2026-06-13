@@ -190,6 +190,7 @@ function DashboardSidebar({
   recentCollections,
   pathname,
   isExpanded,
+  isPro,
   onNavigate,
 }: {
   itemTypes: DashboardItemType[];
@@ -198,6 +199,7 @@ function DashboardSidebar({
   recentCollections: CollectionSummary[];
   pathname: string;
   isExpanded: boolean;
+  isPro: boolean;
   onNavigate?: () => void;
 }) {
   return (
@@ -259,7 +261,7 @@ function DashboardSidebar({
                     <>
                       <span className="min-w-0 flex-1 truncate text-sm font-medium">
                         {itemType.label}
-                        {(itemType.name === "file" || itemType.name === "image") && (
+                        {(itemType.name === "file" || itemType.name === "image") && !isPro && (
                           <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-blue-400">
                             <Sparkles className="size-2.5" />
                             PRO
@@ -370,6 +372,7 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const isPro = data.user.plan === "pro";
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -555,6 +558,7 @@ export function DashboardShell({
             recentCollections={recentCollections}
             pathname={pathname}
             isExpanded={isDesktopSidebarExpanded}
+            isPro={isPro}
           />
         </aside>
 
@@ -982,6 +986,7 @@ export function DashboardShell({
               recentCollections={recentCollections}
               pathname={pathname}
               isExpanded
+              isPro={isPro}
               onNavigate={() => setIsMobileSidebarOpen(false)}
             />
           </aside>

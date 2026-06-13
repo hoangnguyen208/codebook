@@ -10,12 +10,16 @@ public static class Config
             new IdentityResources.OpenId(),
             new IdentityResources.Profile(),
             new IdentityResources.Email(),
+            new IdentityResource("pro", new[] { "isPro", "stripeCustomerId" }),
         };
 
     public static IEnumerable<ApiScope> ApiScopes =>
         new ApiScope[]
         {
-            new("codebook.api", "CodeBook API"),
+            new("codebook.api", "CodeBook API")
+            {
+                UserClaims = { "isPro", "stripeCustomerId" }
+            },
         };
 
     public static IEnumerable<Client> GetClients(IConfiguration configuration)
@@ -51,7 +55,7 @@ public static class Config
                 },
 
                 AllowOfflineAccess = true,
-                AllowedScopes = { "openid", "profile", "email", "codebook.api" }
+                AllowedScopes = { "openid", "profile", "email", "pro", "codebook.api" }
             },
         };
     }

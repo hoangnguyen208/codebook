@@ -22,7 +22,7 @@ export default async function DashboardPage() {
             name: getDisplayName(session?.user?.name ?? null, session?.user?.email ?? null),
             email: session?.user?.email ?? "",
             image: session?.user?.image ?? null,
-            plan: "free" as const,
+          plan: session?.user?.isPro ? "pro" : "free",
           },
           itemTypes: [],
           collections: [],
@@ -71,7 +71,7 @@ export default async function DashboardPage() {
           name: displayName,
           email: userEmail ?? displayName,
           image: session?.user?.image ?? null,
-          plan: "free" as const,
+            plan: session?.user?.isPro ? "pro" : "free",
         },
         itemTypes,
         collections: collections.items.map((collection) => ({

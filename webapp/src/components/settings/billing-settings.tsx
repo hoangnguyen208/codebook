@@ -44,8 +44,8 @@ export function BillingSettings({ isPro, itemCount, collectionCount }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plan,
-          successUrl: `${window.location.origin}/settings?upgraded=true`,
-          cancelUrl: `${window.location.origin}/settings`,
+          successUrl: `${window.location.origin}/settings?upgraded=true&tab=billing`,
+          cancelUrl: `${window.location.origin}/settings?tab=billing`,
         }),
       });
 
@@ -74,7 +74,7 @@ export function BillingSettings({ isPro, itemCount, collectionCount }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          returnUrl: `${window.location.origin}/settings`,
+          returnUrl: `${window.location.origin}/settings?tab=billing`,
         }),
       });
 

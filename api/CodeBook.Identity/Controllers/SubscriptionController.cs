@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CodeBook.Identity.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api/subscription")]
 public class SubscriptionController : ControllerBase
 {
@@ -29,12 +30,7 @@ public class SubscriptionController : ControllerBase
             return NotFound(new { error = "User not found" });
         }
 
-        if (request.IsPro.HasValue)
-            user.IsPro = request.IsPro.Value;
-        if (request.StripeCustomerId != null)
-            user.StripeCustomerId = request.StripeCustomerId == string.Empty ? null : request.StripeCustomerId;
-        if (request.StripeSubscriptionId != null)
-            user.StripeSubscriptionId = request.StripeSubscriptionId == string.Empty ? null : request.StripeSubscriptionId;
+        ApplyUpdates(user, request);
 
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
@@ -43,6 +39,38 @@ public class SubscriptionController : ControllerBase
         }
 
         return Ok(new { userId = user.Id, isPro = user.IsPro });
+    }
+
+    [HttpPut("by-email/{email}")]
+    public async Task<IActionResult> UpdateSubscriptionByEmail(
+        string email,
+        [FromBody] UpdateSubscriptionRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            return NotFound(new { error = "User not found" });
+        }
+
+        ApplyUpdates(user, request);
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            return StatusCode(500, new { error = "Failed to update user subscription" });
+        }
+
+        return Ok(new { userId = user.Id, isPro = user.IsPro });
+    }
+
+    private static void ApplyUpdates(ApplicationUser user, UpdateSubscriptionRequest request)
+    {
+        if (request.IsPro.HasValue)
+            user.IsPro = request.IsPro.Value;
+        if (request.StripeCustomerId != null)
+            user.StripeCustomerId = request.StripeCustomerId == string.Empty ? null : request.StripeCustomerId;
+        if (request.StripeSubscriptionId != null)
+            user.StripeSubscriptionId = request.StripeSubscriptionId == string.Empty ? null : request.StripeSubscriptionId;
     }
 
     [HttpGet("by-stripe-customer/{stripeCustomerId}")]

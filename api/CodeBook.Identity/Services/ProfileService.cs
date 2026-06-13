@@ -9,16 +9,21 @@ namespace CodeBook.Identity.Services;
 public class ProfileService : IProfileService
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IUserClaimsPrincipalFactory<ApplicationUser> _claimsFactory;
 
-    public ProfileService(UserManager<ApplicationUser> userManager)
+    public ProfileService(UserManager<ApplicationUser> userManager, IUserClaimsPrincipalFactory<ApplicationUser> claimsFactory)
     {
         _userManager = userManager;
+        _claimsFactory = claimsFactory;
     }
 
     public async Task GetProfileDataAsync(ProfileDataRequestContext context)
     {
         var user = await _userManager.GetUserAsync(context.Subject);
         if (user == null) return;
+
+        var principal = await _claimsFactory.CreateAsync(user);
+        context.IssuedClaims.AddRange(principal.Claims);
 
         context.IssuedClaims.Add(new Claim("isPro", user.IsPro.ToString().ToLowerInvariant()));
         if (!string.IsNullOrEmpty(user.StripeCustomerId))

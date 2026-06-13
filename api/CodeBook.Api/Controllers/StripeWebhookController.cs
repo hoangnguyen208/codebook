@@ -25,10 +25,12 @@ public class StripeWebhookController : ControllerBase
     public async Task<IActionResult> HandleStripeWebhook()
     {
         var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+        Console.WriteLine($"[StripeWebhook] Received event, body length: {json.Length}");
 
         var webhookSecret = _configuration["STRIPE_WEBHOOK_SECRET"];
         if (string.IsNullOrEmpty(webhookSecret))
         {
+            Console.Error.WriteLine("[StripeWebhook] Webhook secret not configured");
             return BadRequest(new { error = "Webhook secret not configured" });
         }
 
@@ -39,17 +41,21 @@ public class StripeWebhookController : ControllerBase
             stripeEvent = EventUtility.ConstructEvent(
                 json,
                 signatureHeader,
-                webhookSecret
+                webhookSecret,
+                throwOnApiVersionMismatch: false
             );
+            Console.WriteLine($"[StripeWebhook] Verified event: {stripeEvent.Type}");
         }
-        catch (StripeException)
+        catch (StripeException ex)
         {
+            Console.Error.WriteLine($"[StripeWebhook] Signature verification failed: {ex.Message}");
             return BadRequest(new { error = "Invalid Stripe signature" });
         }
 
         try
         {
             var identityBaseUrl = _configuration["Identity:BaseUrl"] ?? "http://id.codebook.local:5001";
+            Console.WriteLine($"[StripeWebhook] Processing event: {stripeEvent.Type}");
 
             switch (stripeEvent.Type)
             {
@@ -76,6 +82,7 @@ public class StripeWebhookController : ControllerBase
             return StatusCode(500, new { error = "Webhook processing failed" });
         }
 
+        Console.WriteLine($"[StripeWebhook] Event {stripeEvent.Type} processed successfully");
         return Ok(new { received = true });
     }
 
@@ -85,16 +92,35 @@ public class StripeWebhookController : ControllerBase
         if (session == null) return;
 
         var userId = session.Metadata?.GetValueOrDefault("userId");
-        if (string.IsNullOrEmpty(userId)) return;
-
-        var subscriptionId = typeof(Stripe.Checkout.Session).GetProperty("Subscription")?.GetValue(session) as string
-            ?? (session.GetType().GetProperty("subscription")?.GetValue(session) as string);
-        var customerId = typeof(Stripe.Checkout.Session).GetProperty("CustomerId")?.GetValue(session) as string
-            ?? (session.GetType().GetProperty("customer")?.GetValue(session) as string);
+        var customerId = session.CustomerId;
+        var subscriptionId = session.SubscriptionId;
 
         if (string.IsNullOrEmpty(customerId)) return;
 
-        await UpdateUserSubscription(identityBaseUrl, userId, isPro: true, stripeCustomerId: customerId, stripeSubscriptionId: subscriptionId);
+        // Try user ID first, then fall back to email
+        if (!string.IsNullOrEmpty(userId))
+        {
+            try
+            {
+                await UpdateUserSubscription(identityBaseUrl, userId, isPro: true, stripeCustomerId: customerId, stripeSubscriptionId: subscriptionId);
+                return;
+            }
+            catch (HttpRequestException)
+            {
+                Console.WriteLine($"[StripeWebhook] User ID {userId} not found in Identity, trying email fallback");
+            }
+        }
+
+        var email = session.CustomerDetails?.Email ?? session.CustomerEmail;
+        if (!string.IsNullOrEmpty(email))
+        {
+            await UpdateUserSubscriptionByEmail(identityBaseUrl, email, isPro: true, stripeCustomerId: customerId, stripeSubscriptionId: subscriptionId);
+            Console.WriteLine($"[StripeWebhook] Updated user by email: {email}");
+        }
+        else
+        {
+            Console.Error.WriteLine("[StripeWebhook] No userId or email available for checkout.session.completed");
+        }
     }
 
     private async Task HandleInvoicePaid(Event stripeEvent, string identityBaseUrl)
@@ -102,7 +128,7 @@ public class StripeWebhookController : ControllerBase
         var invoice = stripeEvent.Data.Object as Invoice;
         if (invoice == null) return;
 
-        var customerId = GetStringProperty(invoice, "CustomerId") ?? GetStringProperty(invoice, "customer");
+        var customerId = invoice.CustomerId;
         if (string.IsNullOrEmpty(customerId)) return;
 
         var user = await FindUserByStripeCustomer(identityBaseUrl, customerId);
@@ -114,7 +140,7 @@ public class StripeWebhookController : ControllerBase
     private async Task HandlePaymentFailed(Event stripeEvent)
     {
         var invoice = stripeEvent.Data.Object as Invoice;
-        var customerId = GetStringProperty(invoice, "CustomerId") ?? GetStringProperty(invoice, "customer");
+        var customerId = invoice?.CustomerId;
         Console.Error.WriteLine($"Payment failed for Stripe customer: {customerId ?? "unknown"}");
     }
 
@@ -123,13 +149,13 @@ public class StripeWebhookController : ControllerBase
         var subscription = stripeEvent.Data.Object as Subscription;
         if (subscription == null) return;
 
-        var customerId = GetStringProperty(subscription, "CustomerId") ?? GetStringProperty(subscription, "customer");
+        var customerId = subscription.CustomerId;
         if (string.IsNullOrEmpty(customerId)) return;
 
         var user = await FindUserByStripeCustomer(identityBaseUrl, customerId);
         if (user == null) return;
 
-        var status = GetStringProperty(subscription, "Status") ?? GetStringProperty(subscription, "status");
+        var status = subscription.Status;
         var isPro = status == "active" || status == "trialing";
 
         await UpdateUserSubscription(identityBaseUrl, user.UserId, isPro: isPro);
@@ -140,7 +166,7 @@ public class StripeWebhookController : ControllerBase
         var subscription = stripeEvent.Data.Object as Subscription;
         if (subscription == null) return;
 
-        var customerId = GetStringProperty(subscription, "CustomerId") ?? GetStringProperty(subscription, "customer");
+        var customerId = subscription.CustomerId;
         if (string.IsNullOrEmpty(customerId)) return;
 
         var user = await FindUserByStripeCustomer(identityBaseUrl, customerId);
@@ -162,9 +188,43 @@ public class StripeWebhookController : ControllerBase
         if (stripeCustomerId != null) payload["stripeCustomerId"] = stripeCustomerId;
         if (stripeSubscriptionId != null) payload["stripeSubscriptionId"] = stripeSubscriptionId;
 
-        var response = await client.PutAsJsonAsync(
-            $"{identityBaseUrl}/api/subscription/{userId}",
-            payload);
+        var url = $"{identityBaseUrl}/api/subscription/{userId}";
+        Console.WriteLine($"[StripeWebhook] Calling Identity PUT {url} with isPro={isPro}, customerId={stripeCustomerId}");
+
+        var response = await client.PutAsJsonAsync(url, payload);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            Console.Error.WriteLine($"[StripeWebhook] Identity update failed: {response.StatusCode} {body}");
+        }
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    private async Task UpdateUserSubscriptionByEmail(
+        string identityBaseUrl,
+        string email,
+        bool? isPro = null,
+        string? stripeCustomerId = null,
+        string? stripeSubscriptionId = null)
+    {
+        var client = _httpClientFactory.CreateClient();
+        var payload = new Dictionary<string, object?>();
+        if (isPro.HasValue) payload["isPro"] = isPro.Value;
+        if (stripeCustomerId != null) payload["stripeCustomerId"] = stripeCustomerId;
+        if (stripeSubscriptionId != null) payload["stripeSubscriptionId"] = stripeSubscriptionId;
+
+        var url = $"{identityBaseUrl}/api/subscription/by-email/{Uri.EscapeDataString(email)}";
+        Console.WriteLine($"[StripeWebhook] Calling Identity PUT {url} with isPro={isPro}, customerId={stripeCustomerId}");
+
+        var response = await client.PutAsJsonAsync(url, payload);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            Console.Error.WriteLine($"[StripeWebhook] Identity update by email failed: {response.StatusCode} {body}");
+        }
 
         response.EnsureSuccessStatusCode();
     }
@@ -172,20 +232,18 @@ public class StripeWebhookController : ControllerBase
     private async Task<StripeUserInfo?> FindUserByStripeCustomer(string identityBaseUrl, string stripeCustomerId)
     {
         var client = _httpClientFactory.CreateClient();
-        var response = await client.GetAsync(
-            $"{identityBaseUrl}/api/subscription/by-stripe-customer/{stripeCustomerId}");
+        var url = $"{identityBaseUrl}/api/subscription/by-stripe-customer/{stripeCustomerId}";
+        Console.WriteLine($"[StripeWebhook] Looking up user by Stripe customer: {stripeCustomerId}");
 
-        if (!response.IsSuccessStatusCode) return null;
+        var response = await client.GetAsync(url);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.Error.WriteLine($"[StripeWebhook] Customer lookup failed: {response.StatusCode}");
+            return null;
+        }
 
         return await response.Content.ReadFromJsonAsync<StripeUserInfo>();
-    }
-
-    private static string? GetStringProperty(object? obj, string propertyName)
-    {
-        if (obj == null) return null;
-        var prop = obj.GetType().GetProperty(propertyName,
-            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
-        return prop?.GetValue(obj) as string;
     }
 }
 

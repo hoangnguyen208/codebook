@@ -128,7 +128,7 @@ const authConfig: NextAuthConfig = {
       issuer: process.env.AUTH_DUENDE_ISSUER,
       clientId: process.env.AUTH_DUENDE_CLIENT_ID,
       clientSecret: process.env.AUTH_DUENDE_CLIENT_SECRET,
-      authorization: { params: { scope: "openid profile email offline_access codebook.api" } },
+      authorization: { params: { scope: "openid profile email pro offline_access codebook.api" } },
       profile(profile) {
         const claims = profile as Record<string, unknown>;
         const email = getStringClaim(claims, "email");
@@ -231,6 +231,25 @@ const authConfig: NextAuthConfig = {
         } else if (typeof token.sub === "string" && token.sub.trim().length > 0) {
           token.name = token.sub.trim();
         }
+      }
+
+      // Re-check isPro from Identity every 15 seconds so webhook updates take effect quickly
+      const isProAge = (token.isProLastChecked as number) ?? 0;
+      if (
+        typeof token.accessToken === "string" &&
+        typeof token.sub === "string" &&
+        Date.now() - isProAge > 15_000
+      ) {
+        const latestUserInfo = await fetchDuendeUserInfo(token.accessToken);
+        const latestIsPro = getStringClaim(latestUserInfo, "isPro");
+        if (latestIsPro !== undefined) {
+          token.isPro = latestIsPro === "true";
+        }
+        const latestCustId = getStringClaim(latestUserInfo, "stripeCustomerId");
+        if (latestCustId !== undefined) {
+          token.stripeCustomerId = latestCustId || undefined;
+        }
+        token.isProLastChecked = Date.now();
       }
 
       return token;

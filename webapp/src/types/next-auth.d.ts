@@ -20,5 +20,7 @@ declare module "next-auth/jwt" {
     provider?: string;
     isPro?: boolean;
     stripeCustomerId?: string;
+    expiresAt?: number;
+    isProLastChecked?: number;
   }
 }

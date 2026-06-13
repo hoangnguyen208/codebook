@@ -67,8 +67,6 @@ internal static class HostingExtensions
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
-        builder.Services.AddTransient<IProfileService, ProfileService>();
-
         builder.Services.Configure<ResendEmailOptions>(builder.Configuration.GetSection(ResendEmailOptions.SectionName));
         builder.Services.PostConfigure<ResendEmailOptions>(options =>
         {
@@ -146,6 +144,8 @@ internal static class HostingExtensions
             .AddInMemoryClients(Config.GetClients(builder.Configuration))
             .AddAspNetIdentity<ApplicationUser>()
             .AddLicenseSummary();
+
+        builder.Services.AddTransient<IProfileService, ProfileService>();
 
         return builder.Build();
     }
