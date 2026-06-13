@@ -631,6 +631,16 @@ export function DashboardShell({
                 <span className="hidden sm:inline">Favorites</span>
               </Link>
 
+              {!isPro ? (
+                <Link
+                  href="/upgrade"
+                  className="h-11 rounded-2xl inline-flex items-center gap-1.5 px-2 sm:px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
+                >
+                  <Sparkles className="size-4" />
+                  <span className="hidden sm:inline">Upgrade</span>
+                </Link>
+              ) : null}
+
               <Button size="lg" className="h-11 rounded-2xl px-2 sm:px-4" onClick={() => setCreateCollectionDialogOpen(true)}>
                 <FolderOpen className="size-4" />
                 <span className="hidden sm:inline">New Collection</span>

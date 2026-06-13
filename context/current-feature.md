@@ -1,6 +1,6 @@
 # Current Feature
 
-Stripe Integration - Phase 2
+Stripe Integration - Upgrade Page
 
 ## Status
 
@@ -9,7 +9,9 @@ Completed
 
 ## Goals
 
-- Wire up Stripe webhook handler to sync subscription status, add feature gating to server actions and upload route, build billing UI on settings page, and add upgrade success toast.
+- Add ghost "Upgrade" button to dashboard header for free users only
+- Create `/upgrade` page with pricing comparison and checkout flow
+- Pro users redirected to billing settings if they visit /upgrade
 
 ## History
 
@@ -66,3 +68,6 @@ Completed
 - **Favorite Button Wiring**: Wired up CollectionHeaderActions no-op star, added favorite toggle to ItemCard/ImageCard/FileRow, added `router.refresh()` for cross-page propagation, fixed `useState` prop sync via `useEffect`, removed `UpdatedAt` mutation from backend favorite endpoints to preserve list ordering, added per-section client-side sorting (Name/Date/Type) to /favorites page
 - **Homepage Mockup**: Created feature branch, built `prototypes/homepage/` with dark-theme marketing page (index.html, styles.css, script.js) featuring hero chaos-to-order animation, 6-card features grid, AI section with editor mockup, pricing with yearly toggle, CTA, and footer
 - **Homepage Implementation**: Created feature branch `feature/homepage-implementation`, replaced `page.tsx` with full marketing homepage keeping auth check, created marketing components (Navbar, ChaosContainer, TransformArrow, DashboardPreview, Features, AISection, Pricing, Footer, SectionHeader)
+- **Stripe Phase 1**: Installed Stripe SDK, created usage limit utilities (with 15 xUnit tests), added IsPro/StripeCustomerId/StripeSubscriptionId to ApplicationUser, built custom ProfileService for Identity claims, added IsPro to NextAuth session/JWT types, created checkout and customer portal API routes
+- **Stripe Phase 2**: Built Stripe webhook handler in CodeBook.Api (5 event types), added feature gating to createItem/createCollection/upload routes, built billing settings UI with upgrade/manage billing buttons and success toast, added PRO badges to sidebar for free users, wired periodic IsPro sync in JWT callback
+- **Stripe Upgrade Page**: Added ghost "Upgrade" button to dashboard header for free users, created /upgrade page with pricing comparison and Stripe checkout flow, Pro users see billing management prompt instead, free users redirected from /items/file|image to /upgrade
