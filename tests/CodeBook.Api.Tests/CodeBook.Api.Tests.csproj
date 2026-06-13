@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\api\CodeBook.Api\CodeBook.Api.csproj" />
+    <ProjectReference Include="..\..\api\CodeBook.Identity\CodeBook.Identity.csproj" />
   </ItemGroup>
 
 </Project>
