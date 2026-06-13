@@ -1,5 +1,6 @@
 using System.Globalization;
 using Duende.IdentityServer;
+using Duende.IdentityServer.Services;
 using CodeBook.Identity.Data;
 using CodeBook.Identity.Models;
 using CodeBook.Identity.Services;
@@ -64,6 +65,8 @@ internal static class HostingExtensions
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
+        builder.Services.AddTransient<IProfileService, ProfileService>();
 
         builder.Services.Configure<ResendEmailOptions>(builder.Configuration.GetSection(ResendEmailOptions.SectionName));
         builder.Services.PostConfigure<ResendEmailOptions>(options =>
