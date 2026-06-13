@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Code2, File, FileImage, FileText, Link2, Sparkles, Terminal } from "lucide-react";
+import { ArrowLeft, Code2, File, FileImage, FileText, Link2, Lock, Sparkles, Terminal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { auth } from "@/auth";
@@ -12,6 +12,8 @@ import type { DashboardItemType } from "@/types/items";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+const PRO_ONLY_TYPES = new Set(["file", "image"]);
 
 const itemTypeIcons: Record<DashboardItemType["icon"], LucideIcon> = {
   code: Code2,
@@ -55,6 +57,39 @@ export default async function ItemsByTypePage({
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const session = await auth();
   const accessToken = session?.accessToken;
+  const isPro = session?.user?.isPro ?? false;
+
+  if (PRO_ONLY_TYPES.has(type) && !isPro) {
+    const label = type === "file" ? "Files" : "Images";
+    return (
+      <main className="min-h-screen bg-background">
+        <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-12 sm:px-6 lg:px-8">
+          <Link href="/dashboard" className={cn(buttonVariants({ variant: "outline" }), "self-start")}>
+            <ArrowLeft className="size-4" />
+            Back to dashboard
+          </Link>
+          <div className="flex flex-col items-center justify-center gap-6 rounded-3xl border border-border/70 bg-card px-8 py-20 text-center shadow-sm">
+            <div className="flex size-16 items-center justify-center rounded-2xl border border-blue-500/20 bg-blue-500/10">
+              <Lock className="size-7 text-blue-400" />
+            </div>
+            <div className="max-w-md space-y-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{label}</h1>
+              <p className="text-sm text-muted-foreground">
+                File and image uploads are a Pro feature. Upgrade to CodeBook Pro to unlock unlimited items, file uploads, image storage, and more.
+              </p>
+            </div>
+            <Link
+              href="/settings?tab=billing"
+              className={cn(buttonVariants({ variant: "default" }), "bg-blue-500 hover:bg-blue-600 text-white gap-2")}
+            >
+              <Sparkles className="size-4" />
+              Upgrade to Pro
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   let itemTypes: Awaited<ReturnType<typeof getSystemDashboardItemTypes>> = [];
   let result: Awaited<ReturnType<typeof getItemsByType>> = { items: [], totalCount: 0, page: 1, pageSize: 21 };

@@ -53,6 +53,7 @@ internal static class HostingExtensions
     public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
     {
         builder.Services.AddRazorPages();
+        builder.Services.AddControllers();
 
         builder.Services.AddSingleton<AuthRateLimiter>();
 
@@ -166,6 +167,8 @@ internal static class HostingExtensions
 
         app.MapRazorPages()
             .RequireAuthorization();
+
+        app.MapControllers();
 
         return app;
     }

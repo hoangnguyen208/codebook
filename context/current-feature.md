@@ -1,6 +1,6 @@
 # Current Feature
 
-Stripe Integration - Phase 1
+Stripe Integration - Phase 2
 
 ## Status
 
@@ -9,7 +9,7 @@ Completed
 
 ## Goals
 
-- Set up Stripe SDK, usage limit utilities, session/auth changes for `IsPro`, checkout flow API, and customer portal API. This phase builds all server-side infrastructure needed before wiring up webhooks and UI.
+- Wire up Stripe webhook handler to sync subscription status, add feature gating to server actions and upload route, build billing UI on settings page, and add upgrade success toast.
 
 ## History
 

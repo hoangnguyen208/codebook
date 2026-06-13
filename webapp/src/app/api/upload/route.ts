@@ -64,6 +64,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (!session.user.isPro) {
+    return NextResponse.json({ error: "File uploads require a Pro subscription" }, { status: 403 });
+  }
+
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
 

@@ -5,11 +5,16 @@ import { getProfileStats } from "@/lib/db/profile";
 
 export const dynamic = "force-dynamic";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const session = await auth();
   const stats = await getProfileStats({ accessToken: session?.accessToken });
   const name = getDisplayName(session?.user?.name, session?.user?.email);
   const provider = session?.user?.provider;
+  const { tab: initialTab } = await searchParams;
 
   return (
     <SettingsClient
@@ -19,6 +24,8 @@ export default async function SettingsPage() {
       isDuendeUser={provider === "duende-identity-server6"}
       identityBaseUrl={process.env.AUTH_DUENDE_ISSUER?.replace(/\/$/, "") ?? ""}
       stats={stats}
+      isPro={session?.user?.isPro ?? false}
+      initialTab={initialTab === "billing" || initialTab === "account" ? initialTab : undefined}
     />
   );
 }
