@@ -1,6 +1,6 @@
 # Current Feature
 
-Homepage Implementation
+Stripe Integration - Phase 2
 
 ## Status
 
@@ -9,54 +9,7 @@ Completed
 
 ## Goals
 
-- Replace `webapp/src/app/page.tsx` with the marketing homepage
-- Authenticated users still redirect to `/dashboard` (keep existing `auth()` check at top of page)
-- Unauthenticated users see the full marketing homepage
-
-## Sections
-
-### 1. Navigation (server component)
-- Fixed top nav with `backdrop-blur`, gets border on scroll via a client wrapper
-- CodeBook logo (blue `<rect>` with `</>` text) + brand text
-- Links: Features (`href="#features"`), Pricing (`href="#pricing"`)
-- Sign In button: links to `/auth/login`
-- Get Started button: links to `/auth/register`, styled with shadcn button using `bg-blue-500`
-- Extracted to `src/components/marketing/Navbar.tsx`
-
-### 2. Hero (server + client components)
-- Headline: "Stop Losing Your **Developer Knowledge**" with gradient text
-- Subheadline about scattered knowledge with CTA buttons
-- Chaos-to-order visual: 3-column grid (chaos / arrow / dashboard)
-- ChaosContainer — client component with `requestAnimationFrame` for floating icons
-- TransformArrow — CSS pulse animation
-- DashboardPreview — static server component
-
-### 3. Features (server component)
-- 6 cards in a responsive grid
-- Extracted to `src/components/marketing/Features.tsx`
-
-### 4. AI Section (server component)
-- Two-column layout with Pro Feature badge, checklist, code editor mockup
-
-### 5. Pricing (client component)
-- Monthly/Yearly toggle with "Save 25%" badge
-- Two cards: Free and Pro
-- Extracted to `src/components/marketing/Pricing.tsx`
-
-### 6. CTA (server component)
-- "Ready to Organize Your Knowledge?" headline with CTA button
-
-### 7. Footer (server component)
-- Logo, tagline, link columns, copyright with dynamic year
-- Extracted to `src/components/marketing/Footer.tsx`
-
-## Notes
-
-- Use Tailwind classes only — no custom CSS files
-- Use buttonVariants for all CTAs styled as links
-- Navbar scroll border effect via client wrapper with scrollY event listener
-- Chaos animation via `requestAnimationFrame` loop
-- Keep the existing `auth()` session check at top of `page.tsx`
+- Wire up Stripe webhook handler to sync subscription status, add feature gating to server actions and upload route, build billing UI on settings page, and add upgrade success toast.
 
 ## History
 

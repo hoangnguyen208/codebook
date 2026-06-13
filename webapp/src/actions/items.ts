@@ -9,6 +9,9 @@ import {
   toggleItemFavorite as toggleItemFavoriteInDb,
   toggleItemPin as toggleItemPinInDb,
 } from "@/lib/db/items";
+import { getUsageLimits } from "@/lib/db/usage";
+
+const PRO_ONLY_TYPES = new Set(["file", "image"]);
 
 const createItemSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
@@ -57,6 +60,19 @@ export async function createItem(
   }
 
   const data = parsed.data;
+
+  if (PRO_ONLY_TYPES.has(data.typeName.toLowerCase()) && !session.user.isPro) {
+    return { success: false, error: "File and image uploads require a Pro subscription" };
+  }
+
+  try {
+    const usage = await getUsageLimits({ accessToken: session.accessToken });
+    if (!usage.canCreateItem) {
+      return { success: false, error: `You have reached the free tier limit of ${usage.itemLimit} items. Upgrade to Pro for unlimited items.` };
+    }
+  } catch {
+    // If usage check fails, allow creation to proceed rather than blocking
+  }
 
   try {
     const created = await createItemInDb(

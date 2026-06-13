@@ -40,9 +40,7 @@ public static class DatabaseSeeder
         {
             CreateCollection(userId, "React Patterns", "Reusable React patterns and hooks", now, isFavorite: true),
             CreateCollection(userId, "AI Workflows", "AI prompts and workflow automations", now),
-            CreateCollection(userId, "DevOps", "Infrastructure and deployment resources", now, isFavorite: true),
-            CreateCollection(userId, "Terminal Commands", "Useful shell commands for everyday development", now),
-            CreateCollection(userId, "Design Resources", "UI/UX resources and references", now)
+            CreateCollection(userId, "DevOps", "Infrastructure and deployment resources", now, isFavorite: true)
         };
 
         var collectionsByName = collections.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
@@ -122,14 +120,14 @@ public static class DatabaseSeeder
         items[7].ItemCollections.Add(new ItemCollection { ItemId = items[7].Id, CollectionId = collectionsByName["DevOps"].Id });
         items[8].ItemCollections.Add(new ItemCollection { ItemId = items[8].Id, CollectionId = collectionsByName["DevOps"].Id });
         items[9].ItemCollections.Add(new ItemCollection { ItemId = items[9].Id, CollectionId = collectionsByName["DevOps"].Id });
-        items[10].ItemCollections.Add(new ItemCollection { ItemId = items[10].Id, CollectionId = collectionsByName["Terminal Commands"].Id });
-        items[11].ItemCollections.Add(new ItemCollection { ItemId = items[11].Id, CollectionId = collectionsByName["Terminal Commands"].Id });
-        items[12].ItemCollections.Add(new ItemCollection { ItemId = items[12].Id, CollectionId = collectionsByName["Terminal Commands"].Id });
-        items[13].ItemCollections.Add(new ItemCollection { ItemId = items[13].Id, CollectionId = collectionsByName["Terminal Commands"].Id });
-        items[14].ItemCollections.Add(new ItemCollection { ItemId = items[14].Id, CollectionId = collectionsByName["Design Resources"].Id });
-        items[15].ItemCollections.Add(new ItemCollection { ItemId = items[15].Id, CollectionId = collectionsByName["Design Resources"].Id });
-        items[16].ItemCollections.Add(new ItemCollection { ItemId = items[16].Id, CollectionId = collectionsByName["Design Resources"].Id });
-        items[17].ItemCollections.Add(new ItemCollection { ItemId = items[17].Id, CollectionId = collectionsByName["Design Resources"].Id });
+        items[10].ItemCollections.Add(new ItemCollection { ItemId = items[10].Id, CollectionId = collectionsByName["React Patterns"].Id });
+        items[11].ItemCollections.Add(new ItemCollection { ItemId = items[11].Id, CollectionId = collectionsByName["React Patterns"].Id });
+        items[12].ItemCollections.Add(new ItemCollection { ItemId = items[12].Id, CollectionId = collectionsByName["DevOps"].Id });
+        items[13].ItemCollections.Add(new ItemCollection { ItemId = items[13].Id, CollectionId = collectionsByName["DevOps"].Id });
+        items[14].ItemCollections.Add(new ItemCollection { ItemId = items[14].Id, CollectionId = collectionsByName["AI Workflows"].Id });
+        items[15].ItemCollections.Add(new ItemCollection { ItemId = items[15].Id, CollectionId = collectionsByName["AI Workflows"].Id });
+        items[16].ItemCollections.Add(new ItemCollection { ItemId = items[16].Id, CollectionId = collectionsByName["React Patterns"].Id });
+        items[17].ItemCollections.Add(new ItemCollection { ItemId = items[17].Id, CollectionId = collectionsByName["React Patterns"].Id });
 
         dbContext.ItemTypes.AddRange(itemTypes);
         dbContext.Collections.AddRange(collections);

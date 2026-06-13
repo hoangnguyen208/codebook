@@ -9,6 +9,7 @@ import {
   deleteCollection as deleteCollectionInDb,
   toggleCollectionFavorite as toggleCollectionFavoriteInDb,
 } from "@/lib/db/collections";
+import { getUsageLimits } from "@/lib/db/usage";
 import type { CollectionForSelect } from "@/types/items";
 
 const createCollectionSchema = z.object({
@@ -37,6 +38,15 @@ export async function createCollection(
   }
 
   const data = parsed.data;
+
+  try {
+    const usage = await getUsageLimits({ accessToken: session.accessToken });
+    if (!usage.canCreateCollection) {
+      return { success: false, error: `You have reached the free tier limit of ${usage.collectionLimit} collections. Upgrade to Pro for unlimited collections.` };
+    }
+  } catch {
+    // If usage check fails, allow creation to proceed rather than blocking
+  }
 
   try {
     const created = await createCollectionInDb(

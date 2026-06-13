@@ -5,9 +5,11 @@ declare module "next-auth" {
     user: DefaultSession["user"] & {
       id: string;
       provider?: string;
+      isPro?: boolean;
     };
     accessToken?: string;
     refreshToken?: string;
+    stripeCustomerId?: string;
   }
 }
 
@@ -16,5 +18,7 @@ declare module "next-auth/jwt" {
     accessToken?: string;
     refreshToken?: string;
     provider?: string;
+    isPro?: boolean;
+    stripeCustomerId?: string;
   }
 }

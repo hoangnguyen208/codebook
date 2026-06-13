@@ -184,6 +184,19 @@ const authConfig: NextAuthConfig = {
         if (email) {
           token.email = email;
         }
+
+        // Sync IsPro and StripeCustomerId from Identity claims
+        const isProClaim =
+          getStringClaim(userInfoClaims, "isPro") ??
+          getStringClaim(idTokenClaims, "isPro");
+        token.isPro = isProClaim === "true";
+
+        const stripeCustomerIdClaim =
+          getStringClaim(userInfoClaims, "stripeCustomerId") ??
+          getStringClaim(idTokenClaims, "stripeCustomerId");
+        if (stripeCustomerIdClaim) {
+          token.stripeCustomerId = stripeCustomerIdClaim;
+        }
       }
 
       // Refresh token if expired
@@ -198,6 +211,17 @@ const authConfig: NextAuthConfig = {
             token.refreshToken = refreshed.refreshToken;
           }
           token.expiresAt = refreshed.expiresAt;
+
+          // Re-fetch userinfo to get latest isPro after token refresh
+          const refreshedUserInfo = await fetchDuendeUserInfo(refreshed.accessToken);
+          const refreshedIsPro = getStringClaim(refreshedUserInfo, "isPro");
+          if (refreshedIsPro !== undefined) {
+            token.isPro = refreshedIsPro === "true";
+          }
+          const refreshedStripeCustId = getStringClaim(refreshedUserInfo, "stripeCustomerId");
+          if (refreshedStripeCustId) {
+            token.stripeCustomerId = refreshedStripeCustId;
+          }
         }
       }
 
@@ -242,6 +266,14 @@ const authConfig: NextAuthConfig = {
 
       if (typeof token.provider === "string") {
         session.user.provider = token.provider;
+      }
+
+      if (typeof token.isPro === "boolean") {
+        session.user.isPro = token.isPro;
+      }
+
+      if (typeof token.stripeCustomerId === "string") {
+        session.stripeCustomerId = token.stripeCustomerId;
       }
 
       return session;

@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Identity;
 
 namespace CodeBook.Identity.Models;
 
-// Add profile data for application users by adding properties to the ApplicationUser class
 public class ApplicationUser : IdentityUser
 {
+    public bool IsPro { get; set; }
+    public string? StripeCustomerId { get; set; }
+    public string? StripeSubscriptionId { get; set; }
 }

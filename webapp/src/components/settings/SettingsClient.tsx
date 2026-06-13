@@ -8,6 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { UserAvatar } from "@/components/auth/UserAvatar";
 import { DeleteAccountDialog } from "@/components/profile/DeleteAccountDialog";
 import { EditorPreferencesSection } from "@/components/settings/EditorPreferencesSection";
+import { BillingSettings } from "@/components/settings/billing-settings";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   code: Code2, code2: Code2, sparkles: Sparkles, terminal: Terminal,
@@ -33,6 +34,8 @@ type Props = {
   sessionImage: string | null;
   isDuendeUser: boolean;
   identityBaseUrl: string;
+  isPro: boolean;
+  initialTab?: "billing" | "account";
   stats: {
     totalCollections: number;
     totalItems: number;
@@ -40,10 +43,10 @@ type Props = {
   };
 };
 
-export function SettingsClient({ sessionName, sessionEmail, sessionImage, isDuendeUser, identityBaseUrl, stats }: Props) {
-  const [tab, setTab] = useState<"editor" | "account">("editor");
+export function SettingsClient({ sessionName, sessionEmail, sessionImage, isDuendeUser, identityBaseUrl, isPro, initialTab, stats }: Props) {
+  const [tab, setTab] = useState<"editor" | "billing" | "account">(initialTab ?? "editor");
 
-  const sidebarLink = (id: "editor" | "account", label: string) => (
+  const sidebarLink = (id: "editor" | "billing" | "account", label: string) => (
     <button
       type="button"
       onClick={() => setTab(id)}
@@ -65,6 +68,7 @@ export function SettingsClient({ sessionName, sessionEmail, sessionImage, isDuen
             </Link>
             <div className="mt-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Settings</div>
             {sidebarLink("editor", "Editor")}
+            {sidebarLink("billing", "Billing")}
             {sidebarLink("account", "Account")}
           </nav>
         </aside>
@@ -75,6 +79,10 @@ export function SettingsClient({ sessionName, sessionEmail, sessionImage, isDuen
           {tab === "editor" ? (
             <div id="editor">
               <EditorPreferencesSection />
+            </div>
+          ) : tab === "billing" ? (
+            <div id="billing">
+              <BillingSettings isPro={isPro} itemCount={stats.totalItems} collectionCount={stats.totalCollections} />
             </div>
           ) : (
             <div id="account" className="space-y-6">
