@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
 import { FileUpload } from "@/components/items/FileUpload";
-
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
 const ITEM_TYPES = [
   { name: "snippet", label: "Snippet" },
   { name: "prompt", label: "Prompt" },
@@ -182,18 +182,32 @@ export function CreateItemDialog({ open, onOpenChange, initialType, initialColle
           />
 
           {HAS_CONTENT.has(typeName) ? (
-            HAS_CODE_EDITOR.has(typeName) ? (
-              <CodeEditor
-                value={content}
-                onChange={setContent}
-                language={language}
-              />
-            ) : (
-              <MarkdownEditor
-                value={content}
-                onChange={setContent}
-              />
-            )
+            <>
+              {HAS_LANGUAGE.has(typeName) ? (
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className={cn(inputClasses, "cursor-pointer")}
+                  aria-label="Language"
+                >
+                  {LANGUAGE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              ) : null}
+              {HAS_CODE_EDITOR.has(typeName) ? (
+                <CodeEditor
+                  value={content}
+                  onChange={setContent}
+                  language={language}
+                />
+              ) : (
+                <MarkdownEditor
+                  value={content}
+                  onChange={setContent}
+                />
+              )}
+            </>
           ) : null}
 
           {HAS_FILE_UPLOAD.has(typeName) ? (
@@ -213,17 +227,6 @@ export function CreateItemDialog({ open, onOpenChange, initialType, initialColle
               className={inputClasses}
               placeholder="https://..."
               aria-label="URL"
-            />
-          ) : null}
-
-          {HAS_LANGUAGE.has(typeName) ? (
-            <input
-              type="text"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className={inputClasses}
-              placeholder="Language (typescript, python...)"
-              aria-label="Language"
             />
           ) : null}
 

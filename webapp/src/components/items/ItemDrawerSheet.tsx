@@ -38,6 +38,7 @@ import { getCollectionsForSelectAction } from "@/actions/collections";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
 import type { CollectionForSelect, ItemDetail } from "@/types/items";
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
 
 const itemTypeIcons: Record<string, LucideIcon> = {
   code: Code2,
@@ -336,18 +337,37 @@ export function ItemDrawerSheet() {
               {isEditing ? (
                 <>
                   {showContentEdit ? (
-                    showCodeEditor ? (
-                      <CodeEditor
-                        value={editContent}
-                        onChange={setEditContent}
-                        language={editLanguage}
-                      />
-                    ) : (
-                      <MarkdownEditor
-                        value={editContent}
-                        onChange={setEditContent}
-                      />
-                    )
+                    <>
+                      {showLanguageEdit ? (
+                        <div className="rounded-xl border border-border/70 bg-background/70 p-4">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                            Language
+                          </p>
+                          <select
+                            value={editLanguage}
+                            onChange={(e) => setEditLanguage(e.target.value)}
+                            className={cn(inputClasses, "cursor-pointer")}
+                            aria-label="Language"
+                          >
+                            {LANGUAGE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : null}
+                      {showCodeEditor ? (
+                        <CodeEditor
+                          value={editContent}
+                          onChange={setEditContent}
+                          language={editLanguage}
+                        />
+                      ) : (
+                        <MarkdownEditor
+                          value={editContent}
+                          onChange={setEditContent}
+                        />
+                      )}
+                    </>
                   ) : null}
 
                   {showUrlEdit ? (
@@ -362,22 +382,6 @@ export function ItemDrawerSheet() {
                         className={inputClasses}
                         placeholder="https://..."
                         aria-label="URL"
-                      />
-                    </div>
-                  ) : null}
-
-                  {showLanguageEdit ? (
-                    <div className="rounded-xl border border-border/70 bg-background/70 p-4">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        Language
-                      </p>
-                      <input
-                        type="text"
-                        value={editLanguage}
-                        onChange={(e) => setEditLanguage(e.target.value)}
-                        className={inputClasses}
-                        placeholder="typescript, python, bash..."
-                        aria-label="Language"
                       />
                     </div>
                   ) : null}
