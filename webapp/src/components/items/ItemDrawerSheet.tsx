@@ -34,7 +34,7 @@ import {
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
 import { updateItem, deleteItem, toggleFavoriteItem, togglePinItem } from "@/actions/items";
-import { generateAutoTags, generateDescription, explainCode } from "@/actions/ai";
+import { generateAutoTags, generateDescription, explainCode, optimizePrompt } from "@/actions/ai";
 import { getCollectionsForSelectAction } from "@/actions/collections";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
@@ -275,6 +275,36 @@ export function ItemDrawerSheet() {
     } else {
       toast.error(result.error);
       return null;
+    }
+  };
+
+  const handleOptimizePrompt = async (): Promise<string | null> => {
+    if (!item) return null;
+    const result = await optimizePrompt({
+      prompt: item.content ?? "",
+    });
+    if (result.success) {
+      return result.data;
+    } else {
+      toast.error(result.error);
+      return null;
+    }
+  };
+
+  const handleApplyOptimized = async (optimizedText: string) => {
+    if (!item) return;
+    const result = await updateItem(item.id, {
+      title: item.title,
+      content: optimizedText,
+      tags: item.tags,
+      collectionIds: item.collectionIds ?? [],
+    });
+    if (result.success) {
+      setItem(result.data as ItemDetail);
+      toast.success("Prompt updated");
+      router.refresh();
+    } else {
+      toast.error(result.error);
     }
   };
 
@@ -587,6 +617,10 @@ export function ItemDrawerSheet() {
                       <MarkdownEditor
                         value={item.content}
                         readOnly
+                        isPro={isPro}
+                        typeName={item.typeName}
+                        onOptimize={handleOptimizePrompt}
+                        onApplyOptimized={handleApplyOptimized}
                       />
                     )
                   ) : null}

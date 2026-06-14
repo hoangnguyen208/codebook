@@ -274,3 +274,64 @@ export async function explainCode(
     };
   }
 }
+
+const optimizePromptSchema = z.object({
+  prompt: z.string().trim().min(1),
+});
+
+export async function optimizePrompt(
+  raw: {
+    prompt: string;
+  },
+): Promise<ActionResult<string>> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  if (!session.user.isPro) {
+    return { success: false, error: "AI prompt optimization is a Pro feature" };
+  }
+
+  const parsed = optimizePromptSchema.safeParse(raw);
+  if (!parsed.success) {
+    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
+    return { success: false, error: firstIssue };
+  }
+
+  const { prompt } = parsed.data;
+
+  const rateLimit = checkAIRateLimit(session.user.id);
+  if (!rateLimit.allowed) {
+    const minutes = Math.ceil((rateLimit.resetAt - Date.now()) / 60000);
+    return {
+      success: false,
+      error: `AI rate limit reached. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
+    };
+  }
+
+  const truncatedPrompt = prompt.slice(0, 2000);
+
+  try {
+    const client = getClient();
+
+    const response = await client.responses.create({
+      model: AI_MODEL,
+      instructions:
+        "You are a prompt optimization assistant for a developer's AI prompt library. Take the given prompt and refine it to be clearer, more specific, and more effective. Improve structure, add specificity, clarify intent, and fix any ambiguity. Preserve the original purpose and style. Return ONLY the optimized prompt text with no preamble, labels, or explanation.",
+      input: `Optimize the following AI prompt to be clearer and more effective:\n\n${truncatedPrompt}`,
+    });
+
+    const text = response.output_text;
+    if (!text) {
+      return { success: false, error: "AI returned an empty response" };
+    }
+
+    return { success: true, data: text.trim() };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "AI service unavailable",
+    };
+  }
+}

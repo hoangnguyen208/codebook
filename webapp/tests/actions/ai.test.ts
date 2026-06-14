@@ -27,7 +27,7 @@ vi.mock("@/lib/ai-rate-limit", () => ({
   checkAIRateLimit: mockCheckAIRateLimit,
 }));
 
-import { generateAutoTags, generateDescription, explainCode } from "@/actions/ai";
+import { generateAutoTags, generateDescription, explainCode, optimizePrompt } from "@/actions/ai";
 
 describe("generateAutoTags", () => {
   beforeEach(() => {
@@ -631,6 +631,162 @@ describe("explainCode", () => {
       mockResponsesCreate.mockRejectedValue(new Error("Service unavailable"));
 
       const result = await explainCode({ code: "test", typeName: "snippet" });
+
+      expect(result).toEqual({ success: false, error: "Service unavailable" });
+    });
+  });
+});
+
+describe("optimizePrompt", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCheckAIRateLimit.mockReturnValue({ allowed: true, remaining: 19, resetAt: Date.now() + 3600000 });
+  });
+
+  describe("auth", () => {
+    it("returns error when not authenticated", async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const result = await optimizePrompt({ prompt: "Write a blog post" });
+
+      expect(result).toEqual({ success: false, error: "Not authenticated" });
+    });
+
+    it("returns error when user has no id", async () => {
+      mockAuth.mockResolvedValue({ user: {} });
+
+      const result = await optimizePrompt({ prompt: "Write a blog post" });
+
+      expect(result).toEqual({ success: false, error: "Not authenticated" });
+    });
+  });
+
+  describe("Pro gating", () => {
+    it("returns error when user is not Pro", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: false },
+      });
+
+      const result = await optimizePrompt({ prompt: "Write a blog post" });
+
+      expect(result).toEqual({ success: false, error: "AI prompt optimization is a Pro feature" });
+    });
+
+    it("allows Pro users to proceed", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "Write a comprehensive blog post about AI advancements in 2024.",
+      });
+
+      const result = await optimizePrompt({ prompt: "Write a blog post" });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("validation", () => {
+    it("returns error when prompt is empty", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+
+      const result = await optimizePrompt({ prompt: "" });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("returns error when prompt is only whitespace", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+
+      const result = await optimizePrompt({ prompt: "   " });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("rate limiting", () => {
+    it("returns error when rate limit exceeded", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockCheckAIRateLimit.mockReturnValue({
+        allowed: false,
+        remaining: 0,
+        resetAt: Date.now() + 300000,
+      });
+
+      const result = await optimizePrompt({ prompt: "test" });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain("AI rate limit reached");
+      }
+    });
+  });
+
+  describe("content truncation", () => {
+    it("truncates prompt to 2000 characters before API call", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "Optimized prompt text.",
+      });
+
+      const longPrompt = "x".repeat(3000);
+
+      await optimizePrompt({ prompt: longPrompt });
+
+      expect(mockResponsesCreate).toHaveBeenCalledTimes(1);
+      const callInput = mockResponsesCreate.mock.calls[0][0].input;
+      expect(callInput).toContain("x".repeat(2000));
+      expect(callInput).not.toContain("x".repeat(2001));
+    });
+  });
+
+  describe("prompt optimization", () => {
+    it("returns optimized prompt text", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "Write a detailed technical blog post about AI advancements in 2024, covering GPT-5, multimodal models, and their impact on software development. Include code examples and practical applications.",
+      });
+
+      const result = await optimizePrompt({
+        prompt: "Write a blog post about AI",
+      });
+
+      expect(result).toEqual({
+        success: true,
+        data: "Write a detailed technical blog post about AI advancements in 2024, covering GPT-5, multimodal models, and their impact on software development. Include code examples and practical applications.",
+      });
+    });
+
+    it("returns error on empty AI response", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "",
+      });
+
+      const result = await optimizePrompt({ prompt: "test" });
+
+      expect(result).toEqual({ success: false, error: "AI returned an empty response" });
+    });
+
+    it("returns error on API failure", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockRejectedValue(new Error("Service unavailable"));
+
+      const result = await optimizePrompt({ prompt: "test" });
 
       expect(result).toEqual({ success: false, error: "Service unavailable" });
     });
