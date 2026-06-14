@@ -286,12 +286,19 @@ function DashboardSidebar({
                 Favorite collections
               </SidebarSectionLabel>
               <div className="space-y-1">
-                {favoriteCollections.map((collection) => (
+                {favoriteCollections.map((collection) => {
+                  const favIsActive = pathname === `/collections/${encodeURIComponent(collection.id)}`;
+                  return (
                   <Link
                     key={collection.id}
                     href={`/collections/${encodeURIComponent(collection.id)}`}
                     onClick={onNavigate}
-                    className="flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60",
+                      favIsActive
+                        ? "border-sidebar-ring/60 bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "border-transparent",
+                    )}
                   >
                     <span
                       className={cn(
@@ -311,7 +318,8 @@ function DashboardSidebar({
                     </div>
                     <Star className="size-4 fill-current text-yellow-400" />
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -320,12 +328,19 @@ function DashboardSidebar({
                 Recent collections
               </SidebarSectionLabel>
               <div className="space-y-1">
-                {recentCollections.map((collection) => (
+                {recentCollections.map((collection) => {
+                  const recIsActive = pathname === `/collections/${encodeURIComponent(collection.id)}`;
+                  return (
                   <Link
                     key={collection.id}
                     href={`/collections/${encodeURIComponent(collection.id)}`}
                     onClick={onNavigate}
-                    className="flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60",
+                      recIsActive
+                        ? "border-sidebar-ring/60 bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "border-transparent",
+                    )}
                   >
                     <span
                       className={cn(
@@ -345,12 +360,18 @@ function DashboardSidebar({
                       {collection.itemCount}
                     </span>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
               <Link
                 href="/collections"
                 onClick={onNavigate}
-                className="inline-flex items-center gap-1 px-3 pt-1 text-sm font-medium text-sidebar-primary hover:text-sidebar-primary/80"
+                className={cn(
+                  "inline-flex items-center gap-1 px-3 pt-1 text-sm font-medium text-sidebar-primary hover:text-sidebar-primary/80",
+                  pathname === "/collections"
+                    ? "text-sidebar-accent-foreground"
+                    : "",
+                )}
               >
                 View all collections
                 <ArrowUpRight className="size-3.5" />
@@ -620,7 +641,12 @@ export function DashboardShell({
 
               <Link
                 href="/favorites"
-                className="h-11 rounded-2xl border border-border/70 bg-card px-2 sm:px-3 inline-flex items-center gap-1.5 sm:gap-2 text-sm hover:bg-accent transition-colors shrink-0"
+                className={cn(
+                  "h-11 rounded-2xl border inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 text-sm transition-colors shrink-0",
+                  pathname === "/favorites"
+                    ? "border-sidebar-ring/60 bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "border-border/70 bg-card hover:bg-accent",
+                )}
               >
                 <Star className={cn(
                   "size-4",
@@ -635,7 +661,12 @@ export function DashboardShell({
               {!isPro ? (
                 <Link
                   href="/upgrade"
-                  className="h-11 rounded-2xl inline-flex items-center gap-1.5 px-2 sm:px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
+                  className={cn(
+                    "h-11 rounded-2xl inline-flex items-center gap-1.5 px-2 sm:px-3 text-sm transition-colors shrink-0",
+                    pathname === "/upgrade"
+                      ? "border-sidebar-ring/60 bg-sidebar-accent text-sidebar-accent-foreground border"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                  )}
                 >
                   <Sparkles className="size-4" />
                   <span className="hidden sm:inline">Upgrade</span>
