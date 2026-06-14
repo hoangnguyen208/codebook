@@ -27,7 +27,7 @@ vi.mock("@/lib/ai-rate-limit", () => ({
   checkAIRateLimit: mockCheckAIRateLimit,
 }));
 
-import { generateAutoTags, generateDescription } from "@/actions/ai";
+import { generateAutoTags } from "@/actions/ai";
 
 describe("generateAutoTags", () => {
   beforeEach(() => {
@@ -114,9 +114,7 @@ describe("generateAutoTags", () => {
       const result = await generateAutoTags({ title: "Test" });
 
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain("AI rate limit reached");
-      }
+      expect(result.error).toContain("AI rate limit reached");
     });
 
     it("allows when rate limit not exceeded", async () => {
@@ -279,135 +277,6 @@ describe("generateAutoTags", () => {
       mockResponsesCreate.mockRejectedValue(new Error("Service unavailable"));
 
       const result = await generateAutoTags({ title: "Test" });
-
-      expect(result).toEqual({ success: false, error: "Service unavailable" });
-    });
-  });
-});
-
-describe("generateDescription", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockCheckAIRateLimit.mockReturnValue({ allowed: true, remaining: 19, resetAt: Date.now() + 3600000 });
-  });
-
-  describe("auth and Pro gating", () => {
-    it("returns error when not authenticated", async () => {
-      mockAuth.mockResolvedValue(null);
-      const result = await generateDescription({ title: "Test" });
-      expect(result).toEqual({ success: false, error: "Not authenticated" });
-    });
-
-    it("returns error when user is not Pro", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: false } });
-      const result = await generateDescription({ title: "Test" });
-      expect(result).toEqual({ success: false, error: "AI description generation is a Pro feature" });
-    });
-  });
-
-  describe("validation", () => {
-    it("returns error when no info is provided", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
-      const result = await generateDescription({});
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe("rate limiting", () => {
-    it("returns error when rate limit exceeded", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
-      mockCheckAIRateLimit.mockReturnValue({ allowed: false, remaining: 0, resetAt: Date.now() + 300000 });
-      const result = await generateDescription({ title: "Test" });
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain("AI rate limit reached");
-      }
-    });
-  });
-
-  describe("description generation", () => {
-    it("returns generated description text", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
-      mockResponsesCreate.mockResolvedValue({
-        output_text: "A reusable React component for handling user authentication flows.",
-      });
-
-      const result = await generateDescription({ title: "AuthComponent", typeName: "snippet" });
-
-      expect(result).toEqual({
-        success: true,
-        data: "A reusable React component for handling user authentication flows.",
-      });
-    });
-
-    it("includes all available fields in the prompt", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
-      mockResponsesCreate.mockResolvedValue({
-        output_text: "Test description.",
-      });
-
-      await generateDescription({
-        title: "My Item",
-        content: "console.log('hello')",
-        typeName: "snippet",
-        language: "javascript",
-        url: "https://example.com",
-      });
-
-      const callInput = mockResponsesCreate.mock.calls[0][0].input;
-      expect(callInput).toContain("Title: My Item");
-      expect(callInput).toContain("Type: snippet");
-      expect(callInput).toContain("Language: javascript");
-      expect(callInput).toContain("URL: https://example.com");
-      expect(callInput).toContain("Content: console.log('hello')");
-    });
-
-    it("truncates content to 2000 characters", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
-      mockResponsesCreate.mockResolvedValue({ output_text: "Test." });
-
-      const longContent = "x".repeat(3000);
-      await generateDescription({ title: "Test", content: longContent });
-
-      const callInput = mockResponsesCreate.mock.calls[0][0].input;
-      expect(callInput).toContain("x".repeat(2000));
-      expect(callInput).not.toContain("x".repeat(2001));
-    });
-
-    it("handles title-only input", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
-      mockResponsesCreate.mockResolvedValue({ output_text: "A sample script." });
-
-      const result = await generateDescription({ title: "My Script" });
-
-      expect(result).toEqual({ success: true, data: "A sample script." });
-    });
-
-    it("strips surrounding quotes from response", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
-      mockResponsesCreate.mockResolvedValue({
-        output_text: '"A quoted description."',
-      });
-
-      const result = await generateDescription({ title: "Test" });
-
-      expect(result).toEqual({ success: true, data: "A quoted description." });
-    });
-
-    it("returns error on empty AI response", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
-      mockResponsesCreate.mockResolvedValue({ output_text: "" });
-
-      const result = await generateDescription({ title: "Test" });
-
-      expect(result).toEqual({ success: false, error: "AI returned an empty response" });
-    });
-
-    it("returns error on API failure", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", isPro: true } });
-      mockResponsesCreate.mockRejectedValue(new Error("Service unavailable"));
-
-      const result = await generateDescription({ title: "Test" });
 
       expect(result).toEqual({ success: false, error: "Service unavailable" });
     });

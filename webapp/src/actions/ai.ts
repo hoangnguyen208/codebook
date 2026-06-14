@@ -67,14 +67,17 @@ export async function generateAutoTags(
     }
 
     let parsed: unknown;
+    // Try direct JSON parse first
     try {
       parsed = JSON.parse(text);
     } catch {
+      // Try extracting JSON from markdown code block
       const codeBlock = text.match(/```(?:json)?\s*\n?([\s\S]*?)```/);
       if (codeBlock?.[1]) {
         try {
           parsed = JSON.parse(codeBlock[1].trim());
         } catch {
+          // Try extracting a JSON array from the text
           const arrayMatch = text.match(/\[[\s\S]*\]/);
           if (arrayMatch) {
             try {
@@ -87,6 +90,7 @@ export async function generateAutoTags(
           }
         }
       } else {
+        // Try extracting a JSON array from the text
         const arrayMatch = text.match(/\[[\s\S]*\]/);
         if (arrayMatch) {
           try {
@@ -119,86 +123,6 @@ export async function generateAutoTags(
     }
 
     return { success: true, data: normalized.slice(0, 5) };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "AI service unavailable",
-    };
-  }
-}
-
-const generateDescriptionSchema = z.object({
-  title: z.string().trim().optional().or(z.literal("")),
-  content: z.string().trim().nullable().optional(),
-  typeName: z.string().trim().nullable().optional(),
-  language: z.string().trim().nullable().optional(),
-  url: z.string().trim().nullable().optional(),
-});
-
-export async function generateDescription(
-  raw: {
-    title?: string | null;
-    content?: string | null;
-    typeName?: string | null;
-    language?: string | null;
-    url?: string | null;
-  },
-): Promise<ActionResult<string>> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, error: "Not authenticated" };
-  }
-
-  if (!session.user.isPro) {
-    return { success: false, error: "AI description generation is a Pro feature" };
-  }
-
-  const parsed = generateDescriptionSchema.safeParse(raw);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstIssue };
-  }
-
-  const { title, content, typeName, language, url } = parsed.data;
-
-  const rateLimit = checkAIRateLimit(session.user.id);
-  if (!rateLimit.allowed) {
-    const minutes = Math.ceil((rateLimit.resetAt - Date.now()) / 60000);
-    return {
-      success: false,
-      error: `AI rate limit reached. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
-    };
-  }
-
-  const parts: string[] = [];
-  if (title) parts.push(`Title: ${title}`);
-  if (typeName) parts.push(`Type: ${typeName}`);
-  if (language) parts.push(`Language: ${language}`);
-  if (url) parts.push(`URL: ${url}`);
-  if (content) parts.push(`Content: ${content.slice(0, 2000)}`);
-
-  if (parts.length === 0) {
-    return { success: false, error: "Provide at least a title or content to generate a description" };
-  }
-
-  try {
-    const client = getClient();
-
-    const response = await client.responses.create({
-      model: AI_MODEL,
-      instructions:
-        "You are a helpful assistant for a developer's code snippet library. Write a concise 1-2 sentence description summarizing what an item is about based on the available information. Be specific and informative. Return ONLY the description text with no additional commentary, formatting, or labels.",
-      input: `Write a short 1-2 sentence description for this item:\n${parts.join("\n")}`,
-    });
-
-    const text = response.output_text;
-    if (!text) {
-      return { success: false, error: "AI returned an empty response" };
-    }
-
-    const cleaned = text.trim().replace(/^"+|"+$/g, "").trim();
-
-    return { success: true, data: cleaned };
   } catch (error) {
     return {
       success: false,
