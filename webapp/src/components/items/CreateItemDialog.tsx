@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X } from "lucide-react";
+import { Plus, Sparkles, X } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -11,12 +12,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createItem } from "@/actions/items";
+import { generateAutoTags } from "@/actions/ai";
 import { getCollectionsForSelectAction } from "@/actions/collections";
 import type { CollectionForSelect } from "@/types/items";
 import { cn } from "@/lib/utils";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
 import { FileUpload } from "@/components/items/FileUpload";
+import { TagSuggestions } from "@/components/items/TagSuggestions";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 const ITEM_TYPES = [
   { name: "snippet", label: "Snippet" },
@@ -42,9 +45,15 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   initialType?: string;
   initialCollectionId?: string;
+  isPro?: boolean;
 };
 
-export function CreateItemDialog({ open, onOpenChange, initialType, initialCollectionId }: Props) {
+type TagSuggestionState = {
+  tag: string;
+  status: "pending" | "accepted" | "rejected";
+};
+
+export function CreateItemDialog({ open, onOpenChange, initialType, initialCollectionId, isPro = false }: Props) {
   const router = useRouter();
   const hasPresetType = typeof initialType === "string" && initialType.trim().length > 0;
   const initialCols = typeof initialCollectionId === "string" && initialCollectionId.trim().length > 0
@@ -68,6 +77,8 @@ export function CreateItemDialog({ open, onOpenChange, initialType, initialColle
   const [error, setError] = useState<string | null>(null);
   const [availableCollections, setAvailableCollections] = useState<CollectionForSelect[]>([]);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>(initialCols);
+  const [tagSuggestions, setTagSuggestions] = useState<TagSuggestionState[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -86,11 +97,57 @@ export function CreateItemDialog({ open, onOpenChange, initialType, initialColle
     setTagsInput("");
     setError(null);
     setSelectedCollectionIds(initialCols);
+    setTagSuggestions([]);
+    setLoadingSuggestions(false);
   };
 
   const handleOpenChange = (next: boolean) => {
     if (!next) reset();
     onOpenChange(next);
+  };
+
+  const handleSuggestTags = async () => {
+    if (!title.trim()) {
+      toast.error("Enter a title first to get tag suggestions");
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    setTagSuggestions([]);
+
+    const result = await generateAutoTags({
+      title: title.trim(),
+      content: content.trim() || null,
+    });
+
+    setLoadingSuggestions(false);
+
+    if (result.success) {
+      setTagSuggestions(
+        result.data.map((tag) => ({ tag, status: "pending" as const })),
+      );
+    } else {
+      toast.error(result.error);
+    }
+  };
+
+  const handleAcceptSuggestion = (tag: string) => {
+    setTagSuggestions((prev) =>
+      prev.map((s) => (s.tag === tag ? { ...s, status: "accepted" as const } : s)),
+    );
+    const existing = tagsInput
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter((t) => t.length > 0);
+    if (!existing.includes(tag)) {
+      setTagsInput((prev) => (prev.trim() ? `${prev}, ${tag}` : tag));
+    }
+  };
+
+  const handleRejectSuggestion = (tag: string) => {
+    setTagSuggestions((prev) =>
+      prev.map((s) => (s.tag === tag ? { ...s, status: "rejected" as const } : s)),
+    );
   };
 
   const handleSave = async () => {
@@ -231,18 +288,39 @@ export function CreateItemDialog({ open, onOpenChange, initialType, initialColle
           ) : null}
 
           <div>
-            <input
-              type="text"
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-              className={inputClasses}
-              placeholder="Tags (comma, separated)"
-              aria-label="Tags"
-            />
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="text"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                className={cn(inputClasses, "flex-1")}
+                placeholder="Tags (comma, separated)"
+                aria-label="Tags"
+              />
+              {isPro ? (
+                <button
+                  type="button"
+                  onClick={handleSuggestTags}
+                  disabled={loadingSuggestions}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-sm font-medium text-purple-300 hover:bg-purple-500/20 transition-colors disabled:opacity-50 shrink-0"
+                  aria-label="Suggest tags"
+                >
+                  <Sparkles className="size-4" />
+                  {loadingSuggestions ? "Thinking..." : "Suggest"}
+                </button>
+              ) : null}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Comma-separated list of tags
             </p>
           </div>
+
+          <TagSuggestions
+            suggestions={tagSuggestions}
+            onAccept={handleAcceptSuggestion}
+            onReject={handleRejectSuggestion}
+            loading={loadingSuggestions}
+          />
 
           <div>
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">

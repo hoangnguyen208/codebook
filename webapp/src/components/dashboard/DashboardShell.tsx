@@ -543,6 +543,7 @@ export function DashboardShell({
       <ItemDrawerProvider
         selectedItemId={drawerItemId}
         onOpenChange={setDrawerItemId}
+        isPro={isPro}
       >
       <div className="lg:grid lg:min-h-screen lg:grid-cols-[auto_minmax(0,1fr)]">
         <aside
@@ -1003,7 +1004,7 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      <CreateItemDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+      <CreateItemDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} isPro={isPro} />
       <CreateCollectionDialog open={createCollectionDialogOpen} onOpenChange={setCreateCollectionDialogOpen} />
       </SearchProvider>
     </main>

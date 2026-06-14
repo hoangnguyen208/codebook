@@ -127,6 +127,7 @@ export default async function ItemsByTypePage({
           itemTypeBorderColorClass={typeBorderColorClass}
           itemTypeLabel={itemType.label.slice(0, -1)}
           typeName={type}
+          isPro={isPro}
         />
         {fetchError ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">

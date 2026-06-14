@@ -20,6 +20,7 @@ type ItemsGridClientProps = {
   itemTypeLabel: string;
   typeName: string;
   initialCollectionId?: string;
+  isPro?: boolean;
 };
 
 function ItemsGridInner({
@@ -30,6 +31,7 @@ function ItemsGridInner({
   itemTypeLabel,
   typeName,
   initialCollectionId,
+  isPro = false,
 }: ItemsGridClientProps) {
   const { openDrawer } = useItemDrawer();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -102,6 +104,7 @@ function ItemsGridInner({
         onOpenChange={setCreateDialogOpen}
         initialType={typeName}
         initialCollectionId={initialCollectionId}
+        isPro={isPro}
       />
     </>
   );
@@ -109,7 +112,7 @@ function ItemsGridInner({
 
 export function ItemsGridClient(props: ItemsGridClientProps) {
   return (
-    <ItemDrawerProvider>
+    <ItemDrawerProvider isPro={props.isPro}>
       <ItemsGridInner {...props} />
     </ItemDrawerProvider>
   );

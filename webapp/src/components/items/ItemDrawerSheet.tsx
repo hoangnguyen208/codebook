@@ -34,9 +34,11 @@ import {
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
 import { updateItem, deleteItem, toggleFavoriteItem, togglePinItem } from "@/actions/items";
+import { generateAutoTags } from "@/actions/ai";
 import { getCollectionsForSelectAction } from "@/actions/collections";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
+import { TagSuggestions } from "@/components/items/TagSuggestions";
 import type { CollectionForSelect, ItemDetail } from "@/types/items";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 
@@ -84,6 +86,11 @@ type StatusBanner = {
   message: string;
 };
 
+type SuggestionState = {
+  tag: string;
+  status: "pending" | "accepted" | "rejected";
+};
+
 function resolveIcon(iconName: string | null): LucideIcon {
   if (!iconName) return FileText;
   return itemTypeIcons[iconName.trim().toLowerCase()] ?? FileText;
@@ -120,7 +127,7 @@ const inputClasses =
   "w-full rounded-xl border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40";
 
 export function ItemDrawerSheet() {
-  const { isOpen, selectedItemId, closeDrawer } = useItemDrawer();
+  const { isOpen, selectedItemId, closeDrawer, isPro } = useItemDrawer();
   const router = useRouter();
   const [item, setItem] = useState<ItemDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -144,6 +151,8 @@ export function ItemDrawerSheet() {
   const [editUrl, setEditUrl] = useState("");
   const [availableCollections, setAvailableCollections] = useState<CollectionForSelect[]>([]);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
+  const [tagSuggestions, setTagSuggestions] = useState<SuggestionState[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
     if (!selectedItemId || !isOpen) {
@@ -180,6 +189,7 @@ export function ItemDrawerSheet() {
     setEditLanguage(item.language ?? "");
     setEditUrl(item.url ?? "");
     setSelectedCollectionIds(item.collectionIds ?? []);
+    setTagSuggestions([]);
     setIsEditing(true);
     setStatus(null);
     getCollectionsForSelectAction().then(setAvailableCollections).catch(() => {});
@@ -188,6 +198,51 @@ export function ItemDrawerSheet() {
   const cancelEdit = () => {
     setIsEditing(false);
     setStatus(null);
+    setTagSuggestions([]);
+  };
+
+  const handleSuggestTags = async () => {
+    if (!editTitle.trim()) {
+      toast.error("Enter a title first to get tag suggestions");
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    setTagSuggestions([]);
+
+    const result = await generateAutoTags({
+      title: editTitle.trim(),
+      content: editContent.trim() || null,
+    });
+
+    setLoadingSuggestions(false);
+
+    if (result.success) {
+      setTagSuggestions(
+        result.data.map((tag) => ({ tag, status: "pending" as const })),
+      );
+    } else {
+      toast.error(result.error);
+    }
+  };
+
+  const handleAcceptSuggestion = (tag: string) => {
+    setTagSuggestions((prev) =>
+      prev.map((s) => (s.tag === tag ? { ...s, status: "accepted" as const } : s)),
+    );
+    const existing = editTagsInput
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter((t) => t.length > 0);
+    if (!existing.includes(tag)) {
+      setEditTagsInput((prev) => (prev.trim() ? `${prev}, ${tag}` : tag));
+    }
+  };
+
+  const handleRejectSuggestion = (tag: string) => {
+    setTagSuggestions((prev) =>
+      prev.map((s) => (s.tag === tag ? { ...s, status: "rejected" as const } : s)),
+    );
   };
 
   const handleSave = async () => {
@@ -390,17 +445,39 @@ export function ItemDrawerSheet() {
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
                       Tags
                     </p>
-                    <input
-                      type="text"
-                      value={editTagsInput}
-                      onChange={(e) => setEditTagsInput(e.target.value)}
-                      className={inputClasses}
-                      placeholder="comma, separated, tags"
-                      aria-label="Tags"
-                    />
+                    <div className="flex items-center gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={editTagsInput}
+                        onChange={(e) => setEditTagsInput(e.target.value)}
+                        className={cn(inputClasses, "flex-1")}
+                        placeholder="comma, separated, tags"
+                        aria-label="Tags"
+                      />
+                      {isPro ? (
+                        <button
+                          type="button"
+                          onClick={handleSuggestTags}
+                          disabled={loadingSuggestions}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-sm font-medium text-purple-300 hover:bg-purple-500/20 transition-colors disabled:opacity-50 shrink-0"
+                          aria-label="Suggest tags"
+                        >
+                          <Sparkles className="size-4" />
+                          {loadingSuggestions ? "Thinking..." : "Suggest"}
+                        </button>
+                      ) : null}
+                    </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       Comma-separated list of tags
                     </p>
+                    <div className="mt-3">
+                      <TagSuggestions
+                        suggestions={tagSuggestions}
+                        onAccept={handleAcceptSuggestion}
+                        onReject={handleRejectSuggestion}
+                        loading={loadingSuggestions}
+                      />
+                    </div>
                   </div>
 
                   <div className="rounded-xl border border-border/70 bg-background/70 p-4">

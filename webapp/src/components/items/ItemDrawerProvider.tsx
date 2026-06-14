@@ -7,6 +7,7 @@ type ItemDrawerContextValue = {
   openDrawer: (itemId: string) => void;
   closeDrawer: () => void;
   isOpen: boolean;
+  isPro: boolean;
 };
 
 const ItemDrawerContext = createContext<ItemDrawerContextValue | null>(null);
@@ -23,12 +24,14 @@ type ItemDrawerProviderProps = {
   children: ReactNode;
   selectedItemId?: string | null;
   onOpenChange?: (itemId: string | null) => void;
+  isPro?: boolean;
 };
 
 export function ItemDrawerProvider({
   children,
   selectedItemId: controlledSelectedItemId,
   onOpenChange,
+  isPro = false,
 }: ItemDrawerProviderProps) {
   const [internalSelectedItemId, setInternalSelectedItemId] = useState<string | null>(null);
 
@@ -60,8 +63,9 @@ export function ItemDrawerProvider({
       openDrawer,
       closeDrawer,
       isOpen: selectedItemId !== null,
+      isPro,
     }),
-    [selectedItemId, openDrawer, closeDrawer],
+    [selectedItemId, openDrawer, closeDrawer, isPro],
   );
 
   return (

@@ -1,6 +1,6 @@
 # Current Feature
 
-Stripe Integration - Upgrade Page
+AI Auto-Tagging
 
 ## Status
 
@@ -9,9 +9,11 @@ Completed
 
 ## Goals
 
-- Add ghost "Upgrade" button to dashboard header for free users only
-- Create `/upgrade` page with pricing comparison and checkout flow
-- Pro users redirected to billing settings if they visit /upgrade
+- Add AI-powered tag suggestions for items using OpenAI gpt-5-nano
+- "Suggest Tags" button in create item dialog and item drawer edit mode
+- Display suggested tags as badges with accept/reject controls
+- Pro-only feature with UI-level and server-side gating
+- Establish OpenAI foundation for subsequent AI features
 
 ## History
 
@@ -71,3 +73,4 @@ Completed
 - **Stripe Phase 1**: Installed Stripe SDK, created usage limit utilities (with 15 xUnit tests), added IsPro/StripeCustomerId/StripeSubscriptionId to ApplicationUser, built custom ProfileService for Identity claims, added IsPro to NextAuth session/JWT types, created checkout and customer portal API routes
 - **Stripe Phase 2**: Built Stripe webhook handler in CodeBook.Api (5 event types), added feature gating to createItem/createCollection/upload routes, built billing settings UI with upgrade/manage billing buttons and success toast, added PRO badges to sidebar for free users, wired periodic IsPro sync in JWT callback
 - **Stripe Upgrade Page**: Added ghost "Upgrade" button to dashboard header for free users, created /upgrade page with pricing comparison and Stripe checkout flow, Pro users see billing management prompt instead, free users redirected from /items/file|image to /upgrade
+- **AI Auto-Tagging**: Created feature branch `feature/ai-auto-tag`, installed openai SDK, created OpenAI client utility with Responses API for gpt-5-nano, added AI rate limit config (20 req/hr per user), created `generateAutoTags` server action with auth/Pro/Zod/rate-limit gating, added Suggest Tags button to CreateItemDialog and ItemDrawerSheet edit mode, created TagSuggestions component with accept/reject controls, threaded `isPro` through ItemDrawerProvider context and page components

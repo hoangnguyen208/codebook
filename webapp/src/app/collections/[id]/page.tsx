@@ -35,6 +35,7 @@ export default async function CollectionItemsPage({
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const session = await auth();
   const accessToken = session?.accessToken;
+  const isPro = session?.user?.isPro ?? false;
 
   let collections: Awaited<ReturnType<typeof getDashboardCollections>> = { items: [], totalCount: 0, page: 1, pageSize: 21 };
   let result: Awaited<ReturnType<typeof getItemsByCollection>> = { items: [], totalCount: 0, page: 1, pageSize: 21 };
@@ -104,6 +105,7 @@ export default async function CollectionItemsPage({
           itemTypeLabel="Item"
           typeName=""
           initialCollectionId={collection.id}
+          isPro={isPro}
         />
         {fetchError ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
