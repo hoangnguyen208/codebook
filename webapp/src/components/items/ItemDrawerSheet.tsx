@@ -34,7 +34,7 @@ import {
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
 import { updateItem, deleteItem, toggleFavoriteItem, togglePinItem } from "@/actions/items";
-import { generateAutoTags, generateDescription } from "@/actions/ai";
+import { generateAutoTags, generateDescription, explainCode } from "@/actions/ai";
 import { getCollectionsForSelectAction } from "@/actions/collections";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
@@ -260,6 +260,21 @@ export function ItemDrawerSheet() {
       setEditDescription(result.data);
     } else {
       toast.error(result.error);
+    }
+  };
+
+  const handleExplainCode = async (): Promise<string | null> => {
+    if (!item) return null;
+    const result = await explainCode({
+      code: item.content ?? "",
+      language: item.language,
+      typeName: item.typeName,
+    });
+    if (result.success) {
+      return result.data;
+    } else {
+      toast.error(result.error);
+      return null;
     }
   };
 
@@ -564,6 +579,9 @@ export function ItemDrawerSheet() {
                         value={item.content}
                         language={item.language ?? undefined}
                         readOnly
+                        isPro={isPro}
+                        typeName={item.typeName}
+                        onExplain={handleExplainCode}
                       />
                     ) : (
                       <MarkdownEditor

@@ -206,3 +206,71 @@ export async function generateDescription(
     };
   }
 }
+
+const explainCodeSchema = z.object({
+  code: z.string().trim().min(1),
+  language: z.string().trim().nullable().optional(),
+  typeName: z.string().trim().min(1),
+});
+
+export async function explainCode(
+  raw: {
+    code: string;
+    language?: string | null;
+    typeName: string;
+  },
+): Promise<ActionResult<string>> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  if (!session.user.isPro) {
+    return { success: false, error: "AI code explanation is a Pro feature" };
+  }
+
+  const parsed = explainCodeSchema.safeParse(raw);
+  if (!parsed.success) {
+    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
+    return { success: false, error: firstIssue };
+  }
+
+  const { code, language, typeName } = parsed.data;
+
+  const rateLimit = checkAIRateLimit(session.user.id);
+  if (!rateLimit.allowed) {
+    const minutes = Math.ceil((rateLimit.resetAt - Date.now()) / 60000);
+    return {
+      success: false,
+      error: `AI rate limit reached. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
+    };
+  }
+
+  const truncatedCode = code.slice(0, 2000);
+
+  const typeLabel = typeName === "command" ? "terminal command" : "code snippet";
+  const langHint = language ? `\nLanguage: ${language}` : "";
+
+  try {
+    const client = getClient();
+
+    const response = await client.responses.create({
+      model: AI_MODEL,
+      instructions:
+        "You are a code explanation assistant for a developer's snippet library. Explain the provided code concisely in 200-300 words using markdown formatting. Cover what the code does, key concepts, patterns, and notable functions or techniques. Be informative but concise. Return ONLY the markdown explanation with no preamble or labels.",
+      input: `Explain this ${typeLabel}:${langHint}\n\nCode:\n${truncatedCode}`,
+    });
+
+    const text = response.output_text;
+    if (!text) {
+      return { success: false, error: "AI returned an empty response" };
+    }
+
+    return { success: true, data: text.trim() };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "AI service unavailable",
+    };
+  }
+}

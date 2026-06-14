@@ -27,7 +27,7 @@ vi.mock("@/lib/ai-rate-limit", () => ({
   checkAIRateLimit: mockCheckAIRateLimit,
 }));
 
-import { generateAutoTags, generateDescription } from "@/actions/ai";
+import { generateAutoTags, generateDescription, explainCode } from "@/actions/ai";
 
 describe("generateAutoTags", () => {
   beforeEach(() => {
@@ -408,6 +408,229 @@ describe("generateDescription", () => {
       mockResponsesCreate.mockRejectedValue(new Error("Service unavailable"));
 
       const result = await generateDescription({ title: "Test" });
+
+      expect(result).toEqual({ success: false, error: "Service unavailable" });
+    });
+  });
+});
+
+describe("explainCode", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCheckAIRateLimit.mockReturnValue({ allowed: true, remaining: 19, resetAt: Date.now() + 3600000 });
+  });
+
+  describe("auth", () => {
+    it("returns error when not authenticated", async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const result = await explainCode({ code: "console.log('hello')", typeName: "snippet" });
+
+      expect(result).toEqual({ success: false, error: "Not authenticated" });
+    });
+
+    it("returns error when user has no id", async () => {
+      mockAuth.mockResolvedValue({ user: {} });
+
+      const result = await explainCode({ code: "console.log('hello')", typeName: "snippet" });
+
+      expect(result).toEqual({ success: false, error: "Not authenticated" });
+    });
+  });
+
+  describe("Pro gating", () => {
+    it("returns error when user is not Pro", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: false },
+      });
+
+      const result = await explainCode({ code: "ls -la", typeName: "command" });
+
+      expect(result).toEqual({ success: false, error: "AI code explanation is a Pro feature" });
+    });
+
+    it("allows Pro users to proceed", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "This code logs a message to the console.",
+      });
+
+      const result = await explainCode({ code: "console.log('hello')", typeName: "snippet" });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("validation", () => {
+    it("returns error when code is empty", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+
+      const result = await explainCode({ code: "", typeName: "snippet" });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("returns error when code is only whitespace", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+
+      const result = await explainCode({ code: "   ", typeName: "snippet" });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("returns error when typeName is empty", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+
+      const result = await explainCode({ code: "test", typeName: "" });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("rate limiting", () => {
+    it("returns error when rate limit exceeded", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockCheckAIRateLimit.mockReturnValue({
+        allowed: false,
+        remaining: 0,
+        resetAt: Date.now() + 300000,
+      });
+
+      const result = await explainCode({ code: "test", typeName: "snippet" });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain("AI rate limit reached");
+      }
+    });
+  });
+
+  describe("content truncation", () => {
+    it("truncates code to 2000 characters before API call", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "Explanation text.",
+      });
+
+      const longCode = "x".repeat(3000);
+
+      await explainCode({ code: longCode, typeName: "snippet" });
+
+      expect(mockResponsesCreate).toHaveBeenCalledTimes(1);
+      const callInput = mockResponsesCreate.mock.calls[0][0].input;
+      expect(callInput).toContain("x".repeat(2000));
+      expect(callInput).not.toContain("x".repeat(2001));
+    });
+  });
+
+  describe("explanation generation", () => {
+    it("returns generated explanation with code snippet type", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "This code snippet uses Array.map to transform each element into a new array.",
+      });
+
+      const result = await explainCode({
+        code: "const doubled = [1,2,3].map(x => x * 2);",
+        typeName: "snippet",
+        language: "javascript",
+      });
+
+      expect(result).toEqual({
+        success: true,
+        data: "This code snippet uses Array.map to transform each element into a new array.",
+      });
+    });
+
+    it("returns generated explanation with command type", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "This terminal command lists all files in the current directory with detailed information.",
+      });
+
+      const result = await explainCode({
+        code: "ls -la",
+        typeName: "command",
+      });
+
+      expect(result).toEqual({
+        success: true,
+        data: "This terminal command lists all files in the current directory with detailed information.",
+      });
+    });
+
+    it("includes language in the prompt when provided", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "Python list comprehension explanation.",
+      });
+
+      await explainCode({
+        code: "[x for x in range(10)]",
+        typeName: "snippet",
+        language: "python",
+      });
+
+      const callInput = mockResponsesCreate.mock.calls[0][0].input;
+      expect(callInput).toContain("Language: python");
+      expect(callInput).toContain("[x for x in range(10)]");
+    });
+
+    it("omits language from prompt when not provided", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "Explanation without language.",
+      });
+
+      await explainCode({
+        code: "echo hello",
+        typeName: "command",
+      });
+
+      const callInput = mockResponsesCreate.mock.calls[0][0].input;
+      expect(callInput).not.toContain("Language:");
+    });
+
+    it("returns error on empty AI response", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockResolvedValue({
+        output_text: "",
+      });
+
+      const result = await explainCode({ code: "test", typeName: "snippet" });
+
+      expect(result).toEqual({ success: false, error: "AI returned an empty response" });
+    });
+
+    it("returns error on API failure", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1", isPro: true },
+      });
+      mockResponsesCreate.mockRejectedValue(new Error("Service unavailable"));
+
+      const result = await explainCode({ code: "test", typeName: "snippet" });
 
       expect(result).toEqual({ success: false, error: "Service unavailable" });
     });
