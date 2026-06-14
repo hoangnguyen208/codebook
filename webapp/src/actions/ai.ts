@@ -1,44 +1,24 @@
 "use server";
 
 import { z } from "zod";
-import { auth } from "@/auth";
 import { getClient, AI_MODEL } from "@/lib/ai";
 import { checkAIRateLimit } from "@/lib/ai-rate-limit";
+import { requireProAuth } from "@/lib/action-auth";
+import { validateOrFail } from "@/lib/action-validate";
+import { wrapDbAction } from "@/lib/action-wrap";
+import type { ActionResult } from "@/lib/action-result";
 
 const generateAutoTagsSchema = z.object({
   title: z.string().trim().min(1),
   content: z.string().trim().nullable().optional(),
 });
 
-type ActionResult<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
 function normalizeTag(tag: string): string {
   return tag.toLowerCase().trim();
 }
 
-export async function generateAutoTags(
-  raw: { title: string; content?: string | null },
-): Promise<ActionResult<string[]>> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, error: "Not authenticated" };
-  }
-
-  if (!session.user.isPro) {
-    return { success: false, error: "AI tag suggestions are a Pro feature" };
-  }
-
-  const parsed = generateAutoTagsSchema.safeParse(raw);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstIssue };
-  }
-
-  const { title, content } = parsed.data;
-
-  const rateLimit = checkAIRateLimit(session.user.id);
+function checkRateLimit(userId: string): { success: false; error: string } | null {
+  const rateLimit = checkAIRateLimit(userId);
   if (!rateLimit.allowed) {
     const minutes = Math.ceil((rateLimit.resetAt - Date.now()) / 60000);
     return {
@@ -46,85 +26,102 @@ export async function generateAutoTags(
       error: `AI rate limit reached. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
     };
   }
+  return null;
+}
 
-  const truncatedContent = content ? content.slice(0, 2000) : "";
+async function aiQuery(instructions: string, input: string): Promise<string> {
+  const client = getClient();
+  const response = await client.responses.create({
+    model: AI_MODEL,
+    instructions,
+    input,
+  });
+  const text = response.output_text;
+  if (!text) {
+    throw new Error("AI returned an empty response");
+  }
+  return text;
+}
 
+function parseAiJsonArray(text: string): unknown {
   try {
-    const client = getClient();
-
-    const response = await client.responses.create({
-      model: AI_MODEL,
-      instructions:
-        "You are a tagging assistant for a developer's code snippet library. Given an item's title (and optionally its content), suggest 3-5 lowercase freeform tags. Even if only the title is given, extract keywords and infer tags from it. You must respond with a valid JSON array of strings and nothing else.",
-      input: content
-        ? `Title: ${title}\nContent: ${truncatedContent}\n\nProvide 3-5 tags as a JSON array only.`
-        : `Title: ${title}\n\nThis item has no content yet. Based on the title, provide 3-5 tags as a JSON array only.`,
-    });
-
-    const text = response.output_text;
-    if (!text) {
-      return { success: false, error: "AI returned an empty response" };
-    }
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      const codeBlock = text.match(/```(?:json)?\s*\n?([\s\S]*?)```/);
-      if (codeBlock?.[1]) {
-        try {
-          parsed = JSON.parse(codeBlock[1].trim());
-        } catch {
-          const arrayMatch = text.match(/\[[\s\S]*\]/);
-          if (arrayMatch) {
-            try {
-              parsed = JSON.parse(arrayMatch[0]);
-            } catch {
-              return { success: false, error: "Failed to parse AI response" };
-            }
-          } else {
-            return { success: false, error: "Failed to parse AI response" };
-          }
-        }
-      } else {
-        const arrayMatch = text.match(/\[[\s\S]*\]/);
-        if (arrayMatch) {
+    return JSON.parse(text);
+  } catch {
+    const codeBlock = text.match(/```(?:json)?\s*\n?([\s\S]*?)```/);
+    if (codeBlock?.[1]) {
+      try {
+        return JSON.parse(codeBlock[1].trim());
+      } catch {
+        const match = text.match(/\[[\s\S]*\]/);
+        if (match) {
           try {
-            parsed = JSON.parse(arrayMatch[0]);
+            return JSON.parse(match[0]);
           } catch {
-            return { success: false, error: "Failed to parse AI response" };
+            throw new Error("Failed to parse AI response");
           }
-        } else {
-          return { success: false, error: "Failed to parse AI response" };
         }
+        throw new Error("Failed to parse AI response");
       }
     }
 
-    let tags: string[];
-    if (Array.isArray(parsed)) {
-      tags = parsed.filter((t): t is string => typeof t === "string");
-    } else if (parsed !== null && typeof parsed === "object" && "tags" in parsed) {
-      const candidate = (parsed as Record<string, unknown>).tags;
-      tags = Array.isArray(candidate)
-        ? candidate.filter((t): t is string => typeof t === "string")
-        : [];
-    } else {
-      tags = [];
+    const arrayMatch = text.match(/\[[\s\S]*\]/);
+    if (arrayMatch) {
+      try {
+        return JSON.parse(arrayMatch[0]);
+      } catch {
+        throw new Error("Failed to parse AI response");
+      }
     }
 
+    throw new Error("Failed to parse AI response");
+  }
+}
+
+function extractTags(parsed: unknown): string[] {
+  if (Array.isArray(parsed)) {
+    return parsed.filter((t): t is string => typeof t === "string");
+  }
+  if (parsed !== null && typeof parsed === "object" && "tags" in parsed) {
+    const candidate = (parsed as Record<string, unknown>).tags;
+    return Array.isArray(candidate)
+      ? candidate.filter((t): t is string => typeof t === "string")
+      : [];
+  }
+  return [];
+}
+
+export async function generateAutoTags(
+  raw: { title: string; content?: string | null },
+): Promise<ActionResult<string[]>> {
+  const authResult = await requireProAuth("AI tag suggestions");
+  if ("error" in authResult) return authResult;
+
+  const validated = validateOrFail(generateAutoTagsSchema, raw);
+  if ("error" in validated) return validated;
+  const { title, content } = validated;
+
+  const rateLimitError = checkRateLimit(authResult.userId);
+  if (rateLimitError) return rateLimitError;
+
+  return wrapDbAction(async () => {
+    const truncatedContent = content ? content.slice(0, 2000) : "";
+    const text = await aiQuery(
+      "You are a tagging assistant for a developer's code snippet library. Given an item's title (and optionally its content), suggest 3-5 lowercase freeform tags. Even if only the title is given, extract keywords and infer tags from it. You must respond with a valid JSON array of strings and nothing else.",
+      content
+        ? `Title: ${title}\nContent: ${truncatedContent}\n\nProvide 3-5 tags as a JSON array only.`
+        : `Title: ${title}\n\nThis item has no content yet. Based on the title, provide 3-5 tags as a JSON array only.`,
+    );
+
+    const parsed = parseAiJsonArray(text);
+    const tags = extractTags(parsed);
     const normalized = [...new Set(tags.map(normalizeTag).filter((t) => t.length > 0))];
 
     if (normalized.length === 0) {
-      return { success: false, error: "No valid tags returned by AI" };
+      throw new Error("No valid tags returned by AI");
     }
 
-    return { success: true, data: normalized.slice(0, 5) };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "AI service unavailable",
-    };
-  }
+    return normalized.slice(0, 5);
+  }, "AI service unavailable");
 }
 
 const generateDescriptionSchema = z.object({
@@ -144,31 +141,15 @@ export async function generateDescription(
     url?: string | null;
   },
 ): Promise<ActionResult<string>> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireProAuth("AI description generation");
+  if ("error" in authResult) return authResult;
 
-  if (!session.user.isPro) {
-    return { success: false, error: "AI description generation is a Pro feature" };
-  }
+  const validated = validateOrFail(generateDescriptionSchema, raw);
+  if ("error" in validated) return validated;
+  const { title, content, typeName, language, url } = validated;
 
-  const parsed = generateDescriptionSchema.safeParse(raw);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstIssue };
-  }
-
-  const { title, content, typeName, language, url } = parsed.data;
-
-  const rateLimit = checkAIRateLimit(session.user.id);
-  if (!rateLimit.allowed) {
-    const minutes = Math.ceil((rateLimit.resetAt - Date.now()) / 60000);
-    return {
-      success: false,
-      error: `AI rate limit reached. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
-    };
-  }
+  const rateLimitError = checkRateLimit(authResult.userId);
+  if (rateLimitError) return rateLimitError;
 
   const parts: string[] = [];
   if (title) parts.push(`Title: ${title}`);
@@ -181,30 +162,14 @@ export async function generateDescription(
     return { success: false, error: "Provide at least a title or content to generate a description" };
   }
 
-  try {
-    const client = getClient();
+  return wrapDbAction(async () => {
+    const text = await aiQuery(
+      "You are a helpful assistant for a developer's code snippet library. Write a concise 1-2 sentence description summarizing what an item is about based on the available information. Be specific and informative. Return ONLY the description text with no additional commentary, formatting, or labels.",
+      `Write a short 1-2 sentence description for this item:\n${parts.join("\n")}`,
+    );
 
-    const response = await client.responses.create({
-      model: AI_MODEL,
-      instructions:
-        "You are a helpful assistant for a developer's code snippet library. Write a concise 1-2 sentence description summarizing what an item is about based on the available information. Be specific and informative. Return ONLY the description text with no additional commentary, formatting, or labels.",
-      input: `Write a short 1-2 sentence description for this item:\n${parts.join("\n")}`,
-    });
-
-    const text = response.output_text;
-    if (!text) {
-      return { success: false, error: "AI returned an empty response" };
-    }
-
-    const cleaned = text.trim().replace(/^"+|"+$/g, "").trim();
-
-    return { success: true, data: cleaned };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "AI service unavailable",
-    };
-  }
+    return text.trim().replace(/^"+|"+$/g, "").trim();
+  }, "AI service unavailable");
 }
 
 const explainCodeSchema = z.object({
@@ -220,59 +185,28 @@ export async function explainCode(
     typeName: string;
   },
 ): Promise<ActionResult<string>> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireProAuth("AI code explanation");
+  if ("error" in authResult) return authResult;
 
-  if (!session.user.isPro) {
-    return { success: false, error: "AI code explanation is a Pro feature" };
-  }
+  const validated = validateOrFail(explainCodeSchema, raw);
+  if ("error" in validated) return validated;
+  const { code, language, typeName } = validated;
 
-  const parsed = explainCodeSchema.safeParse(raw);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstIssue };
-  }
-
-  const { code, language, typeName } = parsed.data;
-
-  const rateLimit = checkAIRateLimit(session.user.id);
-  if (!rateLimit.allowed) {
-    const minutes = Math.ceil((rateLimit.resetAt - Date.now()) / 60000);
-    return {
-      success: false,
-      error: `AI rate limit reached. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
-    };
-  }
+  const rateLimitError = checkRateLimit(authResult.userId);
+  if (rateLimitError) return rateLimitError;
 
   const truncatedCode = code.slice(0, 2000);
-
   const typeLabel = typeName === "command" ? "terminal command" : "code snippet";
   const langHint = language ? `\nLanguage: ${language}` : "";
 
-  try {
-    const client = getClient();
+  return wrapDbAction(async () => {
+    const text = await aiQuery(
+      "You are a code explanation assistant for a developer's snippet library. Explain the provided code concisely in 200-300 words using markdown formatting. Cover what the code does, key concepts, patterns, and notable functions or techniques. Be informative but concise. Return ONLY the markdown explanation with no preamble or labels.",
+      `Explain this ${typeLabel}:${langHint}\n\nCode:\n${truncatedCode}`,
+    );
 
-    const response = await client.responses.create({
-      model: AI_MODEL,
-      instructions:
-        "You are a code explanation assistant for a developer's snippet library. Explain the provided code concisely in 200-300 words using markdown formatting. Cover what the code does, key concepts, patterns, and notable functions or techniques. Be informative but concise. Return ONLY the markdown explanation with no preamble or labels.",
-      input: `Explain this ${typeLabel}:${langHint}\n\nCode:\n${truncatedCode}`,
-    });
-
-    const text = response.output_text;
-    if (!text) {
-      return { success: false, error: "AI returned an empty response" };
-    }
-
-    return { success: true, data: text.trim() };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "AI service unavailable",
-    };
-  }
+    return text.trim();
+  }, "AI service unavailable");
 }
 
 const optimizePromptSchema = z.object({
@@ -284,54 +218,24 @@ export async function optimizePrompt(
     prompt: string;
   },
 ): Promise<ActionResult<string>> {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireProAuth("AI prompt optimization");
+  if ("error" in authResult) return authResult;
 
-  if (!session.user.isPro) {
-    return { success: false, error: "AI prompt optimization is a Pro feature" };
-  }
+  const validated = validateOrFail(optimizePromptSchema, raw);
+  if ("error" in validated) return validated;
+  const { prompt } = validated;
 
-  const parsed = optimizePromptSchema.safeParse(raw);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstIssue };
-  }
-
-  const { prompt } = parsed.data;
-
-  const rateLimit = checkAIRateLimit(session.user.id);
-  if (!rateLimit.allowed) {
-    const minutes = Math.ceil((rateLimit.resetAt - Date.now()) / 60000);
-    return {
-      success: false,
-      error: `AI rate limit reached. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
-    };
-  }
+  const rateLimitError = checkRateLimit(authResult.userId);
+  if (rateLimitError) return rateLimitError;
 
   const truncatedPrompt = prompt.slice(0, 2000);
 
-  try {
-    const client = getClient();
+  return wrapDbAction(async () => {
+    const text = await aiQuery(
+      "You are a prompt optimization assistant for a developer's AI prompt library. Take the given prompt and refine it to be clearer, more specific, and more effective. Improve structure, add specificity, clarify intent, and fix any ambiguity. Preserve the original purpose and style. Return ONLY the optimized prompt text with no preamble, labels, or explanation.",
+      `Optimize the following AI prompt to be clearer and more effective:\n\n${truncatedPrompt}`,
+    );
 
-    const response = await client.responses.create({
-      model: AI_MODEL,
-      instructions:
-        "You are a prompt optimization assistant for a developer's AI prompt library. Take the given prompt and refine it to be clearer, more specific, and more effective. Improve structure, add specificity, clarify intent, and fix any ambiguity. Preserve the original purpose and style. Return ONLY the optimized prompt text with no preamble, labels, or explanation.",
-      input: `Optimize the following AI prompt to be clearer and more effective:\n\n${truncatedPrompt}`,
-    });
-
-    const text = response.output_text;
-    if (!text) {
-      return { success: false, error: "AI returned an empty response" };
-    }
-
-    return { success: true, data: text.trim() };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "AI service unavailable",
-    };
-  }
+    return text.trim();
+  }, "AI service unavailable");
 }

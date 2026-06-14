@@ -1,7 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { auth } from "@/auth";
 import {
   createItem as createItemInDb,
   updateItem as updateItemInDb,
@@ -10,6 +9,10 @@ import {
   toggleItemPin as toggleItemPinInDb,
 } from "@/lib/db/items";
 import { getUsageLimits } from "@/lib/db/usage";
+import { requireAuth } from "@/lib/action-auth";
+import { validateOrFail } from "@/lib/action-validate";
+import { wrapDbAction } from "@/lib/action-wrap";
+import type { ActionResult } from "@/lib/action-result";
 
 const PRO_ONLY_TYPES = new Set(["file", "image"]);
 
@@ -41,41 +44,46 @@ const updateItemSchema = z.object({
 type CreateItemInput = z.infer<typeof createItemSchema>;
 type UpdateItemInput = z.infer<typeof updateItemSchema>;
 
-type ActionResult<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
-export async function createItem(
-  raw: CreateItemInput,
-): Promise<ActionResult<unknown>> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    return { success: false, error: "Not authenticated" };
-  }
-
-  const parsed = createItemSchema.safeParse(raw);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstIssue };
-  }
-
-  const data = parsed.data;
-
-  if (PRO_ONLY_TYPES.has(data.typeName.toLowerCase()) && !session.user.isPro) {
-    return { success: false, error: "File and image uploads require a Pro subscription" };
-  }
-
+async function checkUsageLimit(
+  accessToken: string,
+  check: (usage: Awaited<ReturnType<typeof getUsageLimits>>) => boolean,
+  errorMessage: string,
+): Promise<{ success: false; error: string } | null> {
   try {
-    const usage = await getUsageLimits({ accessToken: session.accessToken });
-    if (!usage.canCreateItem) {
-      return { success: false, error: `You have reached the free tier limit of ${usage.itemLimit} items. Upgrade to Pro for unlimited items.` };
+    const usage = await getUsageLimits({ accessToken });
+    if (!check(usage)) {
+      return { success: false, error: errorMessage };
     }
   } catch {
     // If usage check fails, allow creation to proceed rather than blocking
   }
+  return null;
+}
 
-  try {
-    const created = await createItemInDb(
+export async function createItem(
+  raw: CreateItemInput,
+): Promise<ActionResult<unknown>> {
+  const authResult = await requireAuth();
+  if ("error" in authResult) return authResult;
+
+  const validated = validateOrFail(createItemSchema, raw);
+  if ("error" in validated) return validated;
+
+  const data = validated;
+
+  if (PRO_ONLY_TYPES.has(data.typeName.toLowerCase()) && !authResult.isPro) {
+    return { success: false, error: "File and image uploads require a Pro subscription" };
+  }
+
+  const usageError = await checkUsageLimit(
+    authResult.accessToken,
+    (usage) => usage.canCreateItem,
+    `You have reached the free tier limit. Upgrade to Pro for unlimited items.`,
+  );
+  if (usageError) return usageError;
+
+  return wrapDbAction(async () => {
+    return createItemInDb(
       {
         title: data.title,
         typeName: data.typeName,
@@ -90,37 +98,25 @@ export async function createItem(
         tags: data.tags.filter((t) => t.length > 0),
         collectionIds: data.collectionIds,
       },
-      { accessToken: session.accessToken },
+      { accessToken: authResult.accessToken },
     );
-
-    return { success: true, data: created };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to create item",
-    };
-  }
+  }, "Failed to create item");
 }
 
 export async function updateItem(
   itemId: string,
   raw: UpdateItemInput,
 ): Promise<ActionResult<unknown>> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireAuth();
+  if ("error" in authResult) return authResult;
 
-  const parsed = updateItemSchema.safeParse(raw);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstIssue };
-  }
+  const validated = validateOrFail(updateItemSchema, raw);
+  if ("error" in validated) return validated;
 
-  const data = parsed.data;
+  const data = validated;
 
-  try {
-    const updated = await updateItemInDb(
+  return wrapDbAction(async () => {
+    return updateItemInDb(
       itemId,
       {
         title: data.title,
@@ -131,71 +127,43 @@ export async function updateItem(
         tags: data.tags.filter((t) => t.length > 0),
         collectionIds: data.collectionIds,
       },
-      { accessToken: session.accessToken },
+      { accessToken: authResult.accessToken },
     );
-
-    return { success: true, data: updated };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update item",
-    };
-  }
+  }, "Failed to update item");
 }
 
 export async function deleteItem(
   itemId: string,
 ): Promise<ActionResult<null>> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireAuth();
+  if ("error" in authResult) return authResult;
 
-  try {
-    await deleteItemInDb(itemId, { accessToken: session.accessToken });
-    return { success: true, data: null };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to delete item",
-    };
-  }
+  return wrapDbAction(async () => {
+    await deleteItemInDb(itemId, { accessToken: authResult.accessToken });
+    return null;
+  }, "Failed to delete item");
 }
 
 export async function toggleFavoriteItem(
   itemId: string,
 ): Promise<ActionResult<boolean>> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireAuth();
+  if ("error" in authResult) return authResult;
 
-  try {
-    const result = await toggleItemFavoriteInDb(itemId, { accessToken: session.accessToken });
-    return { success: true, data: result.isFavorite };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle favorite",
-    };
-  }
+  return wrapDbAction(async () => {
+    const result = await toggleItemFavoriteInDb(itemId, { accessToken: authResult.accessToken });
+    return result.isFavorite;
+  }, "Failed to toggle favorite");
 }
 
 export async function togglePinItem(
   itemId: string,
 ): Promise<ActionResult<boolean>> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireAuth();
+  if ("error" in authResult) return authResult;
 
-  try {
-    const result = await toggleItemPinInDb(itemId, { accessToken: session.accessToken });
-    return { success: true, data: result.isPinned };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle pin",
-    };
-  }
+  return wrapDbAction(async () => {
+    const result = await toggleItemPinInDb(itemId, { accessToken: authResult.accessToken });
+    return result.isPinned;
+  }, "Failed to toggle pin");
 }

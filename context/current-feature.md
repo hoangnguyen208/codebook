@@ -1,6 +1,6 @@
 # Current Feature
 
-UI Polish
+Components Refactor
 
 ## Status
 
@@ -9,12 +9,18 @@ Completed
 
 ## Goals
 
-- Add active/highlight state to sidebar links for Favorite Collections, Recent Collections, and "View all collections" using `pathname`-based `isActive` check
-- Add active/highlight state to header links: Favorites and Upgrade
-- Add GitHub external login button to the Duende IdentityServer Register page, matching the Login page pattern
-- Populate `View.ExternalProviders` in Register code-behind via `_schemeProvider` and `_identityProviderStore`
-- Verify sidebar collapsed state shows a useful view (not just icons without context)
-- Fix 401 API error for new users (token missing scopes — investigate root cause)
+**Duplicate code elimination:**
+- Extract `colorClasses` + `getColorClasses` + `getDotColorClass` + `colorTokenMap` + `getItemColor` from 5 duplicated definitions into `lib/color-utils.ts`
+- Extract `itemTypeIcons` record + `resolveItemIcon()` from 3 duplicated definitions into `lib/icons.ts`
+- Extract `HAS_CONTENT` / `HAS_CODE_EDITOR` / `HAS_LANGUAGE` / `HAS_URL` / `HAS_FILE_UPLOAD` / `ITEM_TYPES` / `inputClasses` from 2 places into `lib/item-type-config.ts`
+- Extract tag suggestion/description generation handlers into shared hooks `useTagSuggestions()` and `useGenerateDescription()`
+- Extract collection multi-select pill UI into `<CollectionMultiSelect>` component (duplicated in CreateItemDialog + ItemDrawerSheet)
+- Extract `useCollectionActions` hook + `CollectionMenuDropdown` component from `CollectionCard` + `DashboardCollectionCard` (~80% shared logic)
+
+**Break up large components:**
+- Split `DashboardShell` (1043 → 317 lines) → extracted `DashboardSidebar`, `DashboardHeader`, `DashboardStats`, `DashboardMainContent`
+- Split `ItemDrawerSheet` (877 → 400 lines) → extracted `DrawerItemView`, `DrawerItemEdit`, `DrawerActionBar`, `DeleteItemConfirm`, and `useDrawerAI` hook
+- Split `CreateItemDialog` (425 → 300 lines) → extracted `<TypeSelector>`, reused shared hooks and `<CollectionMultiSelect>`
 
 ## History
 
@@ -79,3 +85,6 @@ Completed
 - **AI Explain Code**: Created feature branch `feature/ai-explain-code`, implementing AI-powered code explanation for snippet/command types in item drawer with Code/Explain tabs
 - **AI Prompt Optimizer**: Created feature branch `feature/ai-prompt-optimizer`, implementing AI-powered prompt refinement for prompt types with Accept/Reject in the markdown editor header
 - **UI Review**: Ran Playwright + code review audit. Found missing sidebar/highlight states on Favorite/Recent collections, header links (Favorites/Upgrade), and missing GitHub button on Duende Register page.
+- **Actions Refactor**: Scanned `webapp/src/actions/` for duplicate code; extracted shared `ActionResult` type, `requireAuth`/`requireProAuth` auth guards, `validateOrFail` Zod helper, and `wrapDbAction` error wrapper into `lib/`; merged duplicate Zod schemas in `collections.ts`; parametrized usage-limit checks; extracted AI helpers (`checkRateLimit`, `aiQuery`, `parseAiJsonArray`, `extractTags`) in `ai.ts` — eliminated ~120 lines of duplicated code across 3 action files.
+- **Components Scan**: Scanned `webapp/src/components/` (43 files) for duplication and oversize issues. Found `colorClasses` duplicated 5x, `itemTypeIcons` 3x, type-conditional sets 2x; `DashboardShell` at 1043 lines and `ItemDrawerSheet` at 877 lines need splitting into 5+ sub-components each; `CreateItemDialog` (425 lines), `CollectionCard`+`DashboardCollectionCard` (~80% shared), and tag/description AI handler hooks are duplicated between CreateItemDialog and ItemDrawerSheet.
+- **Components Refactor**: Implemented all goals. Created shared libs: `color-utils.ts` (eliminated 5x duplication), `icons.ts` (3x), `item-type-config.ts` (2x). Created shared hooks: `useTagSuggestions`, `useGenerateDescription`, `useCollectionActions`, `useDrawerAI`. Created `CollectionMultiSelect`, `CollectionMenuDropdown`, `TypeSelector` components. Split `DashboardShell` (1043→317 lines) into `DashboardSidebar` (240), `DashboardHeader` (214), `DashboardStats` (44), `DashboardMainContent` (327). Split `ItemDrawerSheet` (877→400 lines) into `DrawerItemView` (137), `DrawerItemEdit` (171), `DrawerActionBar` (134), `DeleteItemConfirm` (42). Split `CreateItemDialog` (425→300 lines) via `TypeSelector`. Refactored `CollectionCard`+`DashboardCollectionCard` to share `useCollectionActions` hook + `CollectionMenuDropdown`. `tsc --noEmit` passes clean.

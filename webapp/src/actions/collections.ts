@@ -10,60 +10,59 @@ import {
   toggleCollectionFavorite as toggleCollectionFavoriteInDb,
 } from "@/lib/db/collections";
 import { getUsageLimits } from "@/lib/db/usage";
+import { requireAuth } from "@/lib/action-auth";
+import { validateOrFail } from "@/lib/action-validate";
+import { wrapDbAction } from "@/lib/action-wrap";
+import type { ActionResult } from "@/lib/action-result";
 import type { CollectionForSelect } from "@/types/items";
 
-const createCollectionSchema = z.object({
+const collectionSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200, "Name must be 200 characters or fewer"),
   description: z.string().trim().nullable().optional(),
 });
 
-type CreateCollectionInput = z.infer<typeof createCollectionSchema>;
+type CollectionInput = z.infer<typeof collectionSchema>;
 
-type ActionResult<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
-export async function createCollection(
-  raw: CreateCollectionInput,
-): Promise<ActionResult<unknown>> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    return { success: false, error: "Not authenticated" };
-  }
-
-  const parsed = createCollectionSchema.safeParse(raw);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstIssue };
-  }
-
-  const data = parsed.data;
-
+async function checkUsageLimit(
+  accessToken: string,
+  check: (usage: Awaited<ReturnType<typeof getUsageLimits>>) => boolean,
+  errorMessage: string,
+): Promise<{ success: false; error: string } | null> {
   try {
-    const usage = await getUsageLimits({ accessToken: session.accessToken });
-    if (!usage.canCreateCollection) {
-      return { success: false, error: `You have reached the free tier limit of ${usage.collectionLimit} collections. Upgrade to Pro for unlimited collections.` };
+    const usage = await getUsageLimits({ accessToken });
+    if (!check(usage)) {
+      return { success: false, error: errorMessage };
     }
   } catch {
     // If usage check fails, allow creation to proceed rather than blocking
   }
+  return null;
+}
 
-  try {
-    const created = await createCollectionInDb(
-      {
-        name: data.name,
-        description: data.description ?? null,
-      },
-      { accessToken: session.accessToken },
+export async function createCollection(
+  raw: CollectionInput,
+): Promise<ActionResult<unknown>> {
+  const authResult = await requireAuth();
+  if ("error" in authResult) return authResult;
+
+  const validated = validateOrFail(collectionSchema, raw);
+  if ("error" in validated) return validated;
+
+  const data = validated;
+
+  const usageError = await checkUsageLimit(
+    authResult.accessToken,
+    (usage) => usage.canCreateCollection,
+    `You have reached the free tier limit. Upgrade to Pro for unlimited collections.`,
+  );
+  if (usageError) return usageError;
+
+  return wrapDbAction(async () => {
+    return createCollectionInDb(
+      { name: data.name, description: data.description ?? null },
+      { accessToken: authResult.accessToken },
     );
-
-    return { success: true, data: created };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to create collection",
-    };
-  }
+  }, "Failed to create collection");
 }
 
 export async function getCollectionsForSelectAction(): Promise<CollectionForSelect[]> {
@@ -71,77 +70,45 @@ export async function getCollectionsForSelectAction(): Promise<CollectionForSele
   return getCollectionsForSelectFromDb({ accessToken: session?.accessToken });
 }
 
-const updateCollectionSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(200, "Name must be 200 characters or fewer"),
-  description: z.string().trim().nullable().optional(),
-});
-
-type UpdateCollectionInput = z.infer<typeof updateCollectionSchema>;
-
 export async function updateCollection(
   id: string,
-  raw: UpdateCollectionInput,
+  raw: CollectionInput,
 ): Promise<ActionResult<unknown>> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireAuth();
+  if ("error" in authResult) return authResult;
 
-  const parsed = updateCollectionSchema.safeParse(raw);
-  if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstIssue };
-  }
+  const validated = validateOrFail(collectionSchema, raw);
+  if ("error" in validated) return validated;
 
-  const data = parsed.data;
+  const data = validated;
 
-  try {
-    const updated = await updateCollectionInDb(
+  return wrapDbAction(async () => {
+    return updateCollectionInDb(
       id,
       { name: data.name, description: data.description ?? null },
-      { accessToken: session.accessToken },
+      { accessToken: authResult.accessToken },
     );
-    return { success: true, data: updated };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update collection",
-    };
-  }
+  }, "Failed to update collection");
 }
 
 export async function deleteCollection(id: string): Promise<ActionResult<null>> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireAuth();
+  if ("error" in authResult) return authResult;
 
-  try {
-    await deleteCollectionInDb(id, { accessToken: session.accessToken });
-    return { success: true, data: null };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to delete collection",
-    };
-  }
+  return wrapDbAction(async () => {
+    await deleteCollectionInDb(id, { accessToken: authResult.accessToken });
+    return null;
+  }, "Failed to delete collection");
 }
 
 export async function toggleFavoriteCollection(
   collectionId: string,
 ): Promise<ActionResult<boolean>> {
-  const session = await auth();
-  if (!session?.accessToken) {
-    return { success: false, error: "Not authenticated" };
-  }
+  const authResult = await requireAuth();
+  if ("error" in authResult) return authResult;
 
-  try {
-    const result = await toggleCollectionFavoriteInDb(collectionId, { accessToken: session.accessToken });
-    return { success: true, data: result.isFavorite };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle favorite",
-    };
-  }
+  return wrapDbAction(async () => {
+    const result = await toggleCollectionFavoriteInDb(collectionId, { accessToken: authResult.accessToken });
+    return result.isFavorite;
+  }, "Failed to toggle favorite");
 }

@@ -6,16 +6,11 @@ import {
   ArrowUpDown,
   ChevronDown,
   ChevronUp,
-  Code2,
-  File,
-  FileImage,
-  FileText,
   FolderKanban,
-  Link2,
-  Sparkles,
-  Terminal,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+
+import { colorClasses } from "@/lib/color-utils";
+import { itemTypeIcons, resolveItemIcon } from "@/lib/icons";
 
 import { ItemDrawerProvider, useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { ItemDrawerSheet } from "@/components/items/ItemDrawerSheet";
@@ -23,58 +18,11 @@ import { cn } from "@/lib/utils";
 import type { DashboardItem } from "@/types/items";
 import type { DashboardRecentCollection } from "@/lib/db/collections";
 
-const itemTypeIcons: Record<string, LucideIcon> = {
-  code: Code2,
-  sparkles: Sparkles,
-  terminal: Terminal,
-  "file-text": FileText,
-  file: File,
-  image: FileImage,
-  link: Link2,
-};
-
 type FavoritesListProps = {
   items: DashboardItem[];
   collections: DashboardRecentCollection[];
   itemTypeMap: Record<string, { icon: string | null; name: string; color: string | null }>;
 };
-
-const colorClasses: Record<string, string> = {
-  blue: "bg-blue-500/10 text-blue-300 border-blue-500/30",
-  purple: "bg-purple-500/10 text-purple-300 border-purple-500/30",
-  orange: "bg-orange-500/10 text-orange-300 border-orange-500/30",
-  yellow: "bg-yellow-500/10 text-yellow-300 border-yellow-500/30",
-  slate: "bg-slate-500/10 text-slate-300 border-slate-500/30",
-  pink: "bg-pink-500/10 text-pink-300 border-pink-500/30",
-  emerald: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
-};
-
-function normaliseIcon(name: string | null): string {
-  const lowered = name?.trim().toLowerCase() ?? "";
-  switch (lowered) {
-    case "code":
-    case "code2":
-      return "code";
-    case "sparkles":
-      return "sparkles";
-    case "terminal":
-      return "terminal";
-    case "stickynote":
-    case "filetext":
-    case "file-text":
-      return "file-text";
-    case "file":
-      return "file";
-    case "image":
-    case "fileimage":
-      return "image";
-    case "link":
-    case "link2":
-      return "link";
-    default:
-      return "file-text";
-  }
-}
 
 type CollectionSortField = "name" | "date";
 type ItemSortField = "name" | "date" | "type";
@@ -142,8 +90,7 @@ function FavoritesListInner({ items, collections, itemTypeMap }: FavoritesListPr
 
   const getItemTypeIcon = (typeId: string) => {
     const t = itemTypeMap[typeId];
-    const iconKey = normaliseIcon(t?.icon ?? null);
-    return itemTypeIcons[iconKey] ?? FileText;
+    return resolveItemIcon(t?.icon ?? null);
   };
 
   const getItemTypeColor = (typeId: string) => {
