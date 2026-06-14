@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createItem } from "@/actions/items";
-import { generateAutoTags } from "@/actions/ai";
+import { generateAutoTags, generateDescription } from "@/actions/ai";
 import { getCollectionsForSelectAction } from "@/actions/collections";
 import type { CollectionForSelect } from "@/types/items";
 import { cn } from "@/lib/utils";
@@ -79,6 +79,7 @@ export function CreateItemDialog({ open, onOpenChange, initialType, initialColle
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>(initialCols);
   const [tagSuggestions, setTagSuggestions] = useState<TagSuggestionState[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [loadingDescription, setLoadingDescription] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -99,6 +100,7 @@ export function CreateItemDialog({ open, onOpenChange, initialType, initialColle
     setSelectedCollectionIds(initialCols);
     setTagSuggestions([]);
     setLoadingSuggestions(false);
+    setLoadingDescription(false);
   };
 
   const handleOpenChange = (next: boolean) => {
@@ -148,6 +150,23 @@ export function CreateItemDialog({ open, onOpenChange, initialType, initialColle
     setTagSuggestions((prev) =>
       prev.map((s) => (s.tag === tag ? { ...s, status: "rejected" as const } : s)),
     );
+  };
+
+  const handleGenerateDescription = async () => {
+    setLoadingDescription(true);
+    const result = await generateDescription({
+      title: title.trim() || null,
+      content: content.trim() || null,
+      typeName: typeName || null,
+      language: language.trim() || null,
+      url: url.trim() || null,
+    });
+    setLoadingDescription(false);
+    if (result.success) {
+      setDescription(result.data);
+    } else {
+      toast.error(result.error);
+    }
   };
 
   const handleSave = async () => {
@@ -229,14 +248,28 @@ export function CreateItemDialog({ open, onOpenChange, initialType, initialColle
             aria-label="Title"
           />
 
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className={cn(inputClasses, "min-h-[60px]")}
-            placeholder="Description (optional)"
-            aria-label="Description"
-            rows={2}
-          />
+          <div className="relative">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className={cn(inputClasses, "min-h-[60px] pr-10")}
+              placeholder="Description (optional)"
+              aria-label="Description"
+              rows={2}
+            />
+            {isPro ? (
+              <button
+                type="button"
+                onClick={handleGenerateDescription}
+                disabled={loadingDescription}
+                className="absolute right-2 top-2 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-purple-400 transition-colors disabled:opacity-50"
+                aria-label="Generate description"
+                title="Generate description"
+              >
+                <Sparkles className="size-4" />
+              </button>
+            ) : null}
+          </div>
 
           {HAS_CONTENT.has(typeName) ? (
             <>
