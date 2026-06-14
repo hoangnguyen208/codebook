@@ -10,7 +10,7 @@ Completed
 ## Goals
 
 - Add AI-powered description generation using OpenAI gpt-5-nano
-- Small Sparkles icon button next to description textarea in CreateItemDialog and ItemDrawerSheet edit mode
+- Labeled "Generate description" button below description textarea in CreateItemDialog and ItemDrawerSheet edit mode
 - Generate 1-2 sentence summary from available info (title, content, type, language, URL)
 - Pro-only feature sharing the same rate limit and AI infrastructure
 
@@ -73,4 +73,4 @@ Completed
 - **Stripe Phase 2**: Built Stripe webhook handler in CodeBook.Api (5 event types), added feature gating to createItem/createCollection/upload routes, built billing settings UI with upgrade/manage billing buttons and success toast, added PRO badges to sidebar for free users, wired periodic IsPro sync in JWT callback
 - **Stripe Upgrade Page**: Added ghost "Upgrade" button to dashboard header for free users, created /upgrade page with pricing comparison and Stripe checkout flow, Pro users see billing management prompt instead, free users redirected from /items/file|image to /upgrade
 - **AI Auto-Tagging**: Created feature branch `feature/ai-auto-tag`, installed openai SDK, created OpenAI client utility with Responses API for gpt-5-nano, added AI rate limit config (20 req/hr per user), created `generateAutoTags` server action with auth/Pro/Zod/rate-limit gating, added Suggest Tags button to CreateItemDialog and ItemDrawerSheet edit mode, created TagSuggestions component with accept/reject controls, threaded `isPro` through ItemDrawerProvider context and page components
-- **AI Description Generator**: Created feature branch `feature/ai-description-generator`, added `generateDescription` server action sharing the same auth/Pro/rate-limit infrastructure, added small Sparkles icon button next to description textarea in both CreateItemDialog and ItemDrawerSheet edit mode, generates 1-2 sentence summary from title/content/type/language/URL; added 11 unit tests (29 total)
+- **AI Description Generator**: Created feature branch `feature/ai-description-generator`, added `generateDescription` server action sharing the same auth/Pro/rate-limit infrastructure, added labeled "Generate description" button below description textarea in both CreateItemDialog and ItemDrawerSheet edit mode, generates 1-2 sentence summary from title/content/type/language/URL; added 11 unit tests (29 total)
