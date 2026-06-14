@@ -2,8 +2,10 @@ using System.Security.Claims;
 using System.Text;
 using Duende.IdentityModel;
 using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Stores;
 using CodeBook.Identity.Models;
 using CodeBook.Identity.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -21,25 +23,45 @@ public class Index : PageModel
     private readonly IEmailSender _emailSender;
     private readonly IIdentityServerInteractionService _interaction;
     private readonly AuthRateLimiter _rateLimiter;
+    private readonly IAuthenticationSchemeProvider _schemeProvider;
+    private readonly IIdentityProviderStore _identityProviderStore;
 
     [BindProperty]
     public InputModel Input { get; set; } = default!;
 
     public string? LoginReturnUrl => ReturnUrlHelper.StripSignupScreenHint(Input.ReturnUrl);
 
+    public IEnumerable<ExternalProvider> ExternalProviders { get; set; } = [];
+
+    public class ExternalProvider
+    {
+        public ExternalProvider(string authenticationScheme, string? displayName = null)
+        {
+            AuthenticationScheme = authenticationScheme;
+            DisplayName = displayName;
+        }
+
+        public string? DisplayName { get; set; }
+        public string AuthenticationScheme { get; set; }
+    }
+
     public Index(
         UserManager<ApplicationUser> userManager,
         IEmailSender emailSender,
         IIdentityServerInteractionService interaction,
-        AuthRateLimiter rateLimiter)
+        AuthRateLimiter rateLimiter,
+        IAuthenticationSchemeProvider schemeProvider,
+        IIdentityProviderStore identityProviderStore)
     {
         _userManager = userManager;
         _emailSender = emailSender;
         _interaction = interaction;
         _rateLimiter = rateLimiter;
+        _schemeProvider = schemeProvider;
+        _identityProviderStore = identityProviderStore;
     }
 
-    public IActionResult OnGet(string? returnUrl)
+    public async Task<IActionResult> OnGet(string? returnUrl)
     {
         if (IsInvalidReturnUrl(returnUrl))
         {
@@ -51,7 +73,31 @@ public class Index : PageModel
             ReturnUrl = returnUrl
         };
 
+        await BuildExternalProvidersAsync();
+
         return Page();
+    }
+
+    private async Task BuildExternalProvidersAsync()
+    {
+        var schemes = await _schemeProvider.GetAllSchemesAsync();
+
+        var providers = schemes
+            .Where(x => x.DisplayName != null)
+            .Select(x => new ExternalProvider(
+                authenticationScheme: x.Name,
+                displayName: x.DisplayName ?? x.Name
+            )).ToList();
+
+        var dynamicSchemes = (await _identityProviderStore.GetAllSchemeNamesAsync())
+            .Where(x => x.Enabled)
+            .Select(x => new ExternalProvider(
+                authenticationScheme: x.Scheme,
+                displayName: x.DisplayName ?? x.Scheme
+            ));
+        providers.AddRange(dynamicSchemes);
+
+        ExternalProviders = providers.Where(x => !string.IsNullOrWhiteSpace(x.DisplayName));
     }
 
     public async Task<IActionResult> OnPost()
@@ -63,6 +109,7 @@ public class Index : PageModel
 
         if (!ModelState.IsValid)
         {
+            await BuildExternalProvidersAsync();
             return Page();
         }
 
@@ -73,6 +120,7 @@ public class Index : PageModel
         {
             Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
             ModelState.AddModelError(string.Empty, $"Too many attempts. Please try again in {RateLimitFormat.FormatRetryAfter(retryAfter)}.");
+            await BuildExternalProvidersAsync();
             return Page();
         }
 
@@ -90,6 +138,7 @@ public class Index : PageModel
                 ModelState.AddModelError(string.Empty, error.Description);
             }
 
+            await BuildExternalProvidersAsync();
             return Page();
         }
 

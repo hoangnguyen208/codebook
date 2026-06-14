@@ -1,6 +1,6 @@
 # Current Feature
 
-AI Prompt Optimizer
+UI Polish
 
 ## Status
 
@@ -9,14 +9,12 @@ Completed
 
 ## Goals
 
-- Add AI-powered prompt optimization for prompt-type items using OpenAI gpt-5-nano
-- "Optimize" button (Sparkles icon) in the markdown editor header next to Copy button
-- Only for prompt type in the item drawer read view
-- AI refines the prompt and shows optimized version with Accept/Reject buttons
-- On Accept, the optimized prompt replaces the current content
-- Loading state with Loader2 spinner while optimizing
-- Pro gating in UI: Crown icon + tooltip for free users
-- Error handling via toast (Pro gating, rate limit, AI service errors)
+- Add active/highlight state to sidebar links for Favorite Collections, Recent Collections, and "View all collections" using `pathname`-based `isActive` check
+- Add active/highlight state to header links: Favorites and Upgrade
+- Add GitHub external login button to the Duende IdentityServer Register page, matching the Login page pattern
+- Populate `View.ExternalProviders` in Register code-behind via `_schemeProvider` and `_identityProviderStore`
+- Verify sidebar collapsed state shows a useful view (not just icons without context)
+- Fix 401 API error for new users (token missing scopes — investigate root cause)
 
 ## History
 
@@ -80,3 +78,4 @@ Completed
 - **AI Description Generator**: Created feature branch `feature/ai-description-generator`, added `generateDescription` server action sharing the same auth/Pro/rate-limit infrastructure, added labeled "Generate description" button below description textarea in both CreateItemDialog and ItemDrawerSheet edit mode, generates 1-2 sentence summary from title/content/type/language/URL; added 11 unit tests (29 total)
 - **AI Explain Code**: Created feature branch `feature/ai-explain-code`, implementing AI-powered code explanation for snippet/command types in item drawer with Code/Explain tabs
 - **AI Prompt Optimizer**: Created feature branch `feature/ai-prompt-optimizer`, implementing AI-powered prompt refinement for prompt types with Accept/Reject in the markdown editor header
+- **UI Review**: Ran Playwright + code review audit. Found missing sidebar/highlight states on Favorite/Recent collections, header links (Favorites/Upgrade), and missing GitHub button on Duende Register page.
