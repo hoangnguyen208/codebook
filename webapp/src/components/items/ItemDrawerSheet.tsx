@@ -391,27 +391,26 @@ export function ItemDrawerSheet() {
                 </div>
               </div>
               {isEditing ? (
-                <div className="mt-3">
+                <div className="relative mt-3">
                   <textarea
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
-                    className={cn(inputClasses, "min-h-[60px]")}
+                    className={cn(inputClasses, "min-h-[60px] pr-10")}
                     placeholder="Description (optional)"
                     aria-label="Description"
                     rows={2}
                   />
                   {isPro ? (
-                    <div className="flex justify-end mt-1">
-                      <button
-                        type="button"
-                        onClick={handleGenerateDescription}
-                        disabled={loadingDescription}
-                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-purple-400 transition-colors disabled:opacity-50"
-                      >
-                        <Sparkles className="size-3.5" />
-                        {loadingDescription ? "Generating..." : "Generate description"}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGenerateDescription}
+                      disabled={loadingDescription}
+                      className="absolute right-2 top-2 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-purple-400 transition-colors disabled:opacity-50"
+                      aria-label="Generate description"
+                      title="Generate description"
+                    >
+                      <Sparkles className="size-4" />
+                    </button>
                   ) : null}
                 </div>
               ) : item.description ? (
