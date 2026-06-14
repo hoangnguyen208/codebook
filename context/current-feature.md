@@ -1,6 +1,6 @@
 # Current Feature
 
-AI Explain Code
+AI Prompt Optimizer
 
 ## Status
 
@@ -9,16 +9,14 @@ Completed
 
 ## Goals
 
-- Add AI-powered code explanation for snippets and commands using OpenAI gpt-5-nano
-- "Explain" button (Sparkles icon) in the code editor window controls header next to Copy button
-- Only for snippet and command types in the item drawer read view (not in create/edit forms)
-- Code/Explain tabs in the editor header to toggle between views after generating
-- Render explanation as markdown in the same container space as the code editor
-- Concise explanation (~200-300 words) covering what the code does and key concepts
-- Loading state with Loader2 spinner while generating
+- Add AI-powered prompt optimization for prompt-type items using OpenAI gpt-5-nano
+- "Optimize" button (Sparkles icon) in the markdown editor header next to Copy button
+- Only for prompt type in the item drawer read view
+- AI refines the prompt and shows optimized version with Accept/Reject buttons
+- On Accept, the optimized prompt replaces the current content
+- Loading state with Loader2 spinner while optimizing
 - Pro gating in UI: Crown icon + tooltip for free users
 - Error handling via toast (Pro gating, rate limit, AI service errors)
-- Explanations are not saved to the database — regenerated on each click
 
 ## History
 
@@ -81,3 +79,4 @@ Completed
 - **AI Auto-Tagging**: Created feature branch `feature/ai-auto-tag`, installed openai SDK, created OpenAI client utility with Responses API for gpt-5-nano, added AI rate limit config (20 req/hr per user), created `generateAutoTags` server action with auth/Pro/Zod/rate-limit gating, added Suggest Tags button to CreateItemDialog and ItemDrawerSheet edit mode, created TagSuggestions component with accept/reject controls, threaded `isPro` through ItemDrawerProvider context and page components
 - **AI Description Generator**: Created feature branch `feature/ai-description-generator`, added `generateDescription` server action sharing the same auth/Pro/rate-limit infrastructure, added labeled "Generate description" button below description textarea in both CreateItemDialog and ItemDrawerSheet edit mode, generates 1-2 sentence summary from title/content/type/language/URL; added 11 unit tests (29 total)
 - **AI Explain Code**: Created feature branch `feature/ai-explain-code`, implementing AI-powered code explanation for snippet/command types in item drawer with Code/Explain tabs
+- **AI Prompt Optimizer**: Created feature branch `feature/ai-prompt-optimizer`, implementing AI-powered prompt refinement for prompt types with Accept/Reject in the markdown editor header
