@@ -34,7 +34,7 @@ import {
 import { useItemDrawer } from "@/components/items/ItemDrawerProvider";
 import { cn } from "@/lib/utils";
 import { updateItem, deleteItem, toggleFavoriteItem, togglePinItem } from "@/actions/items";
-import { generateAutoTags } from "@/actions/ai";
+import { generateAutoTags, generateDescription } from "@/actions/ai";
 import { getCollectionsForSelectAction } from "@/actions/collections";
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
@@ -153,6 +153,7 @@ export function ItemDrawerSheet() {
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
   const [tagSuggestions, setTagSuggestions] = useState<SuggestionState[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [loadingDescription, setLoadingDescription] = useState(false);
 
   useEffect(() => {
     if (!selectedItemId || !isOpen) {
@@ -243,6 +244,23 @@ export function ItemDrawerSheet() {
     setTagSuggestions((prev) =>
       prev.map((s) => (s.tag === tag ? { ...s, status: "rejected" as const } : s)),
     );
+  };
+
+  const handleGenerateDescription = async () => {
+    setLoadingDescription(true);
+    const result = await generateDescription({
+      title: editTitle.trim() || null,
+      content: editContent.trim() || null,
+      typeName: item?.typeName || null,
+      language: editLanguage.trim() || null,
+      url: editUrl.trim() || null,
+    });
+    setLoadingDescription(false);
+    if (result.success) {
+      setEditDescription(result.data);
+    } else {
+      toast.error(result.error);
+    }
   };
 
   const handleSave = async () => {
@@ -373,14 +391,28 @@ export function ItemDrawerSheet() {
                 </div>
               </div>
               {isEditing ? (
-                <textarea
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  className={cn(inputClasses, "mt-3 min-h-[60px]")}
-                  placeholder="Description (optional)"
-                  aria-label="Description"
-                  rows={2}
-                />
+                <div className="relative mt-3">
+                  <textarea
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className={cn(inputClasses, "min-h-[60px] pr-10")}
+                    placeholder="Description (optional)"
+                    aria-label="Description"
+                    rows={2}
+                  />
+                  {isPro ? (
+                    <button
+                      type="button"
+                      onClick={handleGenerateDescription}
+                      disabled={loadingDescription}
+                      className="absolute right-2 top-2 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-purple-400 transition-colors disabled:opacity-50"
+                      aria-label="Generate description"
+                      title="Generate description"
+                    >
+                      <Sparkles className="size-4" />
+                    </button>
+                  ) : null}
+                </div>
               ) : item.description ? (
                 <SheetDescription className="mt-3 text-sm leading-relaxed">
                   {item.description}
